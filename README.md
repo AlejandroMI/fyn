@@ -1,12 +1,13 @@
 # Fyn
 
-Fyn (Find Your Nest) is a natural-language property search connector. It translates user intent into property filters, queries source portals, ranks results, and returns explainable matches with deep links.
+Fyn (Find Your Nest) is an MCP-first property search aggregator. In model-driven mode, the LLM plans and sends explicit constraints while Fyn executes deterministic multi-portal searches and returns explainable, source-linked results.
 
 ## Current scope
 
 - First connector: `pisos.com`
 - Primary interface: MCP tool `search_properties`
-- Parser: deterministic ES/EN extraction for core housing constraints
+- Model-driven contract: structured filters + multi-location search + coverage diagnostics
+- Parser: deterministic ES/EN extraction retained as legacy fallback
 - Fallback mode: compliant HTML scraping (then fixtures) when API key is not available
 
 ## Quick start

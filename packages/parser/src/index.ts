@@ -263,11 +263,13 @@ export function normalizeSearchInput(input: SearchInput): { criteria: Normalized
   if (resolvedPropertyTypes.length === 0 && natureLifestyleIntent) {
     resolvedPropertyTypes.push("house");
   }
+  const strictConstraints = input.strict_constraints ?? true;
 
   const criteria: NormalizedFilters = {
     locale: detectedLocale,
     property_types: resolvedPropertyTypes,
     nearby_towns: nearbyTowns,
+    strict_constraints: strictConstraints,
     renovation_ok: renovationOk,
     tags: Array.from(new Set([...(input.tags ?? []), ...derivedTags])),
     ...(resolvedTransaction ? { transaction_type: resolvedTransaction } : {}),
@@ -275,6 +277,11 @@ export function normalizeSearchInput(input: SearchInput): { criteria: Normalized
     ...(resolvedRooms !== undefined ? { min_rooms: resolvedRooms } : {}),
     ...(resolvedCapacity !== undefined ? { min_capacity_people: resolvedCapacity } : {}),
     ...(resolvedPrice !== undefined ? { max_price_eur: resolvedPrice } : {}),
+    ...(input.min_floor !== undefined ? { min_floor: input.min_floor } : {}),
+    ...(input.exclude_ground_floor !== undefined
+      ? { exclude_ground_floor: input.exclude_ground_floor }
+      : {}),
+    ...(input.prefer_exterior !== undefined ? { prefer_exterior: input.prefer_exterior } : {}),
     ...(input.query_text ? { original_query: input.query_text } : {})
   };
 

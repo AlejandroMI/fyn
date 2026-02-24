@@ -68,3 +68,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: harden city extraction and enable scrape discovery mode when city is missing.
 - Action: parser stopword guard for non-city phrases, rural-intent heuristics (`house`, `nearby_towns`), and connector discovery scrape seeds across major Spanish cities.
 - Expected impact: broader, real scraped coverage for exploratory queries without forcing an exact city upfront.
+
+- Date: 2026-02-24
+- Context: Aggregator MCP strategy requires model agency without backend AI orchestration.
+- Signal: single-city parser-driven calls constrained search breadth and made behavior opaque for future multi-portal growth.
+- Decision: move to model-driven contract where backend executes explicit structured constraints and reports coverage.
+- Action: upgraded `search_properties` schema for multi-location and execution controls, added deterministic floor/exterior constraints, and embedded execution/coverage diagnostics; parser path kept as explicit legacy fallback.
+- Expected impact: better alignment with MCP connector semantics, stronger model control, and cleaner scaling path to multiple portals.

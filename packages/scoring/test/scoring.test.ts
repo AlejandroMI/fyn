@@ -11,6 +11,7 @@ const baseCriteria: NormalizedFilters = {
   nearby_towns: false,
   min_rooms: 3,
   max_price_eur: 350_000,
+  strict_constraints: true,
   renovation_ok: false,
   tags: [],
   original_query: "flat in Valencia"
@@ -111,5 +112,33 @@ describe("rankListings", () => {
 
     expect(ranked[0]?.canonical_id).toBe("bright");
     expect(ranked[0]?.why_matched.some((reason) => reason.toLowerCase().includes("natural light"))).toBe(true);
+  });
+
+  it("enforces floor constraints when requested", () => {
+    const floorCriteria: NormalizedFilters = {
+      ...baseCriteria,
+      min_floor: 3,
+      exclude_ground_floor: true
+    };
+
+    const ranked = rankListings(
+      [
+        listing({
+          canonical_id: "ground",
+          raw: { source_path: "/venta/pisos-valencia_capital_zona_urbana/", chars: ["Bajo"] }
+        }),
+        listing({
+          canonical_id: "first",
+          raw: { source_path: "/venta/pisos-valencia_capital_zona_urbana/", chars: ["1ª planta"] }
+        }),
+        listing({
+          canonical_id: "fourth",
+          raw: { source_path: "/venta/pisos-valencia_capital_zona_urbana/", chars: ["4ª planta"] }
+        })
+      ],
+      floorCriteria
+    );
+
+    expect(ranked.map((item) => item.canonical_id)).toEqual(["fourth"]);
   });
 });

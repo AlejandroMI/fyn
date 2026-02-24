@@ -51,12 +51,26 @@ function matchesCityScope(listing: ListingCard, city: string): boolean {
 }
 
 function matchesHardConstraints(listing: ListingCard, criteria: NormalizedFilters): boolean {
-  if (criteria.max_price_eur && listing.price_eur && listing.price_eur > criteria.max_price_eur) {
-    return false;
+  const strict = criteria.strict_constraints ?? true;
+
+  if (criteria.max_price_eur !== undefined) {
+    if (listing.price_eur === null) {
+      if (strict) {
+        return false;
+      }
+    } else if (listing.price_eur > criteria.max_price_eur) {
+      return false;
+    }
   }
 
-  if (criteria.min_rooms && listing.rooms && listing.rooms < criteria.min_rooms) {
-    return false;
+  if (criteria.min_rooms !== undefined) {
+    if (listing.rooms === null) {
+      if (strict) {
+        return false;
+      }
+    } else if (listing.rooms < criteria.min_rooms) {
+      return false;
+    }
   }
 
   if (criteria.min_capacity_people !== undefined) {
@@ -73,6 +87,8 @@ function matchesHardConstraints(listing: ListingCard, criteria: NormalizedFilter
     if (!criteria.property_types.includes(listing.property_type)) {
       return false;
     }
+  } else if (criteria.property_types.length > 0 && listing.property_type === null && strict) {
+    return false;
   }
 
   if (criteria.city && !criteria.nearby_towns) {
@@ -99,6 +115,10 @@ function combinedText(listing: ListingCard): string {
 
 function extractFloor(listing: ListingCard): number | null {
   for (const item of readRawChars(listing)) {
+    if (/\b(bajo|ground floor)\b/i.test(item)) {
+      return 0;
+    }
+
     const match = item.match(/(\d+)[ªa]?\s*planta/i);
     if (!match?.[1]) {
       continue;
@@ -191,6 +211,17 @@ function scoreListing(listing: ListingCard, criteria: NormalizedFilters): Listin
     }
   }
 
+  if (criteria.prefer_exterior && /\b(exterior|outside[- ]facing|toda exterior|todo exterior)\b/i.test(combinedText(listing))) {
+    score += 5;
+    why.push("Exterior preference satisfied");
+  }
+
+  const listingFloor = extractFloor(listing);
+  if (criteria.min_floor !== undefined && listingFloor !== null && listingFloor >= criteria.min_floor) {
+    score += 2;
+    why.push(`Floor requirement satisfied (${listingFloor}ª)`);
+  }
+
   if (criteria.renovation_ok && /(reform|renov|renovar)/i.test(listing.description ?? "")) {
     score += 3;
     why.push("Renovation-friendly description");
@@ -205,7 +236,24 @@ function scoreListing(listing: ListingCard, criteria: NormalizedFilters): Listin
 
 export function rankListings(listings: ListingCard[], criteria: NormalizedFilters): ListingCard[] {
   return listings
-    .filter((listing) => matchesHardConstraints(listing, criteria))
+    .filter((listing) => {
+      const floor = extractFloor(listing);
+      if (criteria.exclude_ground_floor && floor === 0) {
+        return false;
+      }
+
+      if (criteria.min_floor !== undefined) {
+        if (floor === null) {
+          if (criteria.strict_constraints ?? true) {
+            return false;
+          }
+        } else if (floor < criteria.min_floor) {
+          return false;
+        }
+      }
+
+      return matchesHardConstraints(listing, criteria);
+    })
     .map((listing) => scoreListing(listing, criteria))
     .sort((a, b) => b.score - a.score);
 }

@@ -25,9 +25,12 @@ Supporting KPIs:
 
 ## Product Principles
 
-- Natural language first, structured filters second.
+- MCP aggregator mode is model-planned and backend-deterministic.
+- `query_text` is context; explicit constraints drive execution.
+- Multi-location search is first-class (`locations[]`) for broad discovery.
 - Hard constraints are respected before ranking.
 - Results are explainable (`why_matched`) and source-linked.
+- Coverage diagnostics must show what was searched and where gaps remain.
 - Users can go deeper in the original portal at any time.
 - Guest mode is frictionless; accounts unlock durable value.
 
@@ -42,6 +45,8 @@ Supporting KPIs:
 - Ship vertical slices early and instrument them.
 - Prefer reversible architecture choices.
 - Keep contracts explicit across parser, connector, ranking, and MCP layers.
+- Define stable canonical fields so heterogeneous portal payloads stay composable.
+- Apply unsupported portal filters post-fetch deterministically and report it.
 - Fail loudly on upstream schema drift.
 - Build for observability from day one.
 - Constraint-to-capability mindset: when APIs are closed, build compliant scraping systems that are rate-limited, monitorable, and replaceable.
@@ -67,3 +72,4 @@ Supporting KPIs:
 - 2026-02-24: `pisos.com` connector runs in dual mode (official API when key exists, compliant scraping fallback when key is unavailable) so integration work is never blocked by credential availability.
 - 2026-02-24: Vercel selected as default deployment platform for MCP and demo surfaces.
 - 2026-02-24: Delivery order clarified: connector functionality first, compliance hardening immediately after first live user path.
+- 2026-02-24: MCP contract shifted to model-driven execution: structured constraints + multi-location support + coverage diagnostics; parser retained as legacy fallback.

@@ -8,10 +8,15 @@ export interface SearchInput {
   transaction_type?: TransactionType;
   property_types?: PropertyType[];
   city?: string;
+  locations?: string[];
   nearby_towns?: boolean;
   min_rooms?: number;
   min_capacity_people?: number;
   max_price_eur?: number;
+  min_floor?: number;
+  exclude_ground_floor?: boolean;
+  prefer_exterior?: boolean;
+  strict_constraints?: boolean;
   renovation_ok?: boolean;
   tags?: string[];
 }
@@ -25,6 +30,10 @@ export interface NormalizedFilters {
   min_rooms?: number;
   min_capacity_people?: number;
   max_price_eur?: number;
+  min_floor?: number;
+  exclude_ground_floor?: boolean;
+  prefer_exterior?: boolean;
+  strict_constraints?: boolean;
   renovation_ok: boolean;
   tags: string[];
   original_query?: string;

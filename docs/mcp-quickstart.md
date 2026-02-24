@@ -23,6 +23,18 @@ pnpm --filter @fyn/mcp-server dev
 This starts a stdio MCP server that exposes:
 - `search_properties`
 
+## Tool contract (recommended)
+
+Use structured constraints so the model can act as an agent and Fyn stays deterministic:
+
+- `locations[]` for multi-city/town coverage
+- `property_types[]`, `transaction_type`, `max_price_eur`, `min_rooms`
+- `min_floor`, `exclude_ground_floor`, `prefer_exterior`
+- `strict_constraints`
+- `per_location_limit`, `max_results_total`
+
+`query_text` is contextual and optional in this mode.
+
 ## 4. Run smoke test via MCP client
 
 ```bash
@@ -30,6 +42,8 @@ pnpm smoke:mcp -- "Find me a flat in Valencia with at least three rooms, max 350
 ```
 
 With no API key, the connector first uses HTML scraping fallback, then fixtures if scraping fails.
+
+Legacy note: if only `query_text` is provided, the parser fallback path is used. In diagnostics this appears as `execution.mode = "legacy_parser"`.
 
 ## 5. Live connector mode
 
