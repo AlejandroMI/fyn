@@ -181,6 +181,12 @@ function scoreListing(listing: ListingCard, criteria: NormalizedFilters): Listin
     }
   }
 
+  // Break ties in broad exploratory searches where many listings share the same tag-only score.
+  score += Math.min(4, Math.floor(listing.image_urls.length / 2));
+  if (criteria.min_rooms === undefined && listing.rooms !== null) {
+    score += Math.min(3, Math.max(0, listing.rooms - 2));
+  }
+
   if (hasLightIntent(criteria)) {
     const text = combinedText(listing);
     const floor = extractFloor(listing);
@@ -234,6 +240,32 @@ function scoreListing(listing: ListingCard, criteria: NormalizedFilters): Listin
   };
 }
 
+function compareListings(a: ListingCard, b: ListingCard): number {
+  if (b.score !== a.score) {
+    return b.score - a.score;
+  }
+
+  const aPrice = a.price_eur ?? Number.MAX_SAFE_INTEGER;
+  const bPrice = b.price_eur ?? Number.MAX_SAFE_INTEGER;
+  if (aPrice !== bPrice) {
+    return aPrice - bPrice;
+  }
+
+  const aRooms = a.rooms ?? -1;
+  const bRooms = b.rooms ?? -1;
+  if (bRooms !== aRooms) {
+    return bRooms - aRooms;
+  }
+
+  const aSeen = Date.parse(a.last_seen_at);
+  const bSeen = Date.parse(b.last_seen_at);
+  if (Number.isFinite(aSeen) && Number.isFinite(bSeen) && bSeen !== aSeen) {
+    return bSeen - aSeen;
+  }
+
+  return a.canonical_id.localeCompare(b.canonical_id);
+}
+
 export function rankListings(listings: ListingCard[], criteria: NormalizedFilters): ListingCard[] {
   return listings
     .filter((listing) => {
@@ -255,5 +287,5 @@ export function rankListings(listings: ListingCard[], criteria: NormalizedFilter
       return matchesHardConstraints(listing, criteria);
     })
     .map((listing) => scoreListing(listing, criteria))
-    .sort((a, b) => b.score - a.score);
+    .sort(compareListings);
 }

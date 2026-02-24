@@ -55,6 +55,136 @@ function uniqueStrings(values: string[]): string[] {
   );
 }
 
+interface CollectedCandidate {
+  listing: any;
+  search_location: string;
+}
+
+function readFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function listingKey(listing: Record<string, unknown>): string {
+  const portal = typeof listing.portal === "string" ? listing.portal : "unknown";
+  const listingId =
+    typeof listing.portal_listing_id === "string"
+      ? listing.portal_listing_id
+      : typeof listing.canonical_id === "string"
+        ? listing.canonical_id
+        : "";
+
+  return `${portal}:${listingId}`;
+}
+
+function compareRankedListings(a: Record<string, unknown>, b: Record<string, unknown>): number {
+  const aScore = readFiniteNumber(a.score) ?? 0;
+  const bScore = readFiniteNumber(b.score) ?? 0;
+  if (bScore !== aScore) {
+    return bScore - aScore;
+  }
+
+  const aPrice = readFiniteNumber(a.price_eur) ?? Number.MAX_SAFE_INTEGER;
+  const bPrice = readFiniteNumber(b.price_eur) ?? Number.MAX_SAFE_INTEGER;
+  if (aPrice !== bPrice) {
+    return aPrice - bPrice;
+  }
+
+  const aRooms = readFiniteNumber(a.rooms) ?? -1;
+  const bRooms = readFiniteNumber(b.rooms) ?? -1;
+  if (bRooms !== aRooms) {
+    return bRooms - aRooms;
+  }
+
+  const aSeen = typeof a.last_seen_at === "string" ? Date.parse(a.last_seen_at) : Number.NaN;
+  const bSeen = typeof b.last_seen_at === "string" ? Date.parse(b.last_seen_at) : Number.NaN;
+  if (Number.isFinite(aSeen) && Number.isFinite(bSeen) && bSeen !== aSeen) {
+    return bSeen - aSeen;
+  }
+
+  const aId = typeof a.canonical_id === "string" ? a.canonical_id : "";
+  const bId = typeof b.canonical_id === "string" ? b.canonical_id : "";
+  return aId.localeCompare(bId);
+}
+
+function selectDiversifiedListings(
+  candidates: CollectedCandidate[],
+  requestedLocations: string[],
+  maxResultsTotal: number
+): any[] {
+  if (requestedLocations.length <= 1) {
+    return candidates
+      .map((candidate) => candidate.listing)
+      .sort(compareRankedListings)
+      .slice(0, maxResultsTotal);
+  }
+
+  const byLocation = new Map<string, CollectedCandidate[]>();
+  for (const candidate of candidates) {
+    const existing = byLocation.get(candidate.search_location) ?? [];
+    existing.push(candidate);
+    byLocation.set(candidate.search_location, existing);
+  }
+
+  for (const group of byLocation.values()) {
+    group.sort((a, b) => compareRankedListings(a.listing, b.listing));
+  }
+
+  const selected: any[] = [];
+  const used = new Set<string>();
+
+  for (const location of requestedLocations) {
+    if (selected.length >= maxResultsTotal) {
+      break;
+    }
+
+    const group = byLocation.get(location);
+    if (!group || group.length === 0) {
+      continue;
+    }
+
+    const candidate = group.shift();
+    if (!candidate) {
+      continue;
+    }
+
+    const key = listingKey(candidate.listing);
+    if (used.has(key)) {
+      continue;
+    }
+
+    used.add(key);
+    selected.push(candidate.listing);
+  }
+
+  if (selected.length >= maxResultsTotal) {
+    return selected.slice(0, maxResultsTotal);
+  }
+
+  const leftovers = candidates
+    .filter((candidate) => !used.has(listingKey(candidate.listing)))
+    .sort((a, b) => compareRankedListings(a.listing, b.listing));
+
+  for (const candidate of leftovers) {
+    if (selected.length >= maxResultsTotal) {
+      break;
+    }
+    selected.push(candidate.listing);
+  }
+
+  return selected.slice(0, maxResultsTotal);
+}
+
 function readRawChars(listing: Record<string, unknown>): string[] {
   const raw = listing.raw;
   if (!raw || typeof raw !== "object") {
@@ -103,6 +233,41 @@ interface PresentationCard {
   facts: string[];
   score: number;
   why_matched: string[];
+  latitude?: number;
+  longitude?: number;
+}
+
+function readCoordinates(listing: Record<string, unknown>): [number, number] | null {
+  const directLat = readFiniteNumber(listing.latitude ?? listing.lat);
+  const directLon = readFiniteNumber(listing.longitude ?? listing.lng ?? listing.lon);
+
+  if (
+    directLat !== null &&
+    directLon !== null &&
+    Math.abs(directLat) <= 90 &&
+    Math.abs(directLon) <= 180
+  ) {
+    return [directLat, directLon];
+  }
+
+  const raw = listing.raw;
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  const rawObj = raw as Record<string, unknown>;
+  const lat = readFiniteNumber(
+    rawObj.lat ?? rawObj.latitude ?? rawObj.geo_lat ?? rawObj.location_lat
+  );
+  const lon = readFiniteNumber(
+    rawObj.lng ?? rawObj.lon ?? rawObj.longitude ?? rawObj.geo_lng ?? rawObj.location_lng
+  );
+
+  if (lat === null || lon === null || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    return null;
+  }
+
+  return [lat, lon];
 }
 
 function toPresentationCard(listing: Record<string, unknown>, locale: "es" | "en"): PresentationCard {
@@ -127,6 +292,7 @@ function toPresentationCard(listing: Record<string, unknown>, locale: "es" | "en
   const whyMatched = Array.isArray(listing.why_matched)
     ? listing.why_matched.filter((value): value is string => typeof value === "string")
     : [];
+  const coordinates = readCoordinates(listing);
 
   return {
     canonical_id: typeof listing.canonical_id === "string" ? listing.canonical_id : "",
@@ -137,7 +303,8 @@ function toPresentationCard(listing: Record<string, unknown>, locale: "es" | "en
     price: formatPrice(listing.price_eur, locale),
     facts,
     score: typeof listing.score === "number" ? listing.score : 0,
-    why_matched: whyMatched.slice(0, 3)
+    why_matched: whyMatched.slice(0, 3),
+    ...(coordinates ? { latitude: coordinates[0], longitude: coordinates[1] } : {})
   };
 }
 
@@ -405,7 +572,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         const sourceKinds = new Set<string>();
         const connectorWarnings: string[] = [];
         const coverage: Array<Record<string, unknown>> = [];
-        const collected: any[] = [];
+        const collected: CollectedCandidate[] = [];
         let firstConnectorError: InstanceType<typeof ConnectorError> | null = null;
 
         let criteria: any;
@@ -426,7 +593,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
               locations_requested: requestedLocations,
               locations_searched: [],
               sources: allowedSources,
-              per_location_limit: requestedLocations.length > 0 ? perLocationLimit : undefined,
+              ...(requestedLocations.length > 0 ? { per_location_limit: perLocationLimit } : {}),
               max_results_total: maxResultsTotal,
               strict_constraints: strictConstraints
             }
@@ -461,101 +628,85 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             }
           };
           listings = [];
-        } else if (requestedLocations.length === 0) {
+        } else {
           criteria = { ...baseCriteria };
-          try {
-            const result = await connector.search(criteria as any);
-            sourceKinds.add(result.diagnostics.source);
-            const discoveryWarnings = uniqueStrings([
-              "No city/locations provided; running discovery search because `strict_constraints=false`.",
-              ...result.diagnostics.connector_warnings
-            ]);
-            connectorWarnings.push(...discoveryWarnings);
-            const ranked = rankListings(result.listings, criteria as any).slice(0, maxResultsTotal);
-            collected.push(...ranked);
-            coverage.push({
-              location: "__discovery__",
-              source: result.diagnostics.source,
-              candidates: result.listings.length,
-              returned: ranked.length,
-              warnings: discoveryWarnings
-            });
-          } catch (error) {
-            if (error instanceof ConnectorError) {
-              firstConnectorError = error;
+          if (requestedLocations.length === 0) {
+            try {
+              const result = await connector.search(criteria as any);
+              sourceKinds.add(result.diagnostics.source);
+              const discoveryWarnings = uniqueStrings([
+                "No city/locations provided; running discovery search because `strict_constraints=false`.",
+                ...result.diagnostics.connector_warnings
+              ]);
+              connectorWarnings.push(...discoveryWarnings);
+              const ranked = rankListings(result.listings, criteria as any).slice(0, maxResultsTotal);
+              collected.push(
+                ...ranked.map((listing) => ({
+                  listing,
+                  search_location: "__discovery__"
+                }))
+              );
               coverage.push({
                 location: "__discovery__",
-                candidates: 0,
-                returned: 0,
-                warnings: [],
-                error_code: error.code,
-                error_message: error.message
-              });
-            } else {
-              throw error;
-            }
-          }
-
-          if (collected.length === 0 && firstConnectorError) {
-            throw firstConnectorError;
-          }
-
-          const uniqueCandidates = uniqueBy(
-            collected,
-            (listing) => `${String(listing.portal)}:${String(listing.portal_listing_id)}`
-          );
-          listings = rankListings(uniqueCandidates as any, criteria as any).slice(0, maxResultsTotal) as any[];
-          diagnostics = {
-            source: selectSource(sourceKinds),
-            connector_warnings: uniqueStrings(connectorWarnings),
-            request_warnings: [],
-            total_candidates: uniqueCandidates.length,
-            returned_count: listings.length,
-            coverage,
-            execution: {
-              mode: "structured",
-              locations_requested: requestedLocations,
-              locations_searched: coverage
-                .filter((entry) => entry.error_code === undefined)
-                .map((entry) => entry.location),
-              sources: allowedSources,
-              max_results_total: maxResultsTotal,
-              strict_constraints: strictConstraints
-            }
-          };
-        } else {
-          for (const location of requestedLocations) {
-            const localCriteria = { ...baseCriteria, city: location };
-            try {
-              const result = await connector.search(localCriteria as any);
-              sourceKinds.add(result.diagnostics.source);
-              connectorWarnings.push(...result.diagnostics.connector_warnings);
-              const ranked = rankListings(result.listings, localCriteria as any).slice(0, perLocationLimit);
-              collected.push(...ranked);
-              coverage.push({
-                location,
                 source: result.diagnostics.source,
                 candidates: result.listings.length,
                 returned: ranked.length,
-                warnings: result.diagnostics.connector_warnings
+                warnings: discoveryWarnings
               });
             } catch (error) {
               if (error instanceof ConnectorError) {
-                if (!firstConnectorError) {
-                  firstConnectorError = error;
-                }
+                firstConnectorError = error;
                 coverage.push({
-                  location,
+                  location: "__discovery__",
                   candidates: 0,
                   returned: 0,
                   warnings: [],
                   error_code: error.code,
                   error_message: error.message
                 });
-                continue;
+              } else {
+                throw error;
               }
+            }
+          } else {
+            for (const location of requestedLocations) {
+              const localCriteria = { ...baseCriteria, city: location };
+              try {
+                const result = await connector.search(localCriteria as any);
+                sourceKinds.add(result.diagnostics.source);
+                connectorWarnings.push(...result.diagnostics.connector_warnings);
+                const ranked = rankListings(result.listings, localCriteria as any).slice(0, perLocationLimit);
+                collected.push(
+                  ...ranked.map((listing) => ({
+                    listing,
+                    search_location: location
+                  }))
+                );
+                coverage.push({
+                  location,
+                  source: result.diagnostics.source,
+                  candidates: result.listings.length,
+                  returned: ranked.length,
+                  warnings: result.diagnostics.connector_warnings
+                });
+              } catch (error) {
+                if (error instanceof ConnectorError) {
+                  if (!firstConnectorError) {
+                    firstConnectorError = error;
+                  }
+                  coverage.push({
+                    location,
+                    candidates: 0,
+                    returned: 0,
+                    warnings: [],
+                    error_code: error.code,
+                    error_message: error.message
+                  });
+                  continue;
+                }
 
-              throw error;
+                throw error;
+              }
             }
           }
 
@@ -563,16 +714,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             throw firstConnectorError;
           }
 
-          const uniqueCandidates = uniqueBy(
-            collected,
-            (listing) => `${String(listing.portal)}:${String(listing.portal_listing_id)}`
-          );
-          criteria = requestedLocations.length === 1
-            ? { ...baseCriteria, city: requestedLocations[0] }
-            : { ...baseCriteria };
-          listings = rankListings(uniqueCandidates as any, criteria as any).slice(0, maxResultsTotal) as any[];
+          const uniqueCandidates = uniqueBy(collected, (candidate) => listingKey(candidate.listing));
+          const rankingCriteria =
+            requestedLocations.length === 1
+              ? { ...baseCriteria, city: requestedLocations[0] }
+              : { ...baseCriteria };
+          criteria = rankingCriteria;
+          listings =
+            requestedLocations.length > 1
+              ? selectDiversifiedListings(uniqueCandidates, requestedLocations, maxResultsTotal)
+              : rankListings(
+                  uniqueCandidates.map((candidate) => candidate.listing) as any,
+                  rankingCriteria as any
+                ).slice(0, maxResultsTotal);
+
           const uniqueWarnings = uniqueStrings(connectorWarnings);
-          uniqueWarnings.unshift(`Executed multi-location search across ${requestedLocations.length} locations.`);
+          if (requestedLocations.length > 1) {
+            uniqueWarnings.unshift(
+              `Executed multi-location search across ${requestedLocations.length} locations.`
+            );
+          }
+
           diagnostics = {
             source: selectSource(sourceKinds),
             connector_warnings: uniqueWarnings,
@@ -585,9 +747,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
               locations_requested: requestedLocations,
               locations_searched: coverage
                 .filter((entry) => entry.error_code === undefined)
-                .map((entry) => entry.location),
+                .map((entry) => String(entry.location)),
               sources: allowedSources,
-              per_location_limit: perLocationLimit,
+              ...(requestedLocations.length > 0 ? { per_location_limit: perLocationLimit } : {}),
               max_results_total: maxResultsTotal,
               strict_constraints: strictConstraints
             }
@@ -595,9 +757,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         }
 
         const locale = criteria.locale === "es" ? "es" : "en";
-        const cards = listings
-          .slice(0, 8)
-          .map((listing) => toPresentationCard(listing, locale));
+        const cards = listings.slice(0, 20).map((listing) => toPresentationCard(listing, locale));
         const response = {
           criteria,
           listings,

@@ -136,6 +136,11 @@ interface SearchExecutionResult {
   };
 }
 
+interface CollectedCandidate {
+  listing: ListingCard;
+  search_location: string;
+}
+
 function readBooleanEnv(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
   if (!raw) {
@@ -199,6 +204,104 @@ function uniqueStrings(values: string[]): string[] {
   );
 }
 
+function listingKey(listing: ListingCard): string {
+  return `${listing.portal}:${listing.portal_listing_id}`;
+}
+
+function compareRankedListings(a: ListingCard, b: ListingCard): number {
+  if (b.score !== a.score) {
+    return b.score - a.score;
+  }
+
+  const aPrice = a.price_eur ?? Number.MAX_SAFE_INTEGER;
+  const bPrice = b.price_eur ?? Number.MAX_SAFE_INTEGER;
+  if (aPrice !== bPrice) {
+    return aPrice - bPrice;
+  }
+
+  const aRooms = a.rooms ?? -1;
+  const bRooms = b.rooms ?? -1;
+  if (bRooms !== aRooms) {
+    return bRooms - aRooms;
+  }
+
+  const aSeen = Date.parse(a.last_seen_at);
+  const bSeen = Date.parse(b.last_seen_at);
+  if (Number.isFinite(aSeen) && Number.isFinite(bSeen) && bSeen !== aSeen) {
+    return bSeen - aSeen;
+  }
+
+  return a.canonical_id.localeCompare(b.canonical_id);
+}
+
+function selectDiversifiedListings(
+  candidates: CollectedCandidate[],
+  requestedLocations: string[],
+  maxResultsTotal: number
+): ListingCard[] {
+  if (requestedLocations.length <= 1) {
+    return candidates
+      .map((candidate) => candidate.listing)
+      .sort(compareRankedListings)
+      .slice(0, maxResultsTotal);
+  }
+
+  const byLocation = new Map<string, CollectedCandidate[]>();
+  for (const candidate of candidates) {
+    const existing = byLocation.get(candidate.search_location) ?? [];
+    existing.push(candidate);
+    byLocation.set(candidate.search_location, existing);
+  }
+
+  for (const group of byLocation.values()) {
+    group.sort((a, b) => compareRankedListings(a.listing, b.listing));
+  }
+
+  const selected: ListingCard[] = [];
+  const used = new Set<string>();
+
+  for (const location of requestedLocations) {
+    if (selected.length >= maxResultsTotal) {
+      break;
+    }
+
+    const group = byLocation.get(location);
+    if (!group || group.length === 0) {
+      continue;
+    }
+
+    const candidate = group.shift();
+    if (!candidate) {
+      continue;
+    }
+
+    const key = listingKey(candidate.listing);
+    if (used.has(key)) {
+      continue;
+    }
+
+    used.add(key);
+    selected.push(candidate.listing);
+  }
+
+  if (selected.length >= maxResultsTotal) {
+    return selected.slice(0, maxResultsTotal);
+  }
+
+  const leftovers = candidates
+    .filter((candidate) => !used.has(listingKey(candidate.listing)))
+    .sort((a, b) => compareRankedListings(a.listing, b.listing));
+
+  for (const candidate of leftovers) {
+    if (selected.length >= maxResultsTotal) {
+      break;
+    }
+    selected.push(candidate.listing);
+  }
+
+  return selected.slice(0, maxResultsTotal);
+}
+
 function readRawChars(listing: ListingCard): string[] {
   const chars = listing.raw?.chars;
   if (!Array.isArray(chars)) {
@@ -242,11 +345,47 @@ interface PresentationCard {
   facts: string[];
   score: number;
   why_matched: string[];
+  latitude?: number;
+  longitude?: number;
+}
+
+function readCoordinatesFromRaw(
+  raw: ListingCard["raw"] | undefined
+): [number, number] | null {
+  if (!raw) {
+    return null;
+  }
+
+  const candidates = raw as Record<string, unknown>;
+  const latValue =
+    candidates.lat ?? candidates.latitude ?? candidates.geo_lat ?? candidates.location_lat;
+  const lonValue =
+    candidates.lng ??
+    candidates.lon ??
+    candidates.longitude ??
+    candidates.geo_lng ??
+    candidates.location_lng;
+
+  const lat =
+    typeof latValue === "number" ? latValue : typeof latValue === "string" ? Number(latValue) : NaN;
+  const lon =
+    typeof lonValue === "number" ? lonValue : typeof lonValue === "string" ? Number(lonValue) : NaN;
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null;
+  }
+
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    return null;
+  }
+
+  return [lat, lon];
 }
 
 function toPresentationCard(listing: ListingCard, locale: Locale): PresentationCard {
   const floorLabel = extractFloorLabel(listing);
   const facts: string[] = [];
+  const coordinates = readCoordinatesFromRaw(listing.raw);
 
   if (listing.rooms !== null) {
     facts.push(locale === "es" ? `${listing.rooms} hab.` : `${listing.rooms} rooms`);
@@ -269,7 +408,8 @@ function toPresentationCard(listing: ListingCard, locale: Locale): PresentationC
     price: formatPrice(listing.price_eur, locale),
     facts,
     score: listing.score,
-    why_matched: listing.why_matched.slice(0, 3)
+    why_matched: listing.why_matched.slice(0, 3),
+    ...(coordinates ? { latitude: coordinates[0], longitude: coordinates[1] } : {})
   };
 }
 
@@ -430,7 +570,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
   const sourceKinds = new Set<ConnectorSource>();
   const connectorWarnings: string[] = [];
   const coverage: CoverageEntry[] = [];
-  const collected: ListingCard[] = [];
+  const collected: CollectedCandidate[] = [];
   let firstConnectorError: ConnectorError | null = null;
 
   if (requestedLocations.length === 0) {
@@ -444,7 +584,12 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
       ]);
       connectorWarnings.push(...discoveryWarnings);
       const ranked = rankListings(result.listings, criteria).slice(0, maxResultsTotal);
-      collected.push(...ranked);
+      collected.push(
+        ...ranked.map((listing) => ({
+          listing,
+          search_location: "__discovery__"
+        }))
+      );
       coverage.push({
         location: "__discovery__",
         source: result.diagnostics.source,
@@ -475,7 +620,12 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
         sourceKinds.add(result.diagnostics.source);
         connectorWarnings.push(...result.diagnostics.connector_warnings);
         const ranked = rankListings(result.listings, criteria).slice(0, perLocationLimit);
-        collected.push(...ranked);
+        collected.push(
+          ...ranked.map((listing) => ({
+            listing,
+            search_location: location
+          }))
+        );
         coverage.push({
           location,
           source: result.diagnostics.source,
@@ -510,12 +660,17 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
 
   const uniqueCandidates = uniqueBy(
     collected,
-    (listing) => `${listing.portal}:${listing.portal_listing_id}`
+    (candidate) => listingKey(candidate.listing)
   );
   const rankingCriteria = requestedLocations.length === 1
     ? criteriaForLocation(baseCriteria, requestedLocations[0])
     : criteriaForLocation(baseCriteria);
-  const ranked = rankListings(uniqueCandidates, rankingCriteria).slice(0, maxResultsTotal);
+  const ranked = requestedLocations.length > 1
+    ? selectDiversifiedListings(uniqueCandidates, requestedLocations, maxResultsTotal)
+    : rankListings(
+      uniqueCandidates.map((candidate) => candidate.listing),
+      rankingCriteria
+    ).slice(0, maxResultsTotal);
   const uniqueWarnings = uniqueStrings(connectorWarnings);
 
   if (requestedLocations.length > 1) {
@@ -591,7 +746,7 @@ export function createFynMcpServer(connector = connectorFromEnv()): McpServer {
       try {
         const execution = await runStructuredSearch(payload, connector);
         const cards = execution.listings
-          .slice(0, 8)
+          .slice(0, 20)
           .map((listing) => toPresentationCard(listing, execution.criteria.locale));
         const response = {
           criteria: execution.criteria,
