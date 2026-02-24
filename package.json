@@ -13,8 +13,7 @@
     "lint": "turbo run lint",
     "smoke:mcp": "pnpm --filter @fyn/mcp-server run smoke",
     "smoke:mcp:http": "pnpm --filter @fyn/mcp-server run smoke:http",
-    "smoke:search": "tsx scripts/smoke-search.ts",
-    "web:sync": "bash scripts/sync-web.sh"
+    "smoke:search": "tsx scripts/smoke-search.ts"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.27.0",
