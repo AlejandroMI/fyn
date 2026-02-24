@@ -25,6 +25,12 @@ const STRUCTURED_FIELDS = [
   "per_location_limit",
   "max_results_total"
 ] as const;
+const SEARCH_TOOL_DESCRIPTION =
+  "Search Spanish properties via MCP. The model must plan explicit constraints and location strategy, then call this tool deterministically. `query_text` is context-only and never a substitute for `city`/`locations`. For broad intents, send 3-10 locations in `locations[]`, then iterate using `diagnostics.coverage`.";
+const MISSING_LOCATION_WARNING =
+  "No `city` or `locations[]` provided. Discovery search is disabled when `strict_constraints=true`.";
+const MISSING_LOCATION_ACTION =
+  "Model action required: choose candidate cities/towns and retry with `locations[]` (recommended 3-10).";
 
 function readBooleanEnv(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
@@ -288,25 +294,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const sourceSchema = z.enum(["pisos"]);
 
   const toolSchema = {
-    query_text: z.string().optional(),
-    locale: localeSchema.optional(),
-    transaction_type: transactionSchema.optional(),
-    property_types: z.array(propertyTypeSchema).optional(),
-    city: z.string().optional(),
-    locations: z.array(z.string().min(1)).optional(),
-    nearby_towns: z.boolean().optional(),
-    min_rooms: z.number().int().nonnegative().optional(),
-    min_capacity_people: z.number().int().nonnegative().optional(),
-    max_price_eur: z.number().int().nonnegative().optional(),
-    min_floor: z.number().int().nonnegative().optional(),
-    exclude_ground_floor: z.boolean().optional(),
-    prefer_exterior: z.boolean().optional(),
-    strict_constraints: z.boolean().optional(),
-    renovation_ok: z.boolean().optional(),
-    tags: z.array(z.string()).optional(),
-    sources: z.array(sourceSchema).optional(),
-    per_location_limit: z.number().int().positive().max(50).optional(),
-    max_results_total: z.number().int().positive().max(200).optional()
+    query_text: z
+      .string()
+      .optional()
+      .describe("Optional context only. Do not use as the only input; always send structured constraints."),
+    locale: localeSchema.optional().describe("Response locale for cards and formatting (`es` or `en`)."),
+    transaction_type: transactionSchema
+      .optional()
+      .describe("Transaction mode (`buy` or `rent`)."),
+    property_types: z
+      .array(propertyTypeSchema)
+      .optional()
+      .describe("Property types (`flat`, `house`, `office`, `land`)."),
+    city: z
+      .string()
+      .optional()
+      .describe("Single location search target. Prefer `locations[]` for broad or exploratory intent."),
+    locations: z
+      .array(z.string().min(1))
+      .optional()
+      .describe("Primary geography control. Provide 3-10 cities/towns for broad searches."),
+    nearby_towns: z.boolean().optional().describe("Allow nearby towns around each requested location."),
+    min_rooms: z.number().int().nonnegative().optional().describe("Minimum bedrooms."),
+    min_capacity_people: z.number().int().nonnegative().optional().describe("Minimum people capacity."),
+    max_price_eur: z.number().int().nonnegative().optional().describe("Maximum budget in EUR."),
+    min_floor: z.number().int().nonnegative().optional().describe("Minimum floor index (0 = ground)."),
+    exclude_ground_floor: z.boolean().optional().describe("Exclude ground-floor properties."),
+    prefer_exterior: z.boolean().optional().describe("Boost exterior properties when true."),
+    strict_constraints: z
+      .boolean()
+      .optional()
+      .describe("Default true. When true and no location is provided, the tool returns guidance instead of discovery fallback."),
+    renovation_ok: z.boolean().optional().describe("Allow renovation-needed listings."),
+    tags: z.array(z.string()).optional().describe("Preference tags (e.g. `nature`, `views`, `natural_light`)."),
+    sources: z.array(sourceSchema).optional().describe("Source portals. Current deployment supports only `pisos`."),
+    per_location_limit: z
+      .number()
+      .int()
+      .positive()
+      .max(50)
+      .optional()
+      .describe("Max candidates kept per requested location before global rerank."),
+    max_results_total: z
+      .number()
+      .int()
+      .positive()
+      .max(200)
+      .optional()
+      .describe("Max returned listings after global rerank.")
   };
 
   const connector = new PisosConnector({
@@ -330,8 +365,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     "search_properties",
     {
       title: "Search Properties (Model-Driven)",
-      description:
-        "MCP aggregator search for Spanish properties. In structured mode, backend executes explicit constraints and does not infer subjective intent from `query_text`. Use `locations` for multi-city/town search and iterate from diagnostics coverage.",
+      description: SEARCH_TOOL_DESCRIPTION,
       inputSchema: toolSchema
     },
     async (payload: Record<string, unknown>) => {
@@ -353,6 +387,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           const perLocationLimit =
             typeof payload.per_location_limit === "number" ? payload.per_location_limit : 20;
           const baseCriteria = toBaseCriteria(payload);
+          const strictConstraints = baseCriteria.strict_constraints;
           const sourceKinds = new Set<string>();
           const connectorWarnings: string[] = [];
           const coverage: Array<Record<string, unknown>> = [];
@@ -375,7 +410,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
                 sources: allowedSources,
                 per_location_limit: requestedLocations.length > 0 ? perLocationLimit : undefined,
                 max_results_total: maxResultsTotal,
-                strict_constraints: baseCriteria.strict_constraints
+                strict_constraints: strictConstraints
+              }
+            };
+            listings = [];
+          } else if (requestedLocations.length === 0 && strictConstraints) {
+            criteria = { ...baseCriteria };
+            diagnostics = {
+              source: "fixture",
+              connector_warnings: [MISSING_LOCATION_WARNING, MISSING_LOCATION_ACTION],
+              parser_warnings: [
+                "`query_text` is contextual only. In strict structured mode, geography must be explicit."
+              ],
+              total_candidates: 0,
+              returned_count: 0,
+              coverage: [],
+              execution: {
+                mode: "structured",
+                locations_requested: [],
+                locations_searched: [],
+                sources: allowedSources,
+                max_results_total: maxResultsTotal,
+                strict_constraints: strictConstraints
+              },
+              action_required: {
+                code: "MISSING_LOCATIONS",
+                message: MISSING_LOCATION_WARNING,
+                retry_hint: "Send `locations[]` (recommended 3-10) or a single `city` and call the tool again."
               }
             };
             listings = [];
@@ -384,7 +445,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             try {
               const result = await connector.search(criteria as any);
               sourceKinds.add(result.diagnostics.source);
-              connectorWarnings.push(...result.diagnostics.connector_warnings);
+              const discoveryWarnings = uniqueStrings([
+                "No city/locations provided; running discovery search because `strict_constraints=false`.",
+                ...result.diagnostics.connector_warnings
+              ]);
+              connectorWarnings.push(...discoveryWarnings);
               const ranked = rankListings(result.listings, criteria as any).slice(0, maxResultsTotal);
               collected.push(...ranked);
               coverage.push({
@@ -392,7 +457,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
                 source: result.diagnostics.source,
                 candidates: result.listings.length,
                 returned: ranked.length,
-                warnings: result.diagnostics.connector_warnings
+                warnings: discoveryWarnings
               });
             } catch (error) {
               if (error instanceof ConnectorError) {
@@ -434,7 +499,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
                   .map((entry) => entry.location),
                 sources: allowedSources,
                 max_results_total: maxResultsTotal,
-                strict_constraints: baseCriteria.strict_constraints
+                strict_constraints: strictConstraints
               }
             };
           } else {
@@ -503,7 +568,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
                 sources: allowedSources,
                 per_location_limit: perLocationLimit,
                 max_results_total: maxResultsTotal,
-                strict_constraints: baseCriteria.strict_constraints
+                strict_constraints: strictConstraints
               }
             };
           }

@@ -34,6 +34,7 @@ Use structured constraints so the model can act as an agent and Fyn stays determ
 - `per_location_limit`, `max_results_total`
 
 `query_text` is contextual and optional in this mode.
+With `strict_constraints=true` (default), you must provide `city` or `locations[]`; otherwise the tool returns `action_required.code = "MISSING_LOCATIONS"` instead of running discovery fallback.
 
 ## 4. Run smoke test via MCP client
 

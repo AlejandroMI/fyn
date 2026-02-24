@@ -28,6 +28,7 @@ Supporting KPIs:
 - MCP aggregator mode is model-planned and backend-deterministic.
 - `query_text` is context; explicit constraints drive execution.
 - Multi-location search is first-class (`locations[]`) for broad discovery.
+- In strict mode, we do not run implicit geography discovery without `city` or `locations[]`.
 - Hard constraints are respected before ranking.
 - Results are explainable (`why_matched`) and source-linked.
 - Coverage diagnostics must show what was searched and where gaps remain.
@@ -73,3 +74,4 @@ Supporting KPIs:
 - 2026-02-24: Vercel selected as default deployment platform for MCP and demo surfaces.
 - 2026-02-24: Delivery order clarified: connector functionality first, compliance hardening immediately after first live user path.
 - 2026-02-24: MCP contract shifted to model-driven execution: structured constraints + multi-location support + coverage diagnostics; parser retained as legacy fallback.
+- 2026-02-24: Strict structured mode now requires explicit geography (`city` or `locations[]`); if missing, MCP returns action-required guidance instead of low-signal discovery fallback.

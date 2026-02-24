@@ -29,6 +29,7 @@ Connect Fyn's remote MCP endpoint to ChatGPT in Developer Mode and validate live
    - `Find me an office for +50 people in Valencia`
    - `Find me a flat in Valencia with at least three rooms, max 350k`
    - Then ask a broad query and force multi-location strategy (for example: "search 6 towns in Valencia/Madrid where nature + views are strong")
+   - Confirm the model sends `locations[]` for broad requests; `query_text` alone is insufficient in strict structured mode.
 7. Verify responses include:
    - card-style preview block (title, image, key facts, deep link)
    - explainable matches (`why_matched`)
@@ -36,6 +37,7 @@ Connect Fyn's remote MCP endpoint to ChatGPT in Developer Mode and validate live
    - `presentation_cards` in JSON payload for structured rendering
    - diagnostics (`source`, warnings, counts)
    - execution diagnostics (`mode`, searched locations, per-location coverage)
+   - if no geography is provided, expect `action_required.code = "MISSING_LOCATIONS"` and no fallback discovery results
 
 ## What To Capture
 
