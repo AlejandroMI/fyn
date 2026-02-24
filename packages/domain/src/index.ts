@@ -352,6 +352,62 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         display: none !important;
       }
 
+      .compact {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(220px, 1fr);
+        gap: 10px;
+        overflow-x: auto;
+        padding: 10px;
+      }
+
+      .compact-card {
+        background: var(--bg);
+        border-radius: 10px;
+        overflow: hidden;
+        display: grid;
+      }
+
+      .compact-media {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .compact-image {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        display: block;
+      }
+
+      .compact-empty {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: var(--surface);
+      }
+
+      .compact-body {
+        padding: 10px;
+        display: grid;
+        gap: 5px;
+      }
+
+      .compact-title {
+        margin: 0;
+        font-size: 0.86rem;
+        line-height: 1.3;
+      }
+
+      .compact-meta {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
       .map-root {
         height: 320px;
         width: 100%;
@@ -389,12 +445,22 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         border-bottom: 0;
       }
 
+      .card-media {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+      }
+
       .card-image {
         width: 100%;
         height: 88px;
         border-radius: 8px;
         object-fit: cover;
         background: var(--surface);
+        display: block;
       }
 
       .card-main {
@@ -405,6 +471,21 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         margin: 0;
         font-size: 0.91rem;
         line-height: 1.3;
+      }
+
+      .card-title-button {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .card-title-button:hover {
+        text-decoration: underline;
       }
 
       .card-title a {
@@ -452,6 +533,30 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         color: var(--text);
         white-space: nowrap;
         background: var(--surface);
+      }
+
+      .card-actions {
+        display: grid;
+        justify-items: end;
+        align-content: start;
+        gap: 8px;
+      }
+
+      .card-cta {
+        border: 0;
+        background: var(--accent);
+        color: #ffffff;
+        border-radius: 999px;
+        padding: 0.33rem 0.62rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .card-cta:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .empty {
@@ -508,6 +613,13 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         .card-image {
           height: 150px;
         }
+
+        .card-actions {
+          grid-auto-flow: column;
+          justify-content: space-between;
+          justify-items: start;
+          align-items: center;
+        }
       }
     </style>
   </head>
@@ -527,6 +639,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
       <section class="toolbar">
         <div class="segmented" role="tablist" aria-label="View mode">
           <button id="listTab" role="tab" type="button" aria-selected="true">List</button>
+          <button id="compactTab" role="tab" type="button" aria-selected="false">Compact</button>
           <button id="mapTab" role="tab" type="button" aria-selected="false">Map</button>
         </div>
         <div class="meta">
@@ -534,6 +647,10 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           <span id="locationPill" class="meta-pill">locations: 0</span>
           <span id="sourcePill" class="meta-pill">source: --</span>
         </div>
+      </section>
+
+      <section id="compactPanel" class="panel" hidden>
+        <div id="compactRoot" class="compact"></div>
       </section>
 
       <section id="mapPanel" class="panel" hidden>
@@ -576,10 +693,13 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         var markerLayer = null;
 
         var listTab = document.getElementById("listTab");
+        var compactTab = document.getElementById("compactTab");
         var mapTab = document.getElementById("mapTab");
         var listPanel = document.getElementById("listPanel");
+        var compactPanel = document.getElementById("compactPanel");
         var mapPanel = document.getElementById("mapPanel");
         var listRoot = document.getElementById("listRoot");
+        var compactRoot = document.getElementById("compactRoot");
         var mapRoot = document.getElementById("mapRoot");
         var headerSubtitle = document.getElementById("headerSubtitle");
         var countPill = document.getElementById("countPill");
@@ -630,6 +750,14 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
             return;
           }
           window.open(url, "_blank", "noopener,noreferrer");
+        }
+
+        function isSpanish() {
+          return !!(state.criteria && state.criteria.locale === "es");
+        }
+
+        function ctaLabel() {
+          return isSpanish() ? "Ver en pisos.com" : "View on pisos.com";
         }
 
         function locationLabelFromCard(card) {
@@ -835,8 +963,8 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           var facts = Array.isArray(card.facts) ? card.facts : [];
           var why = Array.isArray(card.why_matched) ? card.why_matched : [];
           var image = card.image_url
-            ? '<img class="card-image" src="' + escapeHtml(card.image_url) + '" alt="' + escapeHtml(card.title || "Property image") + '" loading="lazy" referrerpolicy="no-referrer" />'
-            : '<div class="card-image" aria-hidden="true"></div>';
+            ? '<button class="card-media" type="button" data-open-url="' + escapeHtml(card.url || "") + '" aria-label="' + escapeHtml(card.title || "Open listing") + '"><img class="card-image" src="' + escapeHtml(card.image_url) + '" alt="' + escapeHtml(card.title || "Property image") + '" loading="lazy" referrerpolicy="no-referrer" /></button>'
+            : '<button class="card-media" type="button" data-open-url="' + escapeHtml(card.url || "") + '" aria-label="' + escapeHtml(card.title || "Open listing") + '"><div class="card-image" aria-hidden="true"></div></button>';
 
           var factsHtml = facts
             .slice(0, 5)
@@ -851,12 +979,32 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
             '<article class="card">' +
             image +
             '<div class="card-main">' +
-            '<h2 class="card-title"><a href="' + escapeHtml(card.url || "#") + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.title || "Listing") + "</a></h2>" +
+            '<h2 class="card-title"><button class="card-title-button" type="button" data-open-url="' + escapeHtml(card.url || "") + '">' + escapeHtml(card.title || "Listing") + "</button></h2>" +
             '<p class="card-meta">' + escapeHtml((card.price || "Price unavailable") + " - " + (card.city || "Unknown")) + "</p>" +
             '<div class="facts">' + factsHtml + "</div>" +
             whyHtml +
             "</div>" +
+            '<div class="card-actions">' +
             '<span class="score">' + escapeHtml(String(card.score || 0)) + "/100</span>" +
+            '<button class="card-cta" type="button" data-open-url="' + escapeHtml(card.url || "") + '">' + escapeHtml(ctaLabel()) + "</button>" +
+            "</div>" +
+            "</article>"
+          );
+        }
+
+        function compactCardHtml(card) {
+          var image = card.image_url
+            ? '<button class="compact-media" type="button" data-open-url="' + escapeHtml(card.url || "") + '" aria-label="' + escapeHtml(card.title || "Open listing") + '"><img class="compact-image" src="' + escapeHtml(card.image_url) + '" alt="' + escapeHtml(card.title || "Property image") + '" loading="lazy" referrerpolicy="no-referrer" /></button>'
+            : '<button class="compact-media" type="button" data-open-url="' + escapeHtml(card.url || "") + '" aria-label="' + escapeHtml(card.title || "Open listing") + '"><div class="compact-empty" aria-hidden="true"></div></button>';
+
+          return (
+            '<article class="compact-card">' +
+            image +
+            '<div class="compact-body">' +
+            '<h3 class="compact-title">' + escapeHtml(card.title || "Listing") + "</h3>" +
+            '<p class="compact-meta">' + escapeHtml((card.price || "Price unavailable") + " - " + (card.city || "Unknown")) + "</p>" +
+            '<button class="card-cta" type="button" data-open-url="' + escapeHtml(card.url || "") + '">' + escapeHtml(ctaLabel()) + "</button>" +
+            "</div>" +
             "</article>"
           );
         }
@@ -867,6 +1015,14 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
             return;
           }
           listRoot.innerHTML = state.cards.map(cardHtml).join("");
+        }
+
+        function renderCompact() {
+          if (!state.cards.length) {
+            compactRoot.innerHTML = '<div class="empty">No listings to display. Try broader locations or loosen constraints.</div>';
+            return;
+          }
+          compactRoot.innerHTML = state.cards.slice(0, 12).map(compactCardHtml).join("");
         }
 
         function renderMeta() {
@@ -901,12 +1057,19 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         }
 
         function setView(view) {
-          state.view = view === "map" ? "map" : "list";
+          state.view = view === "map" || view === "compact" ? view : "list";
+          var listActive = state.view === "list";
+          var compactActive = state.view === "compact";
           var mapActive = state.view === "map";
-          listTab.setAttribute("aria-selected", mapActive ? "false" : "true");
+          listTab.setAttribute("aria-selected", listActive ? "true" : "false");
+          compactTab.setAttribute("aria-selected", compactActive ? "true" : "false");
           mapTab.setAttribute("aria-selected", mapActive ? "true" : "false");
-          listPanel.hidden = mapActive;
+          listPanel.hidden = !listActive;
+          compactPanel.hidden = !compactActive;
           mapPanel.hidden = !mapActive;
+          if (compactActive) {
+            renderCompact();
+          }
           if (mapActive) {
             renderMap();
           }
@@ -917,6 +1080,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           renderHeader();
           renderMeta();
           renderList();
+          renderCompact();
           if (state.view === "map") {
             renderMap();
           }
@@ -943,8 +1107,56 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           setView("list");
         });
 
+        compactTab.addEventListener("click", function () {
+          setView("compact");
+        });
+
         mapTab.addEventListener("click", function () {
           setView("map");
+        });
+
+        document.body.addEventListener("click", function (event) {
+          var target = event.target;
+          if (!target || typeof target.closest !== "function") {
+            return;
+          }
+
+          var clickable = target.closest("[data-open-url]");
+          if (!clickable) {
+            return;
+          }
+
+          var url = clickable.getAttribute("data-open-url") || "";
+          if (!url) {
+            return;
+          }
+
+          event.preventDefault();
+          openExternal(url);
+        });
+
+        document.body.addEventListener("keydown", function (event) {
+          if (event.key !== "Enter" && event.key !== " ") {
+            return;
+          }
+
+          var target = event.target;
+          if (!target || typeof target.closest !== "function") {
+            return;
+          }
+
+          var clickable = target.closest("[data-open-url]");
+          if (!clickable) {
+            return;
+          }
+
+          var url = clickable.getAttribute("data-open-url") || "";
+          if (!url) {
+            return;
+          }
+
+          event.preventDefault();
+          openExternal(url);
         });
 
         openTopBtn.addEventListener("click", function () {
