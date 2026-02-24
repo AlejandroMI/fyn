@@ -72,3 +72,4 @@ Last updated: 2026-02-24
 - [x] Strict structured mode now blocks no-location execution and returns `action_required` guidance (`MISSING_LOCATIONS`) so models must provide `city`/`locations[]`.
 - [x] Legacy parser execution path removed; MCP backend now runs a single structured deterministic flow.
 - [x] MCP tool metadata centralized in shared domain constants and rewritten in Booking-style action language.
+- [x] `search_properties` now exposes an MCP Apps widget (`ui://widget/fyn-search-results-v1.html`) for map + card rendering in ChatGPT.

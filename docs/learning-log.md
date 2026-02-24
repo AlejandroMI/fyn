@@ -96,3 +96,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: centralize search tool metadata as shared domain constants and adopt Booking-style action description.
 - Action: moved tool title/description/field descriptions and missing-location guidance strings to `@fyn/domain` and wired both MCP runtimes to those shared exports.
 - Expected impact: one canonical prompt contract for model tool-selection and more stable behavior across environments.
+
+- Date: 2026-02-24
+- Context: Text-only MCP output in ChatGPT limited user trust and discovery speed for property browsing.
+- Signal: users needed richer visual scanning (images/cards/map) directly in the connector flow.
+- Decision: attach an MCP Apps UI component to `search_properties` using shared resource/template metadata.
+- Action: registered `ui://widget/fyn-search-results-v1.html`, added `_meta.ui.resourceUri` + `openai/outputTemplate`, and shipped a logo-inspired map + list widget that renders from `presentation_cards`.
+- Expected impact: immediate visual UX lift in ChatGPT while keeping backend deterministic and model-driven.

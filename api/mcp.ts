@@ -252,6 +252,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   ]);
 
   const {
+    buildSearchPropertiesToolMeta,
+    buildSearchPropertiesWidgetResourceMeta,
     ConnectorError,
     SEARCH_PROPERTIES_CONTEXT_ONLY_WARNING,
     SEARCH_PROPERTIES_FIELD_DESCRIPTIONS,
@@ -259,7 +261,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     SEARCH_PROPERTIES_MISSING_LOCATION_RETRY_HINT,
     SEARCH_PROPERTIES_MISSING_LOCATION_WARNING,
     SEARCH_PROPERTIES_TOOL_DESCRIPTION,
-    SEARCH_PROPERTIES_TOOL_TITLE
+    SEARCH_PROPERTIES_TOOL_TITLE,
+    SEARCH_PROPERTIES_WIDGET_HTML,
+    SEARCH_PROPERTIES_WIDGET_RESOURCE_MIME_TYPE,
+    SEARCH_PROPERTIES_WIDGET_RESOURCE_URI
   } = domainModule;
   const { PisosConnector } = connectorModule;
   const { rankListings } = scoringModule;
@@ -350,12 +355,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     version: "0.1.0"
   });
 
+  server.registerResource(
+    "fyn-search-results-widget",
+    SEARCH_PROPERTIES_WIDGET_RESOURCE_URI,
+    {
+      title: "Fyn Search Results Widget",
+      description: "Interactive map + cards for property search results.",
+      mimeType: SEARCH_PROPERTIES_WIDGET_RESOURCE_MIME_TYPE
+    },
+    async () => ({
+      contents: [
+        {
+          uri: SEARCH_PROPERTIES_WIDGET_RESOURCE_URI,
+          mimeType: SEARCH_PROPERTIES_WIDGET_RESOURCE_MIME_TYPE,
+          text: SEARCH_PROPERTIES_WIDGET_HTML,
+          _meta: buildSearchPropertiesWidgetResourceMeta()
+        }
+      ]
+    })
+  );
+
   server.registerTool(
     "search_properties",
     {
       title: SEARCH_PROPERTIES_TOOL_TITLE,
       description: SEARCH_PROPERTIES_TOOL_DESCRIPTION,
-      inputSchema: toolSchema
+      inputSchema: toolSchema,
+      _meta: buildSearchPropertiesToolMeta(),
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        openWorldHint: false,
+        idempotentHint: true
+      }
     },
     async (payload: Record<string, unknown>) => {
       try {

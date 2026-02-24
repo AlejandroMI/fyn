@@ -23,6 +23,8 @@ pnpm --filter @fyn/mcp-server dev
 This starts a stdio MCP server that exposes:
 - `search_properties`
 
+`search_properties` now also links an MCP Apps component resource (`ui://widget/fyn-search-results-v1.html`) so compatible hosts (like ChatGPT apps) can render map + cards from the same tool result.
+
 ## Tool contract (recommended)
 
 Use structured constraints so the model can act as an agent and Fyn stays deterministic:
