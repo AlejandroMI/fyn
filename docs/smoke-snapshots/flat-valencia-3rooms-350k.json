@@ -1,0 +1,58 @@
+{
+  "criteria": {
+    "locale": "en",
+    "property_types": [
+      "flat"
+    ],
+    "nearby_towns": true,
+    "renovation_ok": true,
+    "tags": [
+      "renovation"
+    ],
+    "city": "Valencia",
+    "min_rooms": 3,
+    "max_price_eur": 350000,
+    "original_query": "We are looking for a flat in Valencia with at least three rooms, open for renovations or really nearby towns. Max 350k"
+  },
+  "diagnostics": {
+    "source": "fixture",
+    "parser_warnings": [
+      "No transaction type detected; defaulting to broad portal search."
+    ],
+    "connector_warnings": [
+      "Missing PISOS_API_KEY; returning fixture listings."
+    ],
+    "total_candidates": 3,
+    "returned_count": 1
+  },
+  "listings": [
+    {
+      "canonical_id": "pisos-fixture-1",
+      "portal": "pisos",
+      "portal_listing_id": "fixture-1",
+      "url": "https://www.pisos.com/comprar/piso-valencia_capital_centre-4580701234_100500/",
+      "title": "Luminoso piso en Valencia centro",
+      "city": "Valencia",
+      "price_eur": 320000,
+      "rooms": 3,
+      "property_type": "flat",
+      "image_urls": [
+        "https://st3.idealista.com/blur/WEB_LISTING-M/0/id.pro.es.image.master/sample1.jpg"
+      ],
+      "last_seen_at": "2026-02-24T11:26:16.782Z",
+      "score": 77,
+      "why_matched": [
+        "City exact match",
+        "Within budget",
+        "Rooms requirement satisfied",
+        "Tag matches: renovation",
+        "Renovation-friendly description"
+      ],
+      "description": "Piso con potencial de reforma parcial y excelente ubicación.",
+      "tags": [
+        "renovation"
+      ],
+      "capacity_people": null
+    }
+  ]
+}

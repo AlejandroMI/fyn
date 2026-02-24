@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "idInmueble": "998877",
+      "titulo": "Piso reformado en Ruzafa",
+      "ciudad": "Valencia",
+      "precio": 335000,
+      "habitaciones": 3,
+      "tipoInmueble": "piso",
+      "urlDetalle": "https://www.pisos.com/inmueble/998877/",
+      "descripcion": "Vistas despejadas y reforma integral.",
+      "fotos": [
+        {
+          "url": "https://img.example/f1.jpg"
+        },
+        {
+          "url": "https://img.example/f2.jpg"
+        }
+      ]
+    }
+  ]
+}

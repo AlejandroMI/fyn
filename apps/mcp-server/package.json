@@ -1,0 +1,30 @@
+{
+  "name": "@fyn/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "dev:http": "npx vercel dev --listen 3000",
+    "build": "tsc -p tsconfig.json --outDir dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "smoke": "tsx src/smoke.ts",
+    "smoke:http": "tsx src/smoke-http.ts"
+  },
+  "dependencies": {
+    "@fyn/connectors-pisos": "workspace:*",
+    "@fyn/domain": "workspace:*",
+    "@fyn/parser": "workspace:*",
+    "@fyn/scoring": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.8"
+  }
+}

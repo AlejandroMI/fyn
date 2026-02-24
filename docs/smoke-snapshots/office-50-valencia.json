@@ -1,0 +1,48 @@
+{
+  "criteria": {
+    "locale": "en",
+    "property_types": [
+      "office"
+    ],
+    "nearby_towns": false,
+    "renovation_ok": false,
+    "tags": [],
+    "city": "Valencia",
+    "original_query": "Find me an office for +50 people in Valencia"
+  },
+  "diagnostics": {
+    "source": "fixture",
+    "parser_warnings": [
+      "No transaction type detected; defaulting to broad portal search."
+    ],
+    "connector_warnings": [
+      "Missing PISOS_API_KEY; returning fixture listings."
+    ],
+    "total_candidates": 3,
+    "returned_count": 1
+  },
+  "listings": [
+    {
+      "canonical_id": "pisos-fixture-3",
+      "portal": "pisos",
+      "portal_listing_id": "fixture-3",
+      "url": "https://www.pisos.com/comprar/oficina-valencia_capital-4580717777_100500/",
+      "title": "Oficina diáfana para equipos grandes",
+      "city": "Valencia",
+      "price_eur": 410000,
+      "rooms": 1,
+      "property_type": "office",
+      "image_urls": [],
+      "last_seen_at": "2026-02-24T11:26:16.105Z",
+      "score": 65,
+      "why_matched": [
+        "City exact match"
+      ],
+      "description": "Espacio apto para más de 50 puestos de trabajo.",
+      "tags": [
+        "office"
+      ],
+      "capacity_people": 60
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "fyn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fyn (Find Your Nest): natural-language property search connector.",
+  "packageManager": "pnpm@10.29.3",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:contract": "pnpm --filter @fyn/connectors-pisos run test:contract",
+    "lint": "turbo run lint",
+    "smoke:mcp": "pnpm --filter @fyn/mcp-server run smoke",
+    "smoke:mcp:http": "pnpm --filter @fyn/mcp-server run smoke:http",
+    "smoke:search": "tsx scripts/smoke-search.ts"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "@vercel/node": "^5.3.24",
+    "@types/node": "^22.13.10",
+    "tsx": "^4.20.6",
+    "turbo": "^2.8.10",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.8",
+    "zod": "^4.3.6"
+  }
+}

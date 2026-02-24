@@ -1,0 +1,28 @@
+{
+  "criteria": {
+    "locale": "en",
+    "property_types": [],
+    "nearby_towns": false,
+    "renovation_ok": false,
+    "tags": [
+      "nature",
+      "views",
+      "retreat"
+    ],
+    "transaction_type": "buy",
+    "city": "A natural",
+    "original_query": "I want to buy or build a second property in a natural place, great views, a retreat. Ideally in a place of outstanding beauty in Spain"
+  },
+  "diagnostics": {
+    "source": "fixture",
+    "parser_warnings": [
+      "No property type detected; querying all property types."
+    ],
+    "connector_warnings": [
+      "Missing PISOS_API_KEY; returning fixture listings."
+    ],
+    "total_candidates": 3,
+    "returned_count": 0
+  },
+  "listings": []
+}
