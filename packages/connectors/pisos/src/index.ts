@@ -5,7 +5,7 @@ import {
   type NormalizedFilters,
   type PropertyType,
   type TransactionType
-} from "../../../domain/src/index.js";
+} from "@fyn/domain";
 
 import { FIXTURE_LISTINGS } from "./fixture.js";
 

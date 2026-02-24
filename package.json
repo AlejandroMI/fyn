@@ -5,24 +5,40 @@
   "description": "Fyn (Find Your Nest): natural-language property search connector.",
   "packageManager": "pnpm@10.29.3",
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
+    "build": "next build",
+    "dev": "next dev -p 3008",
+    "dev:all": "turbo run dev --parallel",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:contract": "pnpm --filter @fyn/connectors-pisos run test:contract",
     "lint": "turbo run lint",
+    "dev:web": "next dev -p 3008",
+    "start": "next start -p 3008",
     "smoke:mcp": "pnpm --filter @fyn/mcp-server run smoke",
     "smoke:mcp:http": "pnpm --filter @fyn/mcp-server run smoke:http",
     "smoke:search": "tsx scripts/smoke-search.ts"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.27.0",
-    "@vercel/node": "^5.3.24",
     "@types/node": "^22.13.10",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vercel/node": "^5.3.24",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6",
     "turbo": "^2.8.10",
     "typescript": "^5.9.3",
     "vitest": "^2.1.8",
     "zod": "^4.3.6"
+  },
+  "dependencies": {
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "@fyn/connectors-pisos": "workspace:*",
+    "@fyn/domain": "workspace:*",
+    "@fyn/scoring": "workspace:*"
   }
 }

@@ -413,9 +413,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     import("@modelcontextprotocol/sdk/server/mcp.js"),
     import("@modelcontextprotocol/sdk/server/streamableHttp.js"),
     import("zod"),
-    import("../packages/domain/src/index.js"),
-    import("../packages/connectors/pisos/src/index.js"),
-    import("../packages/scoring/src/index.js")
+    import("@fyn/domain"),
+    import("@fyn/connectors-pisos"),
+    import("@fyn/scoring")
   ]);
 
   const {

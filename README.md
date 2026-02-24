@@ -1,15 +1,28 @@
 # Fyn
 
-Fyn (Find Your Nest) is an MCP-first property search aggregator. In model-driven mode, the LLM plans and sends explicit constraints while Fyn executes deterministic multi-portal searches and returns explainable, source-linked results.
+Fyn (Find Your Nest) is an MCP-first property search aggregator for Spain.
 
-## Current scope
+## Stack
 
-- First connector: `pisos.com`
-- Primary interface: MCP tool `search_properties`
-- Model-driven contract: structured filters + multi-location search + coverage diagnostics
-- Strict mode guardrail: `city` or `locations[]` is required (no implicit discovery fallback)
-- Single execution path: no NLP parser fallback in backend
-- Fallback mode: compliant HTML scraping (then fixtures) when API key is not available
+- Next.js + React + TypeScript (web)
+- Tailwind CSS + custom design system styles
+- Turborepo monorepo for MCP server + shared packages
+- MCP endpoint and health routes exposed from the same deployment
+
+## Architecture
+
+- `pages/`: website routes (`/`, `/developers`) + API routes (`/api/mcp`, `/api/health`)
+- `src/components/`: reusable UI components (shared nav, pages)
+- `src/content/site-content.ts`: single source of truth for ES/EN copy
+- `src/styles/globals.css`: design tokens and shared styles
+- `apps/mcp-server/`: MCP server app used by the connector runtime
+- `packages/*`: shared domain, scoring, and connector logic
+
+## Localization
+
+- Default locale: Spanish (`es`)
+- Secondary locale: English (`en`)
+- Locale switcher is available on product and developer pages
 
 ## Quick start
 
@@ -19,46 +32,49 @@ Fyn (Find Your Nest) is an MCP-first property search aggregator. In model-driven
 pnpm install
 ```
 
-2. Run checks:
+2. Run local web on `http://localhost:3008`:
+
+```bash
+pnpm dev:web
+```
+
+3. Build production web:
+
+```bash
+pnpm build
+```
+
+4. Start production build locally:
+
+```bash
+pnpm start
+```
+
+5. Run MCP server (stdio):
+
+```bash
+pnpm --filter @fyn/mcp-server dev
+```
+
+## Validation
 
 ```bash
 pnpm typecheck
 pnpm test
 ```
 
-3. Run MCP server (stdio):
-
-```bash
-pnpm --filter @fyn/mcp-server dev
-```
-
-4. Run MCP smoke test:
+## MCP smoke checks
 
 ```bash
 pnpm smoke:mcp -- "Find me a flat in Valencia with 3 rooms max 350k"
-```
-
-5. HTTP MCP smoke test (for deployed/remote endpoint):
-
-```bash
 pnpm smoke:mcp:http -- --url https://<your-project>.vercel.app/api/mcp "Find me an office for +50 people in Valencia"
 ```
 
-Detailed MCP setup: `docs/mcp-quickstart.md`.
+## Docs
 
-Execution backlog: `docs/backlog.md`.
-Learning log: `docs/learning-log.md`.
-ChatGPT connector research: `docs/chatgpt-connector-research-2026-02-24.md`.
-ChatGPT Developer Mode runbook: `docs/chatgpt-developer-mode-runbook.md`.
-
-## Environment
-
-Copy `.env.example` to `.env` and set your key when available.
-
-## Skills installed for this workspace
-
-- `frontend-design`
-- `mcp-integration`
-- `playwright`
-- `security-best-practices`
-- `vercel-deploy`
+- `docs/fyn-foundation.md`
+- `docs/backlog.md`
+- `docs/mcp-quickstart.md`
+- `docs/chatgpt-connector-research-2026-02-24.md`
+- `docs/chatgpt-developer-mode-runbook.md`
+- `docs/learning-log.md`

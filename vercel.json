@@ -1,5 +1,4 @@
 {
-  "outputDirectory": ".",
   "rewrites": [
     {
       "source": "/mcp",
