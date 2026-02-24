@@ -91,7 +91,7 @@
     }
 
     .container {
-      max-width: 1140px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 0 2rem;
     }
@@ -216,7 +216,7 @@
 
     /* Hero Section */
     .hero {
-      padding: 6rem 0 8rem;
+      padding: 5rem 0 6rem;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 4rem;
@@ -226,7 +226,7 @@
     @media (max-width: 900px) {
       .hero {
         grid-template-columns: 1fr;
-        padding: 4rem 0 6rem;
+        padding: 3.5rem 0 4.8rem;
       }
     }
 
@@ -236,7 +236,7 @@
 
     .hero h1 {
       font-family: var(--font-serif);
-      font-size: clamp(3.5rem, 6vw, 5.5rem);
+      font-size: clamp(3rem, 5.5vw, 4.8rem);
       line-height: 1;
       font-weight: 400;
       letter-spacing: -0.02em;
@@ -250,7 +250,7 @@
     }
 
     .hero p {
-      font-size: clamp(1.1rem, 2vw, 1.25rem);
+      font-size: clamp(1.05rem, 1.9vw, 1.18rem);
       color: var(--ink-light);
       margin-bottom: 2.5rem;
       line-height: 1.6;
@@ -323,31 +323,31 @@
 
     .chat-text {
       font-family: var(--font-serif);
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       color: var(--ink);
       line-height: 1.2;
     }
 
     /* Section Common */
     section {
-      padding: 6rem 0;
+      padding: 5rem 0;
     }
 
     .section-head {
-      margin-bottom: 4rem;
+      margin-bottom: 2.8rem;
       max-width: 700px;
     }
 
     .section-head h2 {
       font-family: var(--font-serif);
-      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
       font-weight: 400;
       margin-bottom: 1.5rem;
       line-height: 1.1;
     }
 
     .section-copy {
-      font-size: 1.2rem;
+      font-size: 1.05rem;
       color: var(--ink-light);
       line-height: 1.6;
     }
@@ -355,7 +355,7 @@
     /* Statement Box (The Problem) */
     .statement-box {
       background: var(--surface);
-      padding: 6rem;
+      padding: 4rem;
       border-radius: var(--radius-xl);
       text-align: center;
       margin: 0;
@@ -364,7 +364,7 @@
 
     @media (max-width: 768px) {
       .statement-box {
-        padding: 3rem 1.5rem;
+        padding: 2.4rem 1.2rem;
       }
     }
 
@@ -379,76 +379,110 @@
       font-size: clamp(2rem, 3.5vw, 2.5rem);
     }
 
-    /* Personas / Steps Grid */
+    .problem-strip {
+      margin-top: 2rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+
+    .problem-strip img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+    }
+
+    /* Use cases / Steps Grid */
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 2rem;
     }
 
-    @media (max-width: 900px) {
-      .grid-3 {
-        grid-template-columns: 1fr;
-      }
+    .use-case-list {
+      display: grid;
+      gap: 1.2rem;
     }
 
-    .persona-card {
+    .use-case-row {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 1.2rem;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 2.5rem;
-      transition: transform 0.3s ease;
+      overflow: hidden;
     }
 
-    .persona-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-soft);
+    .use-case-row:nth-child(even) {
+      grid-template-columns: 1.05fr 0.95fr;
+      direction: rtl;
     }
 
-    .persona-tag {
-      display: inline-block;
-      padding: 0.4rem 1rem;
-      background: var(--bg);
+    .use-case-media,
+    .use-case-content {
+      direction: ltr;
+    }
+
+    .use-case-media img {
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+      object-fit: cover;
+    }
+
+    .use-case-content {
+      padding: 1.5rem 1.5rem 1.4rem;
+    }
+
+    .use-case-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.34rem 0.8rem;
+      background: var(--surface-sunken);
       border-radius: var(--radius-full);
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1.5rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
       color: var(--ink);
     }
 
-    .persona-card h3 {
+    .use-case-content h3 {
       font-family: var(--font-serif);
-      font-size: 2rem;
+      font-size: 1.65rem;
       font-weight: 400;
       line-height: 1.1;
       margin-bottom: 1rem;
     }
 
-    .persona-card p.summary {
+    .use-case-content p.summary {
       color: var(--ink-light);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
       font-size: 1rem;
       line-height: 1.5;
     }
 
-    .persona-card ul {
+    .use-case-points {
       list-style: none;
       display: grid;
-      gap: 0.8rem;
-      font-size: 0.95rem;
+      gap: 0.55rem;
+      font-size: 0.93rem;
+      color: #2b2b28;
     }
 
-    .persona-card li {
+    .use-case-points li {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.45rem;
+      align-items: baseline;
     }
 
-    .persona-card li::before {
-      content: "↳";
+    .use-case-points li::before {
+      content: "•";
       color: var(--brand-peach);
-      font-weight: bold;
+      font-weight: 700;
     }
 
     /* Steps */
@@ -487,7 +521,7 @@
     .preview-section {
       background: var(--ink);
       color: var(--surface);
-      padding: 8rem 0;
+      padding: 6rem 0;
       border-radius: var(--radius-xl);
       margin: 0;
     }
@@ -509,7 +543,7 @@
     }
 
     .preview-shell {
-      margin-top: 4rem;
+      margin-top: 2.5rem;
     }
 
     .preview-meta {
@@ -518,14 +552,14 @@
       color: #A1A19A;
       font-size: 0.9rem;
       margin-bottom: 1.5rem;
-      padding: 0 2rem;
+      padding: 0;
     }
 
     .cards-rail {
       display: flex;
       gap: 1.5rem;
       overflow-x: auto;
-      padding: 0 2rem 2rem;
+      padding: 0 0 1.2rem;
       scroll-snap-type: x mandatory;
       scrollbar-width: none;
     }
@@ -542,7 +576,6 @@
       overflow: hidden;
       scroll-snap-align: start;
       color: var(--ink);
-      text-decoration: none;
       transition: transform 0.3s ease;
     }
 
@@ -550,10 +583,6 @@
       .listing-card {
         flex: 0 0 85%;
       }
-    }
-
-    .listing-card:hover {
-      transform: translateY(-8px);
     }
 
     .listing-card img {
@@ -585,30 +614,28 @@
     }
 
     .open-tag {
-      display: inline-block;
-      background: var(--bg);
-      color: var(--ink);
-      font-size: 0.8rem;
+      display: inline-flex;
+      color: var(--ink-light);
+      font-size: 0.82rem;
       font-weight: 600;
-      padding: 0.4rem 1rem;
-      border-radius: var(--radius-full);
+      letter-spacing: 0.01em;
     }
 
     /* Final CTA */
     .final-cta {
       text-align: center;
-      padding: 8rem 0;
+      padding: 6rem 0;
     }
 
     .final-cta h2 {
       font-family: var(--font-serif);
-      font-size: clamp(3rem, 6vw, 4.5rem);
+      font-size: clamp(2.5rem, 5.5vw, 3.8rem);
       font-weight: 400;
       margin-bottom: 1.5rem;
     }
 
     .final-cta p {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       color: var(--ink-light);
       max-width: 600px;
       margin: 0 auto 3rem;
@@ -691,7 +718,7 @@
 
     @media (max-width: 860px) {
       .container {
-        padding: 0 1.2rem;
+        padding: 0 1.25rem;
       }
 
       .nav-links {
@@ -699,7 +726,7 @@
       }
 
       section {
-        padding: 4.5rem 0;
+        padding: 4rem 0;
       }
 
       .preview-meta {
@@ -708,6 +735,22 @@
 
       .cards-rail {
         padding: 0 0 1rem;
+      }
+
+      .problem-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .use-case-row,
+      .use-case-row:nth-child(even) {
+        grid-template-columns: 1fr;
+        direction: ltr;
+      }
+
+      .use-case-media img {
+        min-height: 220px;
       }
     }
   </style>
@@ -722,7 +765,7 @@
       </a>
       <div class="nav-links">
         <a href="#problem">Problem</a>
-        <a href="#personas">Personas</a>
+        <a href="#use-cases">Who it's for</a>
         <a href="#how">How it works</a>
         <a href="#preview">Preview</a>
         <a href="/developers.html">Developers</a>
@@ -778,54 +821,74 @@
           Fyn fixes this by bringing the market into one searchable layer and letting you search the way you actually
           think.
         </p>
+        <div class="problem-strip">
+          <img src="/public/web/ruben-mavarez-RbxupW4So0E-unsplash.jpg" alt="Dense city facades at golden hour" loading="lazy" />
+          <img src="/public/web/alex-svkNCWMtiNI-unsplash.jpg" alt="Narrow historical alley in Spain" loading="lazy" />
+          <img src="/public/web/veronika-hradilova-G91CPKfdKfY-unsplash.jpg" alt="Colorful residential street homes" loading="lazy" />
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Personas -->
-  <section id="personas">
+  <!-- Use Cases -->
+  <section id="use-cases">
     <div class="container">
       <div class="section-head">
-        <span class="eyebrow">Who Fyn Serves</span>
-        <h2>Built for real decision moments.</h2>
+        <span class="eyebrow">Who This Is For</span>
+        <h2>Built for real life home decisions.</h2>
         <p class="section-copy">
-          Fyn is designed for the people who need it most: buyers under time pressure, dreamers looking for a lifestyle,
-          and developers building the next generation of agents.
+          Whether you are moving fast in a city, looking for a lifestyle change, or building an assistant, Fyn helps you
+          search in a way that feels natural.
         </p>
       </div>
 
-      <div class="grid-3">
-        <article class="persona-card">
-          <span class="persona-tag">City Movers</span>
-          <h3>Buyers and renters comparing neighborhoods fast.</h3>
-          <p class="summary">They want clarity in minutes, not dozens of tabs and portal-specific filter logic.</p>
-          <ul>
-            <li><strong>Single intent prompt:</strong> Search in Spanish or English.</li>
-            <li><strong>Constraint-first results:</strong> Hard budget and room limits are respected.</li>
-            <li><strong>Direct jump:</strong> One click to the original listing to contact the seller.</li>
-          </ul>
+      <div class="use-case-list">
+        <article class="use-case-row">
+          <div class="use-case-media">
+            <img src="/public/web/alex-santiago-UCrPSYL5zqk-unsplash.jpg" alt="Leafy house on a calm residential street" loading="lazy" />
+          </div>
+          <div class="use-case-content">
+            <span class="use-case-tag">City movers</span>
+            <h3>Buyers and renters comparing neighborhoods fast.</h3>
+            <p class="summary">They want clarity in minutes, not dozens of tabs and portal-specific filter logic.</p>
+            <ul class="use-case-points">
+              <li>Search naturally in Spanish or English.</li>
+              <li>Budget and room constraints are respected.</li>
+              <li>Jump directly to the original listing.</li>
+            </ul>
+          </div>
         </article>
 
-        <article class="persona-card">
-          <span class="persona-tag">Lifestyle Seekers</span>
-          <h3>Second-home buyers searching across towns.</h3>
-          <p class="summary">They care about atmosphere first and refine location after seeing real supply.</p>
-          <ul>
-            <li><strong>Multi-location search:</strong> Scan multiple regions in a single request.</li>
-            <li><strong>Vibe-based matching:</strong> Ask for “light”, “views”, or “quiet”.</li>
-            <li><strong>Explainable notes:</strong> See exactly why each property matched.</li>
-          </ul>
+        <article class="use-case-row">
+          <div class="use-case-media">
+            <img src="/public/web/lina-bob-yOnlhBJbS90-unsplash.jpg" alt="House in nature with mountain landscape" loading="lazy" />
+          </div>
+          <div class="use-case-content">
+            <span class="use-case-tag">Lifestyle seekers</span>
+            <h3>Second-home buyers exploring towns and natural areas.</h3>
+            <p class="summary">They care about atmosphere first and refine location after seeing real supply.</p>
+            <ul class="use-case-points">
+              <li>Scan multiple regions in one request.</li>
+              <li>Ask for light, views, or quiet in plain words.</li>
+              <li>See exactly why each property matched.</li>
+            </ul>
+          </div>
         </article>
 
-        <article class="persona-card">
-          <span class="persona-tag">AI Builders</span>
-          <h3>Teams exposing property search through connectors.</h3>
-          <p class="summary">They need stable interfaces, not custom parsing per portal.</p>
-          <ul>
-            <li><strong>MCP tool shape:</strong> Optimized specifically for LLM planning.</li>
-            <li><strong>Normalized response cards:</strong> Clean data across portal sources.</li>
-            <li><strong>Clear diagnostics:</strong> Built-in fallback and coverage reporting.</li>
-          </ul>
+        <article class="use-case-row">
+          <div class="use-case-media">
+            <img src="/public/web/tsimur-asayonak-eOWM25897Yo-unsplash.jpg" alt="Person working from home on a computer" loading="lazy" />
+          </div>
+          <div class="use-case-content">
+            <span class="use-case-tag">Teams & assistants</span>
+            <h3>Apps and copilots that need property search as a capability.</h3>
+            <p class="summary">They need stable interfaces, not custom parsing per portal.</p>
+            <ul class="use-case-points">
+              <li>Tool shape optimized for LLM planning.</li>
+              <li>Normalized cards across portal sources.</li>
+              <li>Clear diagnostics for fallback and coverage.</li>
+            </ul>
+          </div>
         </article>
       </div>
     </div>
@@ -871,8 +934,8 @@
         <span class="eyebrow">Search Preview</span>
         <h2>Real imagery,<br><i>clean cards, clear actions.</i></h2>
         <p class="section-copy">
-          A compact layout keeps cards visual without flooding your chat. Each card has one explicit action: open the
-          listing source.
+          A compact layout keeps cards visual without flooding your chat. In live searches, each card includes the source
+          listing link and explainable matching notes.
         </p>
       </div>
     </div>
@@ -883,49 +946,48 @@
           <span>Sample run · 4 homes shown</span>
           <span>Explainable matches · Direct portal links</span>
         </div>
-      </div>
 
-      <div class="cards-rail">
-        <!-- User's local images applied to my analog card style -->
-        <a href="https://www.pisos.com" target="_blank" rel="noreferrer" class="listing-card">
-          <img src="/public/web/house-1600596542815.jpg" alt="Casa con jardín en entorno rural" loading="lazy" />
-          <div class="card-body">
-            <h3>Casa con jardín en entorno rural</h3>
-            <p class="meta">Ronda · 4 hab. · Matched for: nature + views</p>
-            <p class="price">390.000 €</p>
-            <span class="open-tag">Open listing →</span>
-          </div>
-        </a>
+        <div class="cards-rail">
+          <article class="listing-card">
+            <img src="/public/web/house-1600596542815.jpg" alt="Finca clásica en barrio céntrico" loading="lazy" />
+            <div class="card-body">
+              <h3>Finca clásica en barrio céntrico</h3>
+              <p class="meta">Barcelona · 3 hab. · Matched for: city character</p>
+              <p class="price">390.000 €</p>
+              <span class="open-tag">Source link in live search</span>
+            </div>
+          </article>
 
-        <a href="https://www.pisos.com" target="_blank" rel="noreferrer" class="listing-card">
-          <img src="/public/web/apartment-8ollvy24dvu.jpg" alt="Piso luminoso en zona urbana" loading="lazy" />
-          <div class="card-body">
-            <h3>Piso luminoso en zona urbana</h3>
-            <p class="meta">Valencia · 3 hab. · Matched for: natural light</p>
-            <p class="price">349.000 €</p>
-            <span class="open-tag">Open listing →</span>
-          </div>
-        </a>
+          <article class="listing-card">
+            <img src="/public/web/apartment-8ollvy24dvu.jpg" alt="Piso exterior en zona urbana" loading="lazy" />
+            <div class="card-body">
+              <h3>Piso exterior en zona urbana</h3>
+              <p class="meta">Valencia · 3 hab. · Matched for: exterior + light</p>
+              <p class="price">349.000 €</p>
+              <span class="open-tag">Source link in live search</span>
+            </div>
+          </article>
 
-        <a href="https://www.pisos.com" target="_blank" rel="noreferrer" class="listing-card">
-          <img src="/public/web/alley-bjerbstbkhe.jpg" alt="Casa tradicional en zona histórica" loading="lazy" />
-          <div class="card-body">
-            <h3>Casa tradicional en casco histórico</h3>
-            <p class="meta">Albarracín · 3 hab. · Matched for: village lifestyle</p>
-            <p class="price">210.000 €</p>
-            <span class="open-tag">Open listing →</span>
-          </div>
-        </a>
+          <article class="listing-card">
+            <img src="/public/web/alley-bjerbstbkhe.jpg" alt="Apartamento en calle histórica" loading="lazy" />
+            <div class="card-body">
+              <h3>Apartamento en calle histórica</h3>
+              <p class="meta">Palma · 2 hab. · Matched for: historic center</p>
+              <p class="price">210.000 €</p>
+              <span class="open-tag">Source link in live search</span>
+            </div>
+          </article>
 
-        <a href="https://www.pisos.com" target="_blank" rel="noreferrer" class="listing-card">
-          <img src="/public/web/tower-3JYIgAKWB2s.jpg" alt="Piso para inversión en zona urbana" loading="lazy" />
-          <div class="card-body">
-            <h3>Piso para inversión con alta demanda</h3>
-            <p class="meta">Madrid · 2 hab. · Matched for: urban opportunity</p>
-            <p class="price">320.000 €</p>
-            <span class="open-tag">Open listing →</span>
-          </div>
-        </a>
+          <article class="listing-card">
+            <img src="/public/web/tower-3JYIgAKWB2s.jpg" alt="Piso en torre con vistas abiertas" loading="lazy" />
+            <div class="card-body">
+              <h3>Piso en torre con vistas abiertas</h3>
+              <p class="meta">Madrid · 2 hab. · Matched for: skyline views</p>
+              <p class="price">320.000 €</p>
+              <span class="open-tag">Source link in live search</span>
+            </div>
+          </article>
+        </div>
       </div>
     </div>
   </section>
@@ -976,7 +1038,7 @@
           <h4 class="footer-heading">Product</h4>
           <ul class="footer-list">
             <li><a href="#problem">Problem</a></li>
-            <li><a href="#personas">Personas</a></li>
+            <li><a href="#use-cases">Who it's for</a></li>
             <li><a href="https://chatgpt.com" target="_blank" rel="noreferrer">Try in ChatGPT</a></li>
           </ul>
         </div>
