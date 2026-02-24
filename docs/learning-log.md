@@ -47,3 +47,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: add a stateless HTTP MCP surface (`/api/mcp`) and lightweight health endpoint (`/api/health`) before deployment.
 - Action: implemented Vercel-ready API handlers and an HTTP smoke client.
 - Expected impact: immediate readiness for publish/test once Vercel credentials are provided.
+
+- Date: 2026-02-24
+- Context: Vercel production rollout for MCP endpoint.
+- Signal: workspace package ESM resolution caused runtime failures in serverless execution.
+- Decision: use root API handlers plus dynamic imports and direct source-path loading where required for serverless compatibility.
+- Action: iterated deployment fixes until `/mcp` and `/health` passed remotely.
+- Expected impact: stable baseline for ChatGPT app connection with zero local tunnel dependencies.

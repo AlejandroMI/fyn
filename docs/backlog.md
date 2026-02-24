@@ -13,10 +13,6 @@ Last updated: 2026-02-24
 
 ## In Progress (Now)
 
-- [ ] `P0` Vercel MCP endpoint (ChatGPT-ready)
-  - Owner: Codex
-  - Goal: expose `search_properties` via remote MCP transport on Vercel.
-  - Definition of done: `/mcp` reachable, healthcheck endpoint, smoke call works remotely.
 - [ ] `P0` ChatGPT app connector alpha
   - Owner: Codex
   - Goal: run Fyn from ChatGPT app connection using real listings.
@@ -68,3 +64,4 @@ Last updated: 2026-02-24
 - [x] Smoke-tested sample prompts through MCP pipeline.
 - [x] Feedback loop ownership moved to founder operations so engineering stays build-focused.
 - [x] Vercel HTTP MCP scaffold added (`/api/mcp`, `/api/health`, remote smoke client script).
+- [x] Vercel production MCP endpoint live and reachable (`https://fyn-mcp-server.vercel.app/mcp`) with successful remote smoke.
