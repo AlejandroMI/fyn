@@ -26,7 +26,7 @@ if (!tools.tools.some((tool) => tool.name === "search_properties")) {
 
 const result = await client.callTool({
   name: "search_properties",
-  arguments: { query_text: query, locale: "en" }
+  arguments: { query_text: query }
 });
 
 console.log(JSON.stringify(result, null, 2));

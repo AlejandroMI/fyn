@@ -67,3 +67,4 @@ Last updated: 2026-02-24
 - [x] Vercel production MCP endpoint live and reachable (`https://fyn-mcp-server.vercel.app/mcp`) with successful remote smoke.
 - [x] Natural-light intent parsing and ranking upgrade (`natural_light`/`exterior`/`orientation` signals).
 - [x] `search_properties` now returns `presentation_cards` + markdown card preview with image URLs for richer ChatGPT output.
+- [x] No-city nature queries now use discovery scrape mode (instead of fixture fallback) and avoid fake city extraction.

@@ -68,6 +68,37 @@ describe("PisosConnector", () => {
     expect(result.listings[0]?.tags).toContain("good_orientation");
   });
 
+  it("uses discovery scrape seeds when city is missing", async () => {
+    const html = `
+      <div id="70000000001.999999" class="ad-preview" data-lnk-href="/comprar/casa-madrid_capital-70000000001_999999/">
+        <span class="ad-preview__price">450.000 €</span>
+        <a href="/comprar/casa-madrid_capital-70000000001_999999/" class="ad-preview__title">Casa con vistas en entorno natural</a>
+        <p class="p-sm ad-preview__subtitle">Madrid Capital</p>
+        <p class="ad-preview__char p-sm">4 habs.</p>
+        <p class="ad-preview__description">Casa luminosa con vistas y entorno natural.</p>
+        <img src="https://fotos.imghs.net/mm-wp/999999/70000000001.999999/sample.jpg" />
+        <script type="application/ld+json">{ "@context":"https://schema.org/" }</script>
+      </div>
+    `;
+
+    const fetchImpl = vi.fn(async () => new Response(html, { status: 200 }));
+    const connector = new PisosConnector({
+      allowFixtureFallback: false,
+      enableScrapeFallback: true,
+      maxScrapeRequests: 2,
+      scrapeRequestDelayMs: 0,
+      fetchImpl
+    });
+
+    const { city: _city, ...broadCriteria } = criteria;
+
+    const result = await connector.search(broadCriteria);
+    expect(result.diagnostics.source).toBe("scrape");
+    expect(result.diagnostics.connector_warnings.join(" ")).toMatch(/No city provided/i);
+    expect(result.listings.length).toBeGreaterThan(0);
+    expect(fetchImpl).toHaveBeenCalled();
+  });
+
   it("maps auth rejection from upstream", async () => {
     const fetchImpl = vi.fn(async () =>
       new Response(JSON.stringify({ message: "Invalid apikey. Authorization failed." }), {

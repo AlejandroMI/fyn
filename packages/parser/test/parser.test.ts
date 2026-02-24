@@ -59,4 +59,25 @@ describe("normalizeSearchInput", () => {
 
     expect(result.criteria.min_rooms).toBe(3);
   });
+
+  it("does not infer fake city from generic spanish phrasing", () => {
+    const result = normalizeSearchInput({
+      query_text: "Vivienda en mitad de la naturaleza en un pueblo bonito de España"
+    });
+
+    expect(result.criteria.city).toBeUndefined();
+    expect(result.warnings).toContain("No city detected; results may be broad.");
+  });
+
+  it("infers rural-home intent for spanish nature queries", () => {
+    const result = normalizeSearchInput({
+      query_text:
+        "Vivienda en mitad de la naturaleza en un pueblo bonito de España, entorno tranquilo, buenas vistas, ideal para desconectar."
+    });
+
+    expect(result.criteria.locale).toBe("es");
+    expect(result.criteria.property_types).toContain("house");
+    expect(result.criteria.nearby_towns).toBe(true);
+    expect(result.criteria.tags).toEqual(expect.arrayContaining(["nature", "views"]));
+  });
 });

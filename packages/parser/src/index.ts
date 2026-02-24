@@ -33,15 +33,34 @@ const ROOM_WORDS: Record<string, number> = {
   seis: 6
 };
 
+const NON_CITY_TOKENS = new Set([
+  "mitad",
+  "medio",
+  "algun",
+  "algunas",
+  "algunos",
+  "un",
+  "una",
+  "el",
+  "la",
+  "los",
+  "las",
+  "pueblo",
+  "ciudad",
+  "zona",
+  "espana",
+  "españa"
+]);
+
 function detectLocale(text: string): Locale {
-  const spanishSignal = /(\b(busco|quiero|piso|casa|habitaciones|cerca|reforma|comprar|alquiler)\b)/i;
+  const spanishSignal = /(\b(busco|quiero|piso|casa|vivienda|habitaciones|cerca|reforma|comprar|alquiler|naturaleza|pueblo|vistas|desconectar)\b)/i;
   return spanishSignal.test(text) ? "es" : "en";
 }
 
 function extractPropertyTypes(text: string): PropertyType[] {
   const found: PropertyType[] = [];
   if (/(\b(flat|apartment|piso)\b)/i.test(text)) found.push("flat");
-  if (/(\b(house|home|casa|chalet)\b)/i.test(text)) found.push("house");
+  if (/(\b(house|home|casa|chalet|vivienda|viviendas)\b)/i.test(text)) found.push("house");
   if (/(\b(office|oficina)\b)/i.test(text)) found.push("office");
   if (/(\b(land|plot|solar|terreno)\b)/i.test(text)) found.push("land");
   return Array.from(new Set(found));
@@ -118,6 +137,33 @@ function extractMinCapacityPeople(text: string): number | undefined {
   return undefined;
 }
 
+function isLikelyCityCandidate(segment: string): boolean {
+  const tokens = segment
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    return false;
+  }
+
+  if (tokens[0] && NON_CITY_TOKENS.has(tokens[0])) {
+    return false;
+  }
+
+  if (tokens[1] === "de") {
+    return false;
+  }
+
+  if (tokens.every((token) => NON_CITY_TOKENS.has(token))) {
+    return false;
+  }
+
+  return true;
+}
+
 function extractCity(text: string): string | undefined {
   for (const city of KNOWN_CITIES) {
     if (new RegExp(`\\b${city}\\b`, "i").test(text)) {
@@ -136,6 +182,10 @@ function extractCity(text: string): string | undefined {
   }
 
   const raw = segment.trim();
+  if (!isLikelyCityCandidate(raw)) {
+    return undefined;
+  }
+
   return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
 }
 
@@ -197,10 +247,11 @@ export function normalizeSearchInput(input: SearchInput): { criteria: Normalized
   const derivedTransaction = extractTransactionType(query);
   const derivedTags = extractTags(query);
   const derivedCapacity = extractMinCapacityPeople(query);
+  const natureLifestyleIntent = /\b(nature|naturaleza|rural|pueblo|pueblos|retreat|desconectar|tranquilo|countryside|village)\b/i.test(query);
 
   const nearbyTowns =
     input.nearby_towns
-    ?? /(nearby towns|nearby|close towns|pueblos cercanos|alrededores|cerca de)/i.test(query);
+    ?? /(nearby towns|nearby|close towns|pueblos cercanos|alrededores|cerca de|pueblo|pueblos|village|villages|countryside)/i.test(query);
 
   const renovationOk = input.renovation_ok ?? /(renovation|reformas?|to renovate)/i.test(query);
   const resolvedTransaction = input.transaction_type ?? derivedTransaction;
@@ -208,10 +259,14 @@ export function normalizeSearchInput(input: SearchInput): { criteria: Normalized
   const resolvedRooms = input.min_rooms ?? derivedRooms;
   const resolvedCapacity = input.min_capacity_people ?? derivedCapacity;
   const resolvedPrice = input.max_price_eur ?? derivedPrice;
+  const resolvedPropertyTypes = mergePropertyTypes(derivedTypes, input.property_types);
+  if (resolvedPropertyTypes.length === 0 && natureLifestyleIntent) {
+    resolvedPropertyTypes.push("house");
+  }
 
   const criteria: NormalizedFilters = {
     locale: detectedLocale,
-    property_types: mergePropertyTypes(derivedTypes, input.property_types),
+    property_types: resolvedPropertyTypes,
     nearby_towns: nearbyTowns,
     renovation_ok: renovationOk,
     tags: Array.from(new Set([...(input.tags ?? []), ...derivedTags])),

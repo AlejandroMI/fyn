@@ -61,3 +61,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: split "natural light" semantics from "nature" and add presentation-friendly cards in MCP output.
 - Action: parser/tag fixes, connector tag inference upgrades, scoring boosts for light-related evidence, and `presentation_cards` + markdown card preview in `search_properties`.
 - Expected impact: materially better relevance for bright homes and more visual, link-rich responses in ChatGPT.
+
+- Date: 2026-02-24
+- Context: Nature-focused broad queries ("pueblo bonito de España") produced fake city extraction and fixture-biased output.
+- Signal: parser inferred `city = "Mitad de"` and no-city searches collapsed to fixtures.
+- Decision: harden city extraction and enable scrape discovery mode when city is missing.
+- Action: parser stopword guard for non-city phrases, rural-intent heuristics (`house`, `nearby_towns`), and connector discovery scrape seeds across major Spanish cities.
+- Expected impact: broader, real scraped coverage for exploratory queries without forcing an exact city upfront.

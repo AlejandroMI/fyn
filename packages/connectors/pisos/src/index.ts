@@ -17,6 +17,7 @@ const SCRAPE_TYPE_SEGMENT: Record<PropertyType, string> = {
   office: "oficinas",
   land: "terrenos"
 };
+const DISCOVERY_CITIES = ["Valencia", "Madrid", "Barcelona", "Sevilla", "Malaga", "Bilbao"] as const;
 
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&",
@@ -576,13 +577,10 @@ export class PisosConnector {
   }
 
   private buildScrapeTargets(criteria: NormalizedFilters): ScrapeTarget[] {
-    if (!criteria.city) {
-      return [];
-    }
-
     const operations: TransactionType[] = criteria.transaction_type ? [criteria.transaction_type] : ["buy"];
     const propertyTypes = criteria.property_types.length > 0 ? criteria.property_types : DEFAULT_BROAD_TYPES;
-    const citySlugs = citySlugCandidates(criteria.city);
+    const seedCities = criteria.city ? [criteria.city] : Array.from(DISCOVERY_CITIES);
+    const citySlugs = uniqueBy(seedCities.flatMap((city) => citySlugCandidates(city)), (value) => value);
 
     const targets: ScrapeTarget[] = [];
     for (const citySlug of citySlugs) {
@@ -602,16 +600,15 @@ export class PisosConnector {
   }
 
   private async searchByScrape(criteria: NormalizedFilters): Promise<ConnectorSearchResult> {
-    if (!criteria.city) {
-      throw new ConnectorError("UPSTREAM_SCHEMA_CHANGED", "Scraper mode requires city-level criteria.");
-    }
-
     const targets = this.buildScrapeTargets(criteria);
     if (targets.length === 0) {
       throw new ConnectorError("UPSTREAM_SCHEMA_CHANGED", "No valid scraper targets generated for current criteria.");
     }
 
     const warnings: string[] = [];
+    if (!criteria.city) {
+      warnings.push("No city provided; using discovery scrape across major Spanish cities.");
+    }
     const scrapedListings: ListingCard[] = [];
 
     for (const [index, target] of targets.entries()) {
