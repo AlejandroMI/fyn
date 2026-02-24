@@ -47,7 +47,7 @@ Ship Fyn to users fast through a ChatGPT connector path with minimal infrastruct
 
 - Keep building the connector path first.
 - Treat compliance hardening as immediate follow-up after first live path works.
-- Keep parser/ranker deterministic and explainable so ChatGPT output quality stays stable.
+- Keep constraint execution/ranking deterministic and explainable so ChatGPT output quality stays stable.
 
 ## Sources
 

@@ -1,5 +1,5 @@
-import { normalizeSearchInput } from "@fyn/parser";
 import { PisosConnector } from "@fyn/connectors-pisos";
+import type { SearchInput } from "@fyn/domain";
 import { rankListings } from "@fyn/scoring";
 
 function readBooleanEnv(name: string, defaultValue: boolean): boolean {
@@ -22,9 +22,43 @@ function readNumberEnv(name: string, defaultValue: number): number {
 }
 
 async function main() {
-  const queryArg = process.argv.slice(2).join(" ").replace(/^--\s*/, "").trim();
-  const query = queryArg || "Find me a flat in Valencia with three rooms max 350k";
-  const parsed = normalizeSearchInput({ query_text: query });
+  const rawArg = process.argv.slice(2).join(" ").replace(/^--\s*/, "").trim();
+  let input: SearchInput;
+  if (rawArg.startsWith("{")) {
+    input = JSON.parse(rawArg) as SearchInput;
+  } else {
+    const query = rawArg || "Find me a flat in Valencia with three rooms max 350k";
+    input = {
+      locale: "en",
+      transaction_type: "buy",
+      property_types: ["flat"],
+      city: "Valencia",
+      min_rooms: 3,
+      max_price_eur: 350000,
+      strict_constraints: true,
+      query_text: query
+    };
+  }
+
+  const criteria = {
+    locale: input.locale ?? "en",
+    property_types: input.property_types ?? [],
+    nearby_towns: input.nearby_towns ?? false,
+    strict_constraints: input.strict_constraints ?? true,
+    renovation_ok: input.renovation_ok ?? false,
+    tags: input.tags ?? [],
+    ...(input.transaction_type ? { transaction_type: input.transaction_type } : {}),
+    ...(input.city ? { city: input.city } : {}),
+    ...(input.min_rooms !== undefined ? { min_rooms: input.min_rooms } : {}),
+    ...(input.min_capacity_people !== undefined ? { min_capacity_people: input.min_capacity_people } : {}),
+    ...(input.max_price_eur !== undefined ? { max_price_eur: input.max_price_eur } : {}),
+    ...(input.min_floor !== undefined ? { min_floor: input.min_floor } : {}),
+    ...(input.exclude_ground_floor !== undefined
+      ? { exclude_ground_floor: input.exclude_ground_floor }
+      : {}),
+    ...(input.prefer_exterior !== undefined ? { prefer_exterior: input.prefer_exterior } : {}),
+    ...(input.query_text ? { original_query: input.query_text } : {})
+  };
 
   const connector = new PisosConnector({
     apiKey: process.env.PISOS_API_KEY,
@@ -35,16 +69,16 @@ async function main() {
     maxScrapeRequests: readNumberEnv("PISOS_MAX_SCRAPE_REQUESTS", 6)
   });
 
-  const connectorResult = await connector.search(parsed.criteria);
-  const ranked = rankListings(connectorResult.listings, parsed.criteria);
+  const connectorResult = await connector.search(criteria);
+  const ranked = rankListings(connectorResult.listings, criteria);
 
   console.log(
     JSON.stringify(
       {
-        criteria: parsed.criteria,
+        criteria,
         diagnostics: {
           source: connectorResult.diagnostics.source,
-          parser_warnings: parsed.warnings,
+          request_warnings: [],
           connector_warnings: connectorResult.diagnostics.connector_warnings,
           total_candidates: connectorResult.listings.length,
           returned_count: ranked.length

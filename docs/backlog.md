@@ -59,7 +59,7 @@ Last updated: 2026-02-24
 
 ## Done
 
-- [x] Monorepo scaffold with MCP server, parser, scoring, first connector.
+- [x] Monorepo scaffold with MCP server, scoring, first connector.
 - [x] Pisos connector in dual mode: API when key exists, scraping fallback when key is missing.
 - [x] Smoke-tested sample prompts through MCP pipeline.
 - [x] Feedback loop ownership moved to founder operations so engineering stays build-focused.
@@ -68,5 +68,6 @@ Last updated: 2026-02-24
 - [x] Natural-light intent parsing and ranking upgrade (`natural_light`/`exterior`/`orientation` signals).
 - [x] `search_properties` now returns `presentation_cards` + markdown card preview with image URLs for richer ChatGPT output.
 - [x] No-city nature queries now use discovery scrape mode (instead of fixture fallback) and avoid fake city extraction.
-- [x] `search_properties` upgraded to model-driven MCP contract (structured constraints, multi-location execution, coverage diagnostics, parser as legacy fallback).
+- [x] `search_properties` upgraded to model-driven MCP contract (structured constraints, multi-location execution, coverage diagnostics).
 - [x] Strict structured mode now blocks no-location execution and returns `action_required` guidance (`MISSING_LOCATIONS`) so models must provide `city`/`locations[]`.
+- [x] Legacy parser execution path removed; MCP backend now runs a single structured deterministic flow.

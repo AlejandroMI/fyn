@@ -80,7 +80,7 @@ export class ConnectorError extends Error {
 
 export interface SearchDiagnostics {
   source: "live" | "scrape" | "fixture";
-  parser_warnings: string[];
+  request_warnings: string[];
   connector_warnings: string[];
   total_candidates: number;
   returned_count: number;
@@ -94,5 +94,5 @@ export interface SearchResult {
 
 export interface ConnectorSearchResult {
   listings: ListingCard[];
-  diagnostics: Omit<SearchDiagnostics, "parser_warnings" | "total_candidates" | "returned_count">;
+  diagnostics: Omit<SearchDiagnostics, "request_warnings" | "total_candidates" | "returned_count">;
 }

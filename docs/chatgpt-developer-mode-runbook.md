@@ -35,7 +35,7 @@ Connect Fyn's remote MCP endpoint to ChatGPT in Developer Mode and validate live
    - explainable matches (`why_matched`)
    - source portal URLs (`pisos.com`)
    - `presentation_cards` in JSON payload for structured rendering
-   - diagnostics (`source`, warnings, counts)
+   - diagnostics (`source`, `request_warnings`, `connector_warnings`, counts)
    - execution diagnostics (`mode`, searched locations, per-location coverage)
    - if no geography is provided, expect `action_required.code = "MISSING_LOCATIONS"` and no fallback discovery results
 

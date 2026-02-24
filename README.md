@@ -8,7 +8,7 @@ Fyn (Find Your Nest) is an MCP-first property search aggregator. In model-driven
 - Primary interface: MCP tool `search_properties`
 - Model-driven contract: structured filters + multi-location search + coverage diagnostics
 - Strict mode guardrail: `city` or `locations[]` is required (no implicit discovery fallback)
-- Parser: deterministic ES/EN extraction retained as legacy fallback
+- Single execution path: no NLP parser fallback in backend
 - Fallback mode: compliant HTML scraping (then fixtures) when API key is not available
 
 ## Quick start

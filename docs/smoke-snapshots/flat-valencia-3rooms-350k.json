@@ -16,9 +16,7 @@
   },
   "diagnostics": {
     "source": "fixture",
-    "parser_warnings": [
-      "No transaction type detected; defaulting to broad portal search."
-    ],
+    "request_warnings": [],
     "connector_warnings": [
       "Missing PISOS_API_KEY; returning fixture listings."
     ],

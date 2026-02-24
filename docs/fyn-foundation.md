@@ -45,7 +45,7 @@ Supporting KPIs:
 
 - Ship vertical slices early and instrument them.
 - Prefer reversible architecture choices.
-- Keep contracts explicit across parser, connector, ranking, and MCP layers.
+- Keep contracts explicit across connector, ranking, and MCP layers.
 - Define stable canonical fields so heterogeneous portal payloads stay composable.
 - Apply unsupported portal filters post-fetch deterministically and report it.
 - Fail loudly on upstream schema drift.
@@ -73,5 +73,6 @@ Supporting KPIs:
 - 2026-02-24: `pisos.com` connector runs in dual mode (official API when key exists, compliant scraping fallback when key is unavailable) so integration work is never blocked by credential availability.
 - 2026-02-24: Vercel selected as default deployment platform for MCP and demo surfaces.
 - 2026-02-24: Delivery order clarified: connector functionality first, compliance hardening immediately after first live user path.
-- 2026-02-24: MCP contract shifted to model-driven execution: structured constraints + multi-location support + coverage diagnostics; parser retained as legacy fallback.
+- 2026-02-24: MCP contract shifted to model-driven execution: structured constraints + multi-location support + coverage diagnostics.
 - 2026-02-24: Strict structured mode now requires explicit geography (`city` or `locations[]`); if missing, MCP returns action-required guidance instead of low-signal discovery fallback.
+- 2026-02-24: Legacy parser execution path removed; backend now has a single deterministic structured execution path.

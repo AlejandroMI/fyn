@@ -1,28 +1,46 @@
 {
   "criteria": {
-    "locale": "en",
-    "property_types": [],
-    "nearby_towns": false,
+    "locale": "es",
+    "property_types": [
+      "house"
+    ],
+    "nearby_towns": true,
+    "strict_constraints": true,
     "renovation_ok": false,
     "tags": [
       "nature",
-      "views",
-      "retreat"
+      "views"
     ],
     "transaction_type": "buy",
-    "city": "A natural",
-    "original_query": "I want to buy or build a second property in a natural place, great views, a retreat. Ideally in a place of outstanding beauty in Spain"
+    "original_query": "vivienda en mitad de la naturaleza en pueblo bonito de España"
   },
   "diagnostics": {
     "source": "fixture",
-    "parser_warnings": [
-      "No property type detected; querying all property types."
+    "request_warnings": [
+      "`query_text` is contextual only. In strict structured mode, geography must be explicit."
     ],
     "connector_warnings": [
-      "Missing PISOS_API_KEY; returning fixture listings."
+      "No `city` or `locations[]` provided. Discovery search is disabled when `strict_constraints=true`.",
+      "Model action required: choose candidate cities/towns and retry with `locations[]` (recommended 3-10)."
     ],
-    "total_candidates": 3,
-    "returned_count": 0
+    "total_candidates": 0,
+    "returned_count": 0,
+    "coverage": [],
+    "execution": {
+      "mode": "structured",
+      "locations_requested": [],
+      "locations_searched": [],
+      "sources": [
+        "pisos"
+      ],
+      "max_results_total": 10,
+      "strict_constraints": true
+    },
+    "action_required": {
+      "code": "MISSING_LOCATIONS",
+      "message": "No `city` or `locations[]` provided. Discovery search is disabled when `strict_constraints=true`.",
+      "retry_hint": "Send `locations[]` (recommended 3-10) or a single `city` and call the tool again."
+    }
   },
   "listings": []
 }

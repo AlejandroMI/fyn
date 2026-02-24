@@ -41,9 +41,6 @@ importers:
       '@fyn/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@fyn/parser':
-        specifier: workspace:*
-        version: link:../../packages/parser
       '@fyn/scoring':
         specifier: workspace:*
         version: link:../../packages/scoring
@@ -81,19 +78,6 @@ importers:
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
 
   packages/domain:
-    devDependencies:
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      vitest:
-        specifier: ^2.1.8
-        version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
-
-  packages/parser:
-    dependencies:
-      '@fyn/domain':
-        specifier: workspace:*
-        version: link:../domain
     devDependencies:
       typescript:
         specifier: ^5.9.3

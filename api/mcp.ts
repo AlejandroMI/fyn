@@ -6,25 +6,6 @@ const CORS_HEADERS = {
   "access-control-allow-headers": "content-type,mcp-session-id,mcp-protocol-version,last-event-id"
 } as const;
 
-const STRUCTURED_FIELDS = [
-  "transaction_type",
-  "property_types",
-  "city",
-  "locations",
-  "nearby_towns",
-  "min_rooms",
-  "min_capacity_people",
-  "max_price_eur",
-  "min_floor",
-  "exclude_ground_floor",
-  "prefer_exterior",
-  "strict_constraints",
-  "renovation_ok",
-  "tags",
-  "sources",
-  "per_location_limit",
-  "max_results_total"
-] as const;
 const SEARCH_TOOL_DESCRIPTION =
   "Search Spanish properties via MCP. The model must plan explicit constraints and location strategy, then call this tool deterministically. `query_text` is context-only and never a substitute for `city`/`locations`. For broad intents, send 3-10 locations in `locations[]`, then iterate using `diagnostics.coverage`.";
 const MISSING_LOCATION_WARNING =
@@ -195,10 +176,6 @@ function buildCardsMarkdown(cards: PresentationCard[], locale: "es" | "en"): str
   return lines.join("\n");
 }
 
-function hasStructuredInput(payload: Record<string, unknown>): boolean {
-  return STRUCTURED_FIELDS.some((field) => payload[field] !== undefined);
-}
-
 function resolveLocations(payload: Record<string, unknown>): string[] {
   if (Array.isArray(payload.locations) && payload.locations.length > 0) {
     return uniqueStrings(payload.locations.filter((value): value is string => typeof value === "string"));
@@ -271,7 +248,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     { z },
     domainModule,
     connectorModule,
-    parserModule,
     scoringModule
   ] = await Promise.all([
     import("@modelcontextprotocol/sdk/server/mcp.js"),
@@ -279,13 +255,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     import("zod"),
     import("../packages/domain/src/index.js"),
     import("../packages/connectors/pisos/src/index.js"),
-    import("../packages/parser/src/index.js"),
     import("../packages/scoring/src/index.js")
   ]);
 
   const { ConnectorError } = domainModule;
   const { PisosConnector } = connectorModule;
-  const { normalizeSearchInput } = parserModule;
   const { rankListings } = scoringModule;
 
   const propertyTypeSchema = z.enum(["flat", "house", "office", "land"]);
@@ -369,8 +343,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       inputSchema: toolSchema
     },
     async (payload: Record<string, unknown>) => {
-      const structuredMode = hasStructuredInput(payload);
-
       try {
         const maxResultsTotal =
           typeof payload.max_results_total === "number" ? payload.max_results_total : 40;
@@ -379,251 +351,195 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           ? payload.sources.filter((value): value is "pisos" => value === "pisos")
           : ["pisos"];
 
+        const perLocationLimit =
+          typeof payload.per_location_limit === "number" ? payload.per_location_limit : 20;
+        const baseCriteria = toBaseCriteria(payload);
+        const strictConstraints = baseCriteria.strict_constraints;
+        const sourceKinds = new Set<string>();
+        const connectorWarnings: string[] = [];
+        const coverage: Array<Record<string, unknown>> = [];
+        const collected: any[] = [];
+        let firstConnectorError: InstanceType<typeof ConnectorError> | null = null;
+
         let criteria: any;
         let listings: any[] = [];
         let diagnostics: Record<string, unknown>;
 
-        if (structuredMode) {
-          const perLocationLimit =
-            typeof payload.per_location_limit === "number" ? payload.per_location_limit : 20;
-          const baseCriteria = toBaseCriteria(payload);
-          const strictConstraints = baseCriteria.strict_constraints;
-          const sourceKinds = new Set<string>();
-          const connectorWarnings: string[] = [];
-          const coverage: Array<Record<string, unknown>> = [];
-          const collected: any[] = [];
-          let firstConnectorError: InstanceType<typeof ConnectorError> | null = null;
-
-          if (!allowedSources.includes("pisos")) {
-            criteria = baseCriteria;
-            diagnostics = {
-              source: "fixture",
-              connector_warnings: ["No supported source selected. Current deployment supports only `pisos`."],
-              parser_warnings: [],
-              total_candidates: 0,
-              returned_count: 0,
-              coverage: [],
-              execution: {
-                mode: "structured",
-                locations_requested: requestedLocations,
-                locations_searched: [],
-                sources: allowedSources,
-                per_location_limit: requestedLocations.length > 0 ? perLocationLimit : undefined,
-                max_results_total: maxResultsTotal,
-                strict_constraints: strictConstraints
-              }
-            };
-            listings = [];
-          } else if (requestedLocations.length === 0 && strictConstraints) {
-            criteria = { ...baseCriteria };
-            diagnostics = {
-              source: "fixture",
-              connector_warnings: [MISSING_LOCATION_WARNING, MISSING_LOCATION_ACTION],
-              parser_warnings: [
-                "`query_text` is contextual only. In strict structured mode, geography must be explicit."
-              ],
-              total_candidates: 0,
-              returned_count: 0,
-              coverage: [],
-              execution: {
-                mode: "structured",
-                locations_requested: [],
-                locations_searched: [],
-                sources: allowedSources,
-                max_results_total: maxResultsTotal,
-                strict_constraints: strictConstraints
-              },
-              action_required: {
-                code: "MISSING_LOCATIONS",
-                message: MISSING_LOCATION_WARNING,
-                retry_hint: "Send `locations[]` (recommended 3-10) or a single `city` and call the tool again."
-              }
-            };
-            listings = [];
-          } else if (requestedLocations.length === 0) {
-            criteria = { ...baseCriteria };
-            try {
-              const result = await connector.search(criteria as any);
-              sourceKinds.add(result.diagnostics.source);
-              const discoveryWarnings = uniqueStrings([
-                "No city/locations provided; running discovery search because `strict_constraints=false`.",
-                ...result.diagnostics.connector_warnings
-              ]);
-              connectorWarnings.push(...discoveryWarnings);
-              const ranked = rankListings(result.listings, criteria as any).slice(0, maxResultsTotal);
-              collected.push(...ranked);
+        if (!allowedSources.includes("pisos")) {
+          criteria = baseCriteria;
+          diagnostics = {
+            source: "fixture",
+            connector_warnings: ["No supported source selected. Current deployment supports only `pisos`."],
+            request_warnings: [],
+            total_candidates: 0,
+            returned_count: 0,
+            coverage: [],
+            execution: {
+              mode: "structured",
+              locations_requested: requestedLocations,
+              locations_searched: [],
+              sources: allowedSources,
+              per_location_limit: requestedLocations.length > 0 ? perLocationLimit : undefined,
+              max_results_total: maxResultsTotal,
+              strict_constraints: strictConstraints
+            }
+          };
+          listings = [];
+        } else if (requestedLocations.length === 0 && strictConstraints) {
+          criteria = { ...baseCriteria };
+          diagnostics = {
+            source: "fixture",
+            connector_warnings: [MISSING_LOCATION_WARNING, MISSING_LOCATION_ACTION],
+            request_warnings: [
+              "`query_text` is contextual only. In strict structured mode, geography must be explicit."
+            ],
+            total_candidates: 0,
+            returned_count: 0,
+            coverage: [],
+            execution: {
+              mode: "structured",
+              locations_requested: [],
+              locations_searched: [],
+              sources: allowedSources,
+              max_results_total: maxResultsTotal,
+              strict_constraints: strictConstraints
+            },
+            action_required: {
+              code: "MISSING_LOCATIONS",
+              message: MISSING_LOCATION_WARNING,
+              retry_hint: "Send `locations[]` (recommended 3-10) or a single `city` and call the tool again."
+            }
+          };
+          listings = [];
+        } else if (requestedLocations.length === 0) {
+          criteria = { ...baseCriteria };
+          try {
+            const result = await connector.search(criteria as any);
+            sourceKinds.add(result.diagnostics.source);
+            const discoveryWarnings = uniqueStrings([
+              "No city/locations provided; running discovery search because `strict_constraints=false`.",
+              ...result.diagnostics.connector_warnings
+            ]);
+            connectorWarnings.push(...discoveryWarnings);
+            const ranked = rankListings(result.listings, criteria as any).slice(0, maxResultsTotal);
+            collected.push(...ranked);
+            coverage.push({
+              location: "__discovery__",
+              source: result.diagnostics.source,
+              candidates: result.listings.length,
+              returned: ranked.length,
+              warnings: discoveryWarnings
+            });
+          } catch (error) {
+            if (error instanceof ConnectorError) {
+              firstConnectorError = error;
               coverage.push({
                 location: "__discovery__",
+                candidates: 0,
+                returned: 0,
+                warnings: [],
+                error_code: error.code,
+                error_message: error.message
+              });
+            } else {
+              throw error;
+            }
+          }
+
+          if (collected.length === 0 && firstConnectorError) {
+            throw firstConnectorError;
+          }
+
+          const uniqueCandidates = uniqueBy(
+            collected,
+            (listing) => `${String(listing.portal)}:${String(listing.portal_listing_id)}`
+          );
+          listings = rankListings(uniqueCandidates as any, criteria as any).slice(0, maxResultsTotal) as any[];
+          diagnostics = {
+            source: selectSource(sourceKinds),
+            connector_warnings: uniqueStrings(connectorWarnings),
+            request_warnings: [],
+            total_candidates: uniqueCandidates.length,
+            returned_count: listings.length,
+            coverage,
+            execution: {
+              mode: "structured",
+              locations_requested: requestedLocations,
+              locations_searched: coverage
+                .filter((entry) => entry.error_code === undefined)
+                .map((entry) => entry.location),
+              sources: allowedSources,
+              max_results_total: maxResultsTotal,
+              strict_constraints: strictConstraints
+            }
+          };
+        } else {
+          for (const location of requestedLocations) {
+            const localCriteria = { ...baseCriteria, city: location };
+            try {
+              const result = await connector.search(localCriteria as any);
+              sourceKinds.add(result.diagnostics.source);
+              connectorWarnings.push(...result.diagnostics.connector_warnings);
+              const ranked = rankListings(result.listings, localCriteria as any).slice(0, perLocationLimit);
+              collected.push(...ranked);
+              coverage.push({
+                location,
                 source: result.diagnostics.source,
                 candidates: result.listings.length,
                 returned: ranked.length,
-                warnings: discoveryWarnings
+                warnings: result.diagnostics.connector_warnings
               });
             } catch (error) {
               if (error instanceof ConnectorError) {
-                firstConnectorError = error;
+                if (!firstConnectorError) {
+                  firstConnectorError = error;
+                }
                 coverage.push({
-                  location: "__discovery__",
+                  location,
                   candidates: 0,
                   returned: 0,
                   warnings: [],
                   error_code: error.code,
                   error_message: error.message
                 });
-              } else {
-                throw error;
+                continue;
               }
+
+              throw error;
             }
-
-            if (collected.length === 0 && firstConnectorError) {
-              throw firstConnectorError;
-            }
-
-            const uniqueCandidates = uniqueBy(
-              collected,
-              (listing) => `${String(listing.portal)}:${String(listing.portal_listing_id)}`
-            );
-            listings = rankListings(uniqueCandidates as any, criteria as any).slice(0, maxResultsTotal) as any[];
-            diagnostics = {
-              source: selectSource(sourceKinds),
-              connector_warnings: uniqueStrings(connectorWarnings),
-              parser_warnings: [],
-              total_candidates: uniqueCandidates.length,
-              returned_count: listings.length,
-              coverage,
-              execution: {
-                mode: "structured",
-                locations_requested: requestedLocations,
-                locations_searched: coverage
-                  .filter((entry) => entry.error_code === undefined)
-                  .map((entry) => entry.location),
-                sources: allowedSources,
-                max_results_total: maxResultsTotal,
-                strict_constraints: strictConstraints
-              }
-            };
-          } else {
-            for (const location of requestedLocations) {
-              const localCriteria = { ...baseCriteria, city: location };
-              try {
-                const result = await connector.search(localCriteria as any);
-                sourceKinds.add(result.diagnostics.source);
-                connectorWarnings.push(...result.diagnostics.connector_warnings);
-                const ranked = rankListings(result.listings, localCriteria as any).slice(0, perLocationLimit);
-                collected.push(...ranked);
-                coverage.push({
-                  location,
-                  source: result.diagnostics.source,
-                  candidates: result.listings.length,
-                  returned: ranked.length,
-                  warnings: result.diagnostics.connector_warnings
-                });
-              } catch (error) {
-                if (error instanceof ConnectorError) {
-                  if (!firstConnectorError) {
-                    firstConnectorError = error;
-                  }
-                  coverage.push({
-                    location,
-                    candidates: 0,
-                    returned: 0,
-                    warnings: [],
-                    error_code: error.code,
-                    error_message: error.message
-                  });
-                  continue;
-                }
-
-                throw error;
-              }
-            }
-
-            if (collected.length === 0 && firstConnectorError) {
-              throw firstConnectorError;
-            }
-
-            const uniqueCandidates = uniqueBy(
-              collected,
-              (listing) => `${String(listing.portal)}:${String(listing.portal_listing_id)}`
-            );
-            criteria = requestedLocations.length === 1
-              ? { ...baseCriteria, city: requestedLocations[0] }
-              : { ...baseCriteria };
-            listings = rankListings(uniqueCandidates as any, criteria as any).slice(0, maxResultsTotal) as any[];
-            const uniqueWarnings = uniqueStrings(connectorWarnings);
-            uniqueWarnings.unshift(`Executed multi-location search across ${requestedLocations.length} locations.`);
-            diagnostics = {
-              source: selectSource(sourceKinds),
-              connector_warnings: uniqueWarnings,
-              parser_warnings: [],
-              total_candidates: uniqueCandidates.length,
-              returned_count: listings.length,
-              coverage,
-              execution: {
-                mode: "structured",
-                locations_requested: requestedLocations,
-                locations_searched: coverage
-                  .filter((entry) => entry.error_code === undefined)
-                  .map((entry) => entry.location),
-                sources: allowedSources,
-                per_location_limit: perLocationLimit,
-                max_results_total: maxResultsTotal,
-                strict_constraints: strictConstraints
-              }
-            };
           }
-        } else {
-          const input = {
-            ...(typeof payload.query_text === "string" ? { query_text: payload.query_text } : {}),
-            ...(payload.locale ? { locale: payload.locale } : {}),
-            ...(payload.transaction_type ? { transaction_type: payload.transaction_type } : {}),
-            ...(Array.isArray(payload.property_types) ? { property_types: payload.property_types } : {}),
-            ...(typeof payload.city === "string" ? { city: payload.city } : {}),
-            ...(Array.isArray(payload.locations) ? { locations: payload.locations } : {}),
-            ...(typeof payload.nearby_towns === "boolean" ? { nearby_towns: payload.nearby_towns } : {}),
-            ...(typeof payload.min_rooms === "number" ? { min_rooms: payload.min_rooms } : {}),
-            ...(typeof payload.min_capacity_people === "number"
-              ? { min_capacity_people: payload.min_capacity_people }
-              : {}),
-            ...(typeof payload.max_price_eur === "number" ? { max_price_eur: payload.max_price_eur } : {}),
-            ...(typeof payload.min_floor === "number" ? { min_floor: payload.min_floor } : {}),
-            ...(typeof payload.exclude_ground_floor === "boolean"
-              ? { exclude_ground_floor: payload.exclude_ground_floor }
-              : {}),
-            ...(typeof payload.prefer_exterior === "boolean"
-              ? { prefer_exterior: payload.prefer_exterior }
-              : {}),
-            ...(typeof payload.strict_constraints === "boolean"
-              ? { strict_constraints: payload.strict_constraints }
-              : {}),
-            ...(typeof payload.renovation_ok === "boolean" ? { renovation_ok: payload.renovation_ok } : {}),
-            ...(Array.isArray(payload.tags) ? { tags: payload.tags } : {})
-          };
 
-          const parsed = normalizeSearchInput(input as any);
-          const connectorResult = await connector.search(parsed.criteria);
-          criteria = parsed.criteria as any;
-          listings = rankListings(connectorResult.listings, parsed.criteria).slice(0, maxResultsTotal) as any[];
+          if (collected.length === 0 && firstConnectorError) {
+            throw firstConnectorError;
+          }
+
+          const uniqueCandidates = uniqueBy(
+            collected,
+            (listing) => `${String(listing.portal)}:${String(listing.portal_listing_id)}`
+          );
+          criteria = requestedLocations.length === 1
+            ? { ...baseCriteria, city: requestedLocations[0] }
+            : { ...baseCriteria };
+          listings = rankListings(uniqueCandidates as any, criteria as any).slice(0, maxResultsTotal) as any[];
+          const uniqueWarnings = uniqueStrings(connectorWarnings);
+          uniqueWarnings.unshift(`Executed multi-location search across ${requestedLocations.length} locations.`);
           diagnostics = {
-            source: connectorResult.diagnostics.source,
-            connector_warnings: connectorResult.diagnostics.connector_warnings,
-            parser_warnings: [
-              ...parsed.warnings,
-              "Legacy parser mode: provide structured constraints for agent-grade control."
-            ],
-            total_candidates: connectorResult.listings.length,
+            source: selectSource(sourceKinds),
+            connector_warnings: uniqueWarnings,
+            request_warnings: [],
+            total_candidates: uniqueCandidates.length,
             returned_count: listings.length,
-            coverage: [],
+            coverage,
             execution: {
-              mode: "legacy_parser",
-              locations_requested: parsed.criteria.city ? [parsed.criteria.city] : [],
-              locations_searched: parsed.criteria.city ? [parsed.criteria.city] : [],
+              mode: "structured",
+              locations_requested: requestedLocations,
+              locations_searched: coverage
+                .filter((entry) => entry.error_code === undefined)
+                .map((entry) => entry.location),
               sources: allowedSources,
+              per_location_limit: perLocationLimit,
               max_results_total: maxResultsTotal,
-              strict_constraints:
-                typeof parsed.criteria.strict_constraints === "boolean"
-                  ? parsed.criteria.strict_constraints
-                  : true
+              strict_constraints: strictConstraints
             }
           };
         }

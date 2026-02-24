@@ -22,9 +22,29 @@ for (let i = 0; i < args.length; i += 1) {
   }
 }
 
-const query = queryParts.join(" ").replace(/^--\s*/, "").trim()
-  || "Find me a flat in Valencia with at least three rooms. Max 350k";
+const rawArg = queryParts.join(" ").replace(/^--\s*/, "").trim();
+const defaultQuery = "Find me a flat in Valencia with at least three rooms. Max 350k";
 const resolvedEndpoint = endpoint || "http://localhost:3000/api/mcp";
+
+function resolveArguments() {
+  if (rawArg.startsWith("{")) {
+    return JSON.parse(rawArg) as Record<string, unknown>;
+  }
+
+  const query = rawArg || defaultQuery;
+  return {
+    locale: "en",
+    transaction_type: "buy",
+    property_types: ["flat"],
+    city: "Valencia",
+    min_rooms: 3,
+    max_price_eur: 350000,
+    strict_constraints: true,
+    query_text: query
+  };
+}
+
+const toolArguments = resolveArguments();
 
 const transport = new StreamableHTTPClientTransport(new URL(resolvedEndpoint));
 const client = new Client({ name: "fyn-http-smoke-client", version: "0.1.0" });
@@ -39,7 +59,7 @@ if (!tools.tools.some((tool) => tool.name === "search_properties")) {
 
 const result = await client.callTool({
   name: "search_properties",
-  arguments: { query_text: query }
+  arguments: toolArguments
 });
 
 console.log(JSON.stringify(result, null, 2));

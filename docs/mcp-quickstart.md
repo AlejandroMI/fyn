@@ -42,9 +42,16 @@ With `strict_constraints=true` (default), you must provide `city` or `locations[
 pnpm smoke:mcp -- "Find me a flat in Valencia with at least three rooms, max 350k"
 ```
 
+The smoke client sends a structured request (city + constraints) and keeps your text as `query_text` context.
+You can also pass full JSON arguments:
+
+```bash
+pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["house"],"locations":["Náquera","Buñol","Requena"],"tags":["nature","views"],"strict_constraints":true}'
+```
+
 With no API key, the connector first uses HTML scraping fallback, then fixtures if scraping fails.
 
-Legacy note: if only `query_text` is provided, the parser fallback path is used. In diagnostics this appears as `execution.mode = "legacy_parser"`.
+Diagnostics now expose `request_warnings` (request-shape guidance) and `connector_warnings` (upstream/source warnings).
 
 ## 5. Live connector mode
 

@@ -7,11 +7,9 @@ import {
   type ConnectorSearchResult,
   type ListingCard,
   type Locale,
-  type NormalizedFilters,
-  type SearchInput
+  type NormalizedFilters
 } from "@fyn/domain";
 import { PisosConnector } from "@fyn/connectors-pisos";
-import { normalizeSearchInput } from "@fyn/parser";
 import { rankListings } from "@fyn/scoring";
 
 const propertyTypeSchema = z.enum(["flat", "house", "office", "land"]);
@@ -91,7 +89,7 @@ interface CoverageEntry {
 }
 
 interface ExecutionDiagnostics {
-  mode: "structured" | "legacy_parser";
+  mode: "structured";
   locations_requested: string[];
   locations_searched: string[];
   sources: Array<z.infer<typeof sourceSchema>>;
@@ -106,7 +104,7 @@ interface SearchExecutionResult {
   diagnostics: {
     source: ConnectorSource;
     connector_warnings: string[];
-    parser_warnings: string[];
+    request_warnings: string[];
     total_candidates: number;
     returned_count: number;
     coverage: CoverageEntry[];
@@ -118,26 +116,6 @@ interface SearchExecutionResult {
     };
   };
 }
-
-const STRUCTURED_FIELDS: Array<keyof ToolPayload> = [
-  "transaction_type",
-  "property_types",
-  "city",
-  "locations",
-  "nearby_towns",
-  "min_rooms",
-  "min_capacity_people",
-  "max_price_eur",
-  "min_floor",
-  "exclude_ground_floor",
-  "prefer_exterior",
-  "strict_constraints",
-  "renovation_ok",
-  "tags",
-  "sources",
-  "per_location_limit",
-  "max_results_total"
-];
 
 function readBooleanEnv(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
@@ -170,31 +148,6 @@ function connectorFromEnv(): PisosConnector {
       ? { serializedSearchOverride: process.env.PISOS_SERIALIZED_SEARCH }
       : {})
   });
-}
-
-function toSearchInput(payload: ToolPayload): SearchInput {
-  return {
-    ...(payload.query_text ? { query_text: payload.query_text } : {}),
-    ...(payload.locale ? { locale: payload.locale } : {}),
-    ...(payload.transaction_type ? { transaction_type: payload.transaction_type } : {}),
-    ...(payload.property_types ? { property_types: payload.property_types } : {}),
-    ...(payload.city ? { city: payload.city } : {}),
-    ...(payload.locations ? { locations: payload.locations } : {}),
-    ...(payload.nearby_towns !== undefined ? { nearby_towns: payload.nearby_towns } : {}),
-    ...(payload.min_rooms !== undefined ? { min_rooms: payload.min_rooms } : {}),
-    ...(payload.min_capacity_people !== undefined
-      ? { min_capacity_people: payload.min_capacity_people }
-      : {}),
-    ...(payload.max_price_eur !== undefined ? { max_price_eur: payload.max_price_eur } : {}),
-    ...(payload.min_floor !== undefined ? { min_floor: payload.min_floor } : {}),
-    ...(payload.exclude_ground_floor !== undefined
-      ? { exclude_ground_floor: payload.exclude_ground_floor }
-      : {}),
-    ...(payload.prefer_exterior !== undefined ? { prefer_exterior: payload.prefer_exterior } : {}),
-    ...(payload.strict_constraints !== undefined ? { strict_constraints: payload.strict_constraints } : {}),
-    ...(payload.renovation_ok !== undefined ? { renovation_ok: payload.renovation_ok } : {}),
-    ...(payload.tags ? { tags: payload.tags } : {})
-  };
 }
 
 function textContent(text: string) {
@@ -348,10 +301,6 @@ function resolveLocations(payload: ToolPayload): string[] {
   return [];
 }
 
-function hasStructuredInput(payload: ToolPayload): boolean {
-  return STRUCTURED_FIELDS.some((field) => payload[field] !== undefined);
-}
-
 function baseCriteriaFromPayload(payload: ToolPayload): NormalizedFilters {
   return {
     locale: payload.locale ?? "en",
@@ -409,7 +358,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
       diagnostics: {
         source: "fixture",
         connector_warnings: ["No supported source selected. Current deployment supports only `pisos`."],
-        parser_warnings: [],
+        request_warnings: [],
         total_candidates: 0,
         returned_count: 0,
         coverage: [],
@@ -433,7 +382,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
       diagnostics: {
         source: "fixture",
         connector_warnings: [MISSING_LOCATION_WARNING, MISSING_LOCATION_ACTION],
-        parser_warnings: [
+        request_warnings: [
           "`query_text` is contextual only. In strict structured mode, geography must be explicit."
         ],
         total_candidates: 0,
@@ -557,7 +506,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
     diagnostics: {
       source: selectSource(sourceKinds),
       connector_warnings: uniqueWarnings,
-      parser_warnings: [],
+      request_warnings: [],
       total_candidates: uniqueCandidates.length,
       returned_count: ranked.length,
       coverage,
@@ -571,39 +520,6 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
         ...(requestedLocations.length > 0 ? { per_location_limit: perLocationLimit } : {}),
         max_results_total: maxResultsTotal,
         strict_constraints: strictConstraints
-      }
-    }
-  };
-}
-
-async function runLegacySearch(payload: ToolPayload, connector: PisosConnector): Promise<SearchExecutionResult> {
-  const input = toSearchInput(payload);
-  const parsed = normalizeSearchInput(input);
-  const maxResultsTotal = payload.max_results_total ?? 40;
-
-  const connectorResult = await connector.search(parsed.criteria);
-  const ranked = rankListings(connectorResult.listings, parsed.criteria).slice(0, maxResultsTotal);
-
-  return {
-    criteria: parsed.criteria,
-    listings: ranked,
-    diagnostics: {
-      source: connectorResult.diagnostics.source,
-      connector_warnings: connectorResult.diagnostics.connector_warnings,
-      parser_warnings: [
-        ...parsed.warnings,
-        "Legacy parser mode: provide structured constraints for agent-grade control."
-      ],
-      total_candidates: connectorResult.listings.length,
-      returned_count: ranked.length,
-      coverage: [],
-      execution: {
-        mode: "legacy_parser",
-        locations_requested: parsed.criteria.city ? [parsed.criteria.city] : [],
-        locations_searched: parsed.criteria.city ? [parsed.criteria.city] : [],
-        sources: payload.sources ?? ["pisos"],
-        max_results_total: maxResultsTotal,
-        strict_constraints: parsed.criteria.strict_constraints ?? true
       }
     }
   };
@@ -623,12 +539,8 @@ export function createFynMcpServer(connector = connectorFromEnv()): McpServer {
       inputSchema: toolSchema
     },
     async (payload) => {
-      const structuredMode = hasStructuredInput(payload);
-
       try {
-        const execution = structuredMode
-          ? await runStructuredSearch(payload, connector)
-          : await runLegacySearch(payload, connector);
+        const execution = await runStructuredSearch(payload, connector);
         const cards = execution.listings
           .slice(0, 8)
           .map((listing) => toPresentationCard(listing, execution.criteria.locale));

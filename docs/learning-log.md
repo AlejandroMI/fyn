@@ -73,7 +73,7 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Context: Aggregator MCP strategy requires model agency without backend AI orchestration.
 - Signal: single-city parser-driven calls constrained search breadth and made behavior opaque for future multi-portal growth.
 - Decision: move to model-driven contract where backend executes explicit structured constraints and reports coverage.
-- Action: upgraded `search_properties` schema for multi-location and execution controls, added deterministic floor/exterior constraints, and embedded execution/coverage diagnostics; parser path kept as explicit legacy fallback.
+- Action: upgraded `search_properties` schema for multi-location and execution controls, added deterministic floor/exterior constraints, and embedded execution/coverage diagnostics.
 - Expected impact: better alignment with MCP connector semantics, stronger model control, and cleaner scaling path to multiple portals.
 
 - Date: 2026-02-24
@@ -82,3 +82,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: enforce geography requirement in strict structured mode and sharpen tool schema/description instructions.
 - Action: added `MISSING_LOCATIONS` action-required response when `city`/`locations[]` is missing, plus stronger field descriptions emphasizing location planning and `query_text` as context-only.
 - Expected impact: model behavior shifts from passive query forwarding to explicit multi-location search planning, improving relevance and controllability.
+
+- Date: 2026-02-24
+- Context: Product is pre-launch and we control all clients.
+- Signal: maintaining parser fallback created two backend execution systems and diluted MCP contract clarity.
+- Decision: remove legacy parser execution path and keep only one structured deterministic backend flow.
+- Action: deleted parser package usage from MCP runtime, removed parser workspace package, updated smoke tools/docs to structured-first behavior, and renamed diagnostics `parser_warnings` to `request_warnings`.
+- Expected impact: simpler architecture, fewer hidden behaviors, and stronger model/tool contract alignment.
