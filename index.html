@@ -6,27 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fyn — Find Your Nest</title>
   <meta name="description"
-    content="Fyn helps you find homes in Spain with natural language. Describe what you need, compare explainable matches, and open listings directly on source portals." />
+    content="Describe your next home in plain language. Fyn returns explainable property matches from Spain's top portals with direct links and real photos." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
     rel="stylesheet" />
   <style>
     :root {
-      --bg: #f6f4ee;
+      --bg: #f7f6f1;
       --surface: #ffffff;
-      --ink: #141414;
-      --muted: #5f5f5b;
-      --line: #e7e3d8;
-      --accent: #1a1a1a;
-      --accent-soft: #efede6;
+      --surface-soft: #efeee7;
+      --ink: #141413;
+      --ink-light: #5e5d59;
+      --line: #e3e1d7;
+      --primary: #111111;
       --radius-sm: 12px;
-      --radius-md: 18px;
-      --radius-lg: 26px;
-      --shadow-soft: 0 16px 40px rgba(19, 19, 18, 0.08);
-      --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --font-serif: "Newsreader", Georgia, serif;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+      --shadow-soft: 0 18px 44px rgba(22, 22, 20, 0.08);
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: "Instrument Serif", Georgia, serif;
     }
 
     * {
@@ -35,11 +35,15 @@
       padding: 0;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       font-family: var(--font-sans);
-      background: var(--bg);
       color: var(--ink);
-      line-height: 1.5;
+      background: var(--bg);
+      line-height: 1.52;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
     }
@@ -50,24 +54,24 @@
     }
 
     img {
-      display: block;
       max-width: 100%;
+      display: block;
     }
 
     .container {
-      width: min(1120px, 92vw);
+      width: min(1140px, 92vw);
       margin: 0 auto;
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       font-size: 0.78rem;
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--ink-light);
     }
 
     .eyebrow::before {
@@ -80,14 +84,14 @@
     .site-header {
       position: sticky;
       top: 0;
-      z-index: 30;
+      z-index: 50;
       backdrop-filter: blur(10px);
-      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
       border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
     }
 
     .header-wrap {
-      min-height: 76px;
+      min-height: 78px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -97,29 +101,25 @@
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.72rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
+      font-size: 1.08rem;
     }
 
-    .brand-mark {
+    .brand-logo {
       width: 34px;
       height: 34px;
-      border-radius: 11px;
-      background: linear-gradient(138deg, #c9eb79 3%, #dccd90 44%, #80b3d9 93%);
-      box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.32);
-    }
-
-    .brand span:last-child {
-      font-size: 1.15rem;
+      border-radius: 10px;
+      object-fit: cover;
     }
 
     .top-nav {
       display: inline-flex;
       align-items: center;
       gap: 1.2rem;
-      color: var(--muted);
-      font-size: 0.94rem;
+      color: var(--ink-light);
+      font-size: 0.93rem;
       font-weight: 500;
     }
 
@@ -135,8 +135,8 @@
       font-size: 0.94rem;
       font-weight: 600;
       line-height: 1;
-      padding: 0.88rem 1.35rem;
-      transition: transform 0.18s ease, opacity 0.18s ease;
+      padding: 0.9rem 1.34rem;
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
     .btn:hover {
@@ -144,24 +144,24 @@
     }
 
     .btn-primary {
-      background: var(--accent);
+      background: var(--primary);
       color: #fff;
     }
 
     .btn-secondary {
       background: var(--surface);
-      color: var(--ink);
       border: 1px solid var(--line);
+      color: var(--ink);
     }
 
     .hero {
-      padding: 4.5rem 0 3.2rem;
+      padding: 4.2rem 0 3.5rem;
     }
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
-      gap: 2.2rem;
+      grid-template-columns: 1.08fr 1fr;
+      gap: 1.25rem;
       align-items: stretch;
     }
 
@@ -169,50 +169,51 @@
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
-      padding: clamp(1.6rem, 2.5vw, 2.6rem);
       box-shadow: var(--shadow-soft);
+      padding: clamp(1.5rem, 2.4vw, 2.5rem);
     }
 
     h1 {
-      margin-top: 1rem;
+      margin-top: 0.95rem;
       font-family: var(--font-serif);
-      font-size: clamp(2.2rem, 5vw, 4.1rem);
-      line-height: 0.98;
-      font-weight: 500;
+      font-size: clamp(2.45rem, 5.4vw, 5rem);
+      line-height: 0.95;
       letter-spacing: -0.03em;
+      font-weight: 500;
+      color: var(--ink);
     }
 
-    .lead {
-      margin-top: 1.2rem;
-      color: var(--muted);
-      font-size: 1.04rem;
-      max-width: 52ch;
+    .hero-sub {
+      margin-top: 1.25rem;
+      max-width: 62ch;
+      color: var(--ink-light);
+      font-size: 1.03rem;
     }
 
     .hero-actions {
-      margin-top: 1.6rem;
+      margin-top: 1.5rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 0.7rem;
+      gap: 0.72rem;
     }
 
-    .hero-points {
-      margin-top: 1.4rem;
+    .checks {
+      margin-top: 1.2rem;
       list-style: none;
       display: grid;
-      gap: 0.55rem;
-      color: var(--muted);
+      gap: 0.52rem;
       font-size: 0.95rem;
+      color: var(--ink-light);
     }
 
-    .hero-points li {
+    .checks li {
       display: inline-flex;
-      align-items: baseline;
       gap: 0.45rem;
+      align-items: baseline;
     }
 
-    .hero-points li::before {
-      content: "•";
+    .checks li::before {
+      content: "✓";
       color: var(--ink);
       font-weight: 700;
     }
@@ -221,7 +222,7 @@
       position: relative;
       border-radius: var(--radius-lg);
       overflow: hidden;
-      min-height: 510px;
+      min-height: 540px;
       box-shadow: var(--shadow-soft);
     }
 
@@ -231,288 +232,301 @@
       object-fit: cover;
     }
 
-    .hero-note {
+    .hero-caption {
       position: absolute;
       left: 1rem;
       right: 1rem;
       bottom: 1rem;
-      padding: 0.9rem 1rem;
-      border-radius: 14px;
       background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      padding: 0.88rem 0.95rem;
       font-size: 0.9rem;
-      color: #252525;
+      color: #2a2a27;
     }
 
-    .hero-note strong {
+    .hero-caption strong {
       display: block;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #5b5b57;
-      margin-bottom: 0.3rem;
+      color: #666660;
+      margin-bottom: 0.28rem;
     }
 
     section {
-      padding: 3.2rem 0;
+      padding: 3.3rem 0;
     }
 
     .section-head {
+      margin-bottom: 1.45rem;
       display: grid;
       gap: 0.8rem;
-      margin-bottom: 1.6rem;
     }
 
     h2 {
       font-family: var(--font-serif);
-      font-size: clamp(1.9rem, 4vw, 2.9rem);
-      letter-spacing: -0.03em;
-      line-height: 1;
       font-weight: 500;
+      font-size: clamp(2rem, 4.6vw, 3.3rem);
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+      color: var(--ink);
     }
 
-    .section-sub {
-      color: var(--muted);
-      max-width: 62ch;
+    .section-copy {
+      color: var(--ink-light);
       font-size: 1rem;
+      max-width: 68ch;
     }
 
-    .persona-grid {
+    .problem {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: clamp(1.5rem, 2.4vw, 2.4rem);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .personas-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1rem;
     }
 
-    .persona-card {
+    .persona {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
-      padding: 1.25rem;
+      padding: 1.18rem;
       display: grid;
-      gap: 0.75rem;
+      gap: 0.72rem;
     }
 
-    .persona-tag {
-      display: inline-flex;
-      align-items: center;
+    .tag {
       width: fit-content;
       border-radius: 999px;
-      background: var(--accent-soft);
-      padding: 0.32rem 0.68rem;
-      font-size: 0.76rem;
+      background: var(--surface-soft);
+      color: #494943;
+      padding: 0.31rem 0.68rem;
+      font-size: 0.75rem;
       font-weight: 600;
+      letter-spacing: 0.09em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #4d4c48;
     }
 
-    .persona-card h3 {
-      font-size: 1.12rem;
+    .persona h3 {
+      font-size: 1.08rem;
+      line-height: 1.25;
       letter-spacing: -0.01em;
     }
 
-    .persona-card p {
-      color: var(--muted);
-      font-size: 0.96rem;
+    .persona .summary {
+      color: var(--ink-light);
+      font-size: 0.95rem;
     }
 
-    .persona-card ul {
+    .persona ul {
       list-style: none;
-      color: #2d2d2a;
+      display: grid;
+      gap: 0.42rem;
       font-size: 0.9rem;
-      display: grid;
-      gap: 0.35rem;
-      margin-top: 0.25rem;
+      color: #2f2f2d;
     }
 
-    .persona-card li {
+    .persona li {
       display: inline-flex;
-      gap: 0.4rem;
+      align-items: baseline;
+      gap: 0.42rem;
     }
 
-    .persona-card li::before {
+    .persona li::before {
       content: "↳";
-      color: #787873;
+      color: #7b7a74;
+      font-weight: 600;
+      flex-shrink: 0;
     }
 
-    .results-shell {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
-      padding: 1.05rem;
-      box-shadow: var(--shadow-soft);
-    }
-
-    .results-meta {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-      margin-bottom: 0.9rem;
-      color: var(--muted);
-      font-size: 0.86rem;
-      font-weight: 500;
-    }
-
-    .results-rail {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(250px, 1fr);
-      gap: 0.8rem;
-      overflow-x: auto;
-      padding-bottom: 0.3rem;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: thin;
-    }
-
-    .listing {
-      display: grid;
-      grid-template-rows: 210px auto;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      overflow: hidden;
-      scroll-snap-align: start;
-      min-height: 100%;
-    }
-
-    .listing img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .listing-body {
-      padding: 0.9rem;
-      display: grid;
-      gap: 0.55rem;
-      align-content: start;
-    }
-
-    .listing h3 {
-      font-size: 1.03rem;
-      letter-spacing: -0.01em;
-      line-height: 1.22;
-    }
-
-    .listing .meta {
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .listing .price {
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      font-size: 1rem;
-    }
-
-    .listing .open {
-      margin-top: 0.3rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      width: fit-content;
-      border-radius: 999px;
-      padding: 0.55rem 0.86rem;
-      background: #111;
-      color: #fff;
-    }
-
-    .workflow-grid {
+    .steps-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.9rem;
+      gap: 1rem;
     }
 
     .step {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
-      padding: 1.25rem;
+      padding: 1.2rem;
       display: grid;
-      gap: 0.65rem;
+      gap: 0.68rem;
     }
 
-    .step .num {
+    .step-number {
       width: 32px;
       height: 32px;
+      border-radius: 999px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 999px;
-      background: var(--accent-soft);
+      background: var(--surface-soft);
+      color: #3f3f3a;
       font-size: 0.86rem;
       font-weight: 700;
-      color: #34342f;
     }
 
     .step h3 {
       font-size: 1.05rem;
       letter-spacing: -0.01em;
+      line-height: 1.22;
     }
 
     .step p {
-      color: var(--muted);
+      color: var(--ink-light);
       font-size: 0.93rem;
     }
 
-    .final-cta {
+    .preview-shell {
+      background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: var(--radius-lg);
-      background: #131312;
-      color: #efefec;
-      padding: clamp(1.4rem, 3vw, 2.4rem);
+      box-shadow: var(--shadow-soft);
+      padding: 1.05rem;
+    }
+
+    .preview-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      color: var(--ink-light);
+      font-size: 0.86rem;
+      font-weight: 500;
+      margin-bottom: 0.86rem;
+    }
+
+    .cards-rail {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(255px, 1fr);
+      gap: 0.8rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 222px auto;
+      scroll-snap-align: start;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-body {
+      padding: 0.92rem;
+      display: grid;
+      gap: 0.5rem;
+      align-content: start;
+    }
+
+    .card h3 {
+      font-size: 1.02rem;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+
+    .meta {
+      font-size: 0.88rem;
+      color: var(--ink-light);
+    }
+
+    .price {
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .open {
+      margin-top: 0.22rem;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 0.56rem 0.86rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      background: #111;
+      color: #fff;
+    }
+
+    .trust-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: clamp(1.4rem, 2.2vw, 2.2rem);
+    }
+
+    .final-cta {
+      background: #151514;
+      color: #f6f6f4;
+      border-radius: var(--radius-lg);
+      padding: clamp(1.5rem, 2.5vw, 2.4rem);
       display: grid;
       gap: 0.8rem;
     }
 
-    .final-cta h2 {
-      color: #f7f7f4;
-      margin-bottom: 0.2rem;
-    }
-
     .final-cta p {
-      max-width: 60ch;
-      color: #c8c8c2;
+      color: #cbc9c2;
+      max-width: 62ch;
     }
 
-    .final-cta .actions {
-      margin-top: 0.4rem;
+    .final-actions {
+      margin-top: 0.34rem;
       display: flex;
       flex-wrap: wrap;
       gap: 0.7rem;
     }
 
-    .final-cta .actions .btn-primary {
-      background: #efefec;
-      color: #111;
+    .final-actions .btn-primary {
+      background: #f2f2ef;
+      color: #141414;
     }
 
     footer {
       padding: 2.4rem 0 2.8rem;
-      color: var(--muted);
+      color: var(--ink-light);
       font-size: 0.86rem;
     }
 
     .foot {
       border-top: 1px solid var(--line);
-      padding-top: 1.1rem;
+      padding-top: 1rem;
       display: flex;
       justify-content: space-between;
-      gap: 0.7rem;
+      gap: 0.9rem;
       flex-wrap: wrap;
     }
 
-    .photo-credit {
+    .credits {
       display: inline-flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.52rem;
     }
 
-    .photo-credit a {
+    .credits a {
       text-decoration: underline;
       text-underline-offset: 2px;
     }
 
-    @media (max-width: 1000px) {
+    @media (max-width: 1020px) {
       .hero-grid {
         grid-template-columns: 1fr;
       }
@@ -521,32 +535,32 @@
         min-height: 430px;
       }
 
-      .persona-grid,
-      .workflow-grid {
-        grid-template-columns: 1fr 1fr;
+      .personas-grid,
+      .steps-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 760px) {
       .top-nav {
         display: none;
       }
 
       .hero {
-        padding-top: 2.9rem;
+        padding-top: 2.8rem;
       }
 
-      .persona-grid,
-      .workflow-grid {
+      .personas-grid,
+      .steps-grid {
         grid-template-columns: 1fr;
       }
 
-      .results-rail {
+      .cards-rail {
         grid-auto-columns: minmax(82vw, 1fr);
       }
 
-      .listing {
-        grid-template-rows: 240px auto;
+      .card {
+        grid-template-rows: 238px auto;
       }
     }
   </style>
@@ -556,13 +570,14 @@
   <header class="site-header">
     <div class="container header-wrap">
       <a href="/" class="brand" aria-label="Fyn home">
-        <span class="brand-mark" aria-hidden="true"></span>
+        <img src="/public/web/fynlogo.png" alt="Fyn logo" class="brand-logo" />
         <span>Fyn</span>
       </a>
-      <nav class="top-nav" aria-label="Primary">
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a href="#problem">Problem</a>
         <a href="#personas">Personas</a>
-        <a href="#results">Preview</a>
         <a href="#how">How it works</a>
+        <a href="#preview">Preview</a>
         <a href="/developers.html">Developers</a>
       </nav>
     </div>
@@ -572,29 +587,50 @@
     <section class="hero">
       <div class="container hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">Find Your Nest</p>
+          <p class="eyebrow">Fyn — Find Your Nest</p>
           <h1>Describe your next home in plain language.</h1>
-          <p class="lead">
-            Fyn is a property search layer for Spain. You describe what matters, models decide search strategy, and Fyn
-            returns explainable matches with direct portal links and photos.
+          <p class="hero-sub">
+            Finding a property in Spain should not be a second job. Fyn is a property search layer that connects directly
+            to your favorite AI. You describe what matters in your own words, and Fyn returns explainable matches from
+            across the whole market with direct portal links and photos.
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="https://chatgpt.com" target="_blank" rel="noreferrer">Open in ChatGPT</a>
-            <a class="btn btn-secondary" href="/developers.html">Read MCP docs</a>
+            <a class="btn btn-secondary" href="/developers.html">Read MCP docs (For Developers)</a>
           </div>
-          <ul class="hero-points">
+          <ul class="checks">
             <li>No giant filter maze before you can start.</li>
             <li>Every result keeps source transparency and deep links.</li>
-            <li>Built for connectors first, product UX second.</li>
+            <li>Search across Spain's top real estate portals instantly.</li>
           </ul>
         </div>
         <div class="hero-visual">
           <img src="/public/web/patio-film-zheka-kapusta.jpg"
-            alt="A sunlit patio that reflects natural, warm home search vibes" loading="eager" />
-          <div class="hero-note">
+            alt="Sunlit patio and warm home atmosphere for lifestyle-led home search" loading="eager" />
+          <div class="hero-caption">
             <strong>Example prompt</strong>
-            “Busco casa en un pueblo bonito con vistas, cerca de naturaleza, para comprar.”
+            “Busco casa en un pueblo bonito con vistas, cerca de naturaleza, para comprar. Max 350k.”
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="problem">
+      <div class="container">
+        <div class="problem">
+          <div class="section-head">
+            <p class="eyebrow">The Problem</p>
+            <h2>Looking for a place is a nightmare. It doesn't have to be.</h2>
+          </div>
+          <p class="section-copy">
+            You know the drill. You install five different apps. You set up the exact same filters on every single one.
+            You refresh constantly. You compromise. Dropdown menus cannot capture nuances like “I am open to
+            renovations” or “a place with great views.”
+          </p>
+          <p class="section-copy" style="margin-top:0.85rem;">
+            Fyn fixes this by bringing the market into one searchable layer and letting you search the way you actually
+            think.
+          </p>
         </div>
       </div>
     </section>
@@ -602,108 +638,47 @@
     <section id="personas">
       <div class="container">
         <div class="section-head">
-          <p class="eyebrow">Who Fyn serves</p>
+          <p class="eyebrow">Who Fyn Serves</p>
           <h2>Built for real decision moments.</h2>
-          <p class="section-sub">
-            The page now talks to the actual people we need first: buyers and renters under time pressure, lifestyle
-            seekers, and builders integrating Fyn into agents.
+          <p class="section-copy">
+            Fyn is designed for the people who need it most: buyers under time pressure, dreamers looking for a
+            lifestyle, and developers building the next generation of agents.
           </p>
         </div>
-        <div class="persona-grid">
-          <article class="persona-card">
-            <span class="persona-tag">City movers</span>
-            <h3>Buyers and renters comparing neighborhoods fast.</h3>
-            <p>
-              They want clarity in minutes, not dozens of tabs and portal-specific filter logic.
-            </p>
-            <ul>
-              <li>Single intent prompt in ES or EN.</li>
-              <li>Constraint-first results for budget and rooms.</li>
-              <li>Direct jump to the original listing.</li>
-            </ul>
-          </article>
-          <article class="persona-card">
-            <span class="persona-tag">Lifestyle seekers</span>
-            <h3>Second-home and nature buyers searching across towns.</h3>
-            <p>
-              They care about atmosphere first and can refine location after seeing real supply.
-            </p>
-            <ul>
-              <li>Multi-location search in one request.</li>
-              <li>Natural-language intents like “light”, “views”, “quiet”.</li>
-              <li>Explainable match notes per listing.</li>
-            </ul>
-          </article>
-          <article class="persona-card">
-            <span class="persona-tag">AI builders</span>
-            <h3>Teams exposing property search through connectors and agents.</h3>
-            <p>
-              They need stable interfaces, not custom parsing per portal.
-            </p>
-            <ul>
-              <li>MCP tool shape optimized for LLM planning.</li>
-              <li>Normalized response cards across sources.</li>
-              <li>Clear diagnostics for fallback and coverage.</li>
-            </ul>
-          </article>
-        </div>
-      </div>
-    </section>
 
-    <section id="results">
-      <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">Search preview</p>
-          <h2>Real imagery, clean cards, clear actions.</h2>
-          <p class="section-sub">
-            Compact carousel-style layout keeps cards visual without flooding the chat. Each card has one explicit action:
-            open the listing source.
-          </p>
-        </div>
-        <div class="results-shell">
-          <div class="results-meta">
-            <span>Example run: 12 matches from 5 locations</span>
-            <span>Mode: connector-first · source: scrape/API fallback</span>
-          </div>
-          <div class="results-rail">
-            <article class="listing">
-              <img src="/public/web/house-1600596542815.jpg" alt="Stone house with large front garden" loading="lazy" />
-              <div class="listing-body">
-                <h3>Casa con jardín en entorno rural</h3>
-                <p class="meta">Ronda · 4 hab. · matched for nature + views</p>
-                <p class="price">390.000 €</p>
-                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
-              </div>
-            </article>
-            <article class="listing">
-              <img src="/public/web/apartment-8ollvy24dvu.jpg" alt="Apartment block at golden hour in the city" loading="lazy" />
-              <div class="listing-body">
-                <h3>Piso luminoso en zona urbana</h3>
-                <p class="meta">Valencia · 3 hab. · matched for natural light</p>
-                <p class="price">349.000 €</p>
-                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
-              </div>
-            </article>
-            <article class="listing">
-              <img src="/public/web/alley-bjerbstbkhe.jpg"
-                alt="Historic narrow street in Spain with warm evening light" loading="lazy" />
-              <div class="listing-body">
-                <h3>Casa tradicional en casco histórico</h3>
-                <p class="meta">Albarracín · 3 hab. · matched for village lifestyle</p>
-                <p class="price">210.000 €</p>
-                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
-              </div>
-            </article>
-            <article class="listing">
-              <img src="/public/web/tower-3JYIgAKWB2s.jpg" alt="Tall building with greenery nearby" loading="lazy" />
-              <div class="listing-body">
-                <h3>Piso para inversión con alta demanda</h3>
-                <p class="meta">Madrid · 2 hab. · matched for urban rental demand</p>
-                <p class="price">320.000 €</p>
-                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
-              </div>
-            </article>
-          </div>
+        <div class="personas-grid">
+          <article class="persona">
+            <span class="tag">City Movers</span>
+            <h3>Buyers and renters comparing neighborhoods fast.</h3>
+            <p class="summary">They want clarity in minutes, not dozens of tabs and portal-specific filter logic.</p>
+            <ul>
+              <li><strong>Single intent prompt:</strong> Search in Spanish or English.</li>
+              <li><strong>Constraint-first results:</strong> Hard budget and room limits are respected.</li>
+              <li><strong>Direct jump:</strong> One click to the original listing to contact the seller.</li>
+            </ul>
+          </article>
+
+          <article class="persona">
+            <span class="tag">Lifestyle Seekers</span>
+            <h3>Second-home and nature buyers searching across towns.</h3>
+            <p class="summary">They care about atmosphere first and refine location after seeing real supply.</p>
+            <ul>
+              <li><strong>Multi-location search:</strong> Scan multiple regions in a single request.</li>
+              <li><strong>Vibe-based matching:</strong> Ask for “light”, “views”, or “quiet”.</li>
+              <li><strong>Explainable notes:</strong> See exactly why each property matched.</li>
+            </ul>
+          </article>
+
+          <article class="persona">
+            <span class="tag">AI Builders</span>
+            <h3>Teams exposing property search through connectors and agents.</h3>
+            <p class="summary">They need stable interfaces, not custom parsing per portal.</p>
+            <ul>
+              <li><strong>MCP tool shape:</strong> Optimized specifically for LLM planning.</li>
+              <li><strong>Normalized response cards:</strong> Clean data across portal sources.</li>
+              <li><strong>Clear diagnostics:</strong> Built-in fallback and coverage reporting.</li>
+            </ul>
+          </article>
         </div>
       </div>
     </section>
@@ -711,25 +686,115 @@
     <section id="how">
       <div class="container">
         <div class="section-head">
-          <p class="eyebrow">How it works</p>
-          <h2>Simple flow, connector by connector.</h2>
+          <p class="eyebrow">How It Works</p>
+          <h2>Simple flow. Talk to your AI, Fyn does the rest.</h2>
+          <p class="section-copy">
+            You do not need to learn a new interface. Plug Fyn into your AI and start chatting.
+          </p>
         </div>
-        <div class="workflow-grid">
+
+        <div class="steps-grid">
           <article class="step">
-            <span class="num">1</span>
-            <h3>Model plans the search</h3>
-            <p>The LLM chooses locations, constraint strictness, and search breadth based on user intent.</p>
+            <span class="step-number">1</span>
+            <h3>The model plans the search</h3>
+            <p>
+              You type what you want. Your AI chooses locations, strictness, and search breadth from your intent.
+            </p>
           </article>
+
           <article class="step">
-            <span class="num">2</span>
-            <h3>Fyn executes connectors</h3>
-            <p>MCP tools run portal searches, normalize cards, and attach diagnostics for transparency.</p>
+            <span class="step-number">2</span>
+            <h3>Fyn executes the connectors</h3>
+            <p>
+              Fyn runs portal searches, normalizes messy listing data into clean cards, and attaches diagnostics.
+            </p>
           </article>
+
           <article class="step">
-            <span class="num">3</span>
-            <h3>User decides faster</h3>
-            <p>People compare cards, read why each match appears, and open the source listing immediately.</p>
+            <span class="step-number">3</span>
+            <h3>You decide faster</h3>
+            <p>
+              Compare clear cards in chat, see why each match appeared, and open the source listing immediately.
+            </p>
           </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="preview">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Search Preview</p>
+          <h2>Real imagery, clean cards, clear actions.</h2>
+          <p class="section-copy">
+            A compact layout keeps cards visual without flooding your chat. Each card has one explicit action: open the
+            listing source.
+          </p>
+        </div>
+
+        <div class="preview-shell">
+          <div class="preview-meta">
+            <span>Sample run · 4 homes shown</span>
+            <span>Explainable matches · Direct portal links</span>
+          </div>
+
+          <div class="cards-rail">
+            <article class="card">
+              <img src="/public/web/house-1600596542815.jpg" alt="Casa con jardín en entorno rural" loading="lazy" />
+              <div class="card-body">
+                <h3>Casa con jardín en entorno rural</h3>
+                <p class="meta">Ronda · 4 hab. · Matched for: nature + views</p>
+                <p class="price">390.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing →</a>
+              </div>
+            </article>
+
+            <article class="card">
+              <img src="/public/web/apartment-8ollvy24dvu.jpg" alt="Piso luminoso en zona urbana" loading="lazy" />
+              <div class="card-body">
+                <h3>Piso luminoso en zona urbana</h3>
+                <p class="meta">Valencia · 3 hab. · Matched for: natural light</p>
+                <p class="price">349.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing →</a>
+              </div>
+            </article>
+
+            <article class="card">
+              <img src="/public/web/alley-bjerbstbkhe.jpg" alt="Casa tradicional en zona histórica" loading="lazy" />
+              <div class="card-body">
+                <h3>Casa tradicional en casco histórico</h3>
+                <p class="meta">Albarracín · 3 hab. · Matched for: village lifestyle</p>
+                <p class="price">210.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing →</a>
+              </div>
+            </article>
+
+            <article class="card">
+              <img src="/public/web/tower-3JYIgAKWB2s.jpg" alt="Piso para inversión en zona urbana" loading="lazy" />
+              <div class="card-body">
+                <h3>Piso para inversión con alta demanda</h3>
+                <p class="meta">Madrid · 2 hab. · Matched for: urban opportunity</p>
+                <p class="price">320.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing →</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="trust">
+      <div class="container">
+        <div class="trust-box">
+          <div class="section-head">
+            <p class="eyebrow">Trust & Transparency</p>
+            <h2>Practical, transparent, and honest.</h2>
+          </div>
+          <p class="section-copy">
+            We do not hide details to trap you in our product. Fyn is designed to get you the information you need and
+            get out of your way. We always show the original source link, provide clear reasoning for every match, and
+            respect your exact constraints.
+          </p>
         </div>
       </div>
     </section>
@@ -737,15 +802,16 @@
     <section>
       <div class="container">
         <div class="final-cta">
-          <p class="eyebrow" style="color: #a9a99f">Next step</p>
-          <h2>Fyn is live in development mode. Launch path is connector expansion + public landing.</h2>
+          <p class="eyebrow" style="color:#a9a79f;">Final Call</p>
+          <h2>Fyn is live. Ready to find your nest?</h2>
           <p>
-            We already have a working ChatGPT connector flow. Next cycle: add more portals, keep interface consistency,
-            and point users from this landing to the live connector experience.
+            We already have a working ChatGPT connector flow. Stop scrolling endless filters and start finding what you
+            actually want.
           </p>
-          <div class="actions">
-            <a class="btn btn-primary" href="https://chatgpt.com" target="_blank" rel="noreferrer">Try connector</a>
-            <a class="btn btn-secondary" href="/developers.html">Developer quickstart</a>
+          <div class="final-actions">
+            <a class="btn btn-primary" href="https://chatgpt.com" target="_blank" rel="noreferrer">Try Connector in
+              ChatGPT</a>
+            <a class="btn btn-secondary" href="/developers.html">Developer Quickstart</a>
           </div>
         </div>
       </div>
@@ -754,8 +820,8 @@
 
   <footer>
     <div class="container foot">
-      <p>© <span id="year"></span> Fyn · Find Your Nest.</p>
-      <p class="photo-credit">
+      <p>© <span id="year"></span> Fyn · Find Your Nest</p>
+      <p class="credits">
         Photos:
         <a href="https://unsplash.com/photos/-JXMvTTmdmY" target="_blank" rel="noreferrer">patio</a>
         <a href="https://unsplash.com/photos/BjerBstbKHE" target="_blank" rel="noreferrer">street</a>
