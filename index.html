@@ -1,494 +1,773 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fyn | Find Your Nest</title>
-    <meta
-      name="description"
-      content="Fyn helps you find homes with natural language. One query, multiple portals, explainable results."
-    />
-    <style>
-      :root {
-        color-scheme: light;
-        --canvas: #f4f3ec;
-        --ink: #101112;
-        --muted: #5b5d61;
-        --line: #d6d7cf;
-        --card: #f8f8f4;
-        --accent: #101112;
-        --accent-ink: #ffffff;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fyn — Find Your Nest</title>
+  <meta name="description"
+    content="Fyn helps you find homes in Spain with natural language. Describe what you need, compare explainable matches, and open listings directly on source portals." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f6f4ee;
+      --surface: #ffffff;
+      --ink: #141414;
+      --muted: #5f5f5b;
+      --line: #e7e3d8;
+      --accent: #1a1a1a;
+      --accent-soft: #efede6;
+      --radius-sm: 12px;
+      --radius-md: 18px;
+      --radius-lg: 26px;
+      --shadow-soft: 0 16px 40px rgba(19, 19, 18, 0.08);
+      --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: "Newsreader", Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .container {
+      width: min(1120px, 92vw);
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 22px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(10px);
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+    }
+
+    .header-wrap {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: linear-gradient(138deg, #c9eb79 3%, #dccd90 44%, #80b3d9 93%);
+      box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.32);
+    }
+
+    .brand span:last-child {
+      font-size: 1.15rem;
+    }
+
+    .top-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.2rem;
+      color: var(--muted);
+      font-size: 0.94rem;
+      font-weight: 500;
+    }
+
+    .top-nav a:hover {
+      color: var(--ink);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      line-height: 1;
+      padding: 0.88rem 1.35rem;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .hero {
+      padding: 4.5rem 0 3.2rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 2.2rem;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: clamp(1.6rem, 2.5vw, 2.6rem);
+      box-shadow: var(--shadow-soft);
+    }
+
+    h1 {
+      margin-top: 1rem;
+      font-family: var(--font-serif);
+      font-size: clamp(2.2rem, 5vw, 4.1rem);
+      line-height: 0.98;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      margin-top: 1.2rem;
+      color: var(--muted);
+      font-size: 1.04rem;
+      max-width: 52ch;
+    }
+
+    .hero-actions {
+      margin-top: 1.6rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .hero-points {
+      margin-top: 1.4rem;
+      list-style: none;
+      display: grid;
+      gap: 0.55rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .hero-points li {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.45rem;
+    }
+
+    .hero-points li::before {
+      content: "•";
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .hero-visual {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      min-height: 510px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hero-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-note {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      font-size: 0.9rem;
+      color: #252525;
+    }
+
+    .hero-note strong {
+      display: block;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #5b5b57;
+      margin-bottom: 0.3rem;
+    }
+
+    section {
+      padding: 3.2rem 0;
+    }
+
+    .section-head {
+      display: grid;
+      gap: 0.8rem;
+      margin-bottom: 1.6rem;
+    }
+
+    h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.9rem, 4vw, 2.9rem);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      font-weight: 500;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      max-width: 62ch;
+      font-size: 1rem;
+    }
+
+    .persona-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .persona-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .persona-tag {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      padding: 0.32rem 0.68rem;
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #4d4c48;
+    }
+
+    .persona-card h3 {
+      font-size: 1.12rem;
+      letter-spacing: -0.01em;
+    }
+
+    .persona-card p {
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .persona-card ul {
+      list-style: none;
+      color: #2d2d2a;
+      font-size: 0.9rem;
+      display: grid;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+    }
+
+    .persona-card li {
+      display: inline-flex;
+      gap: 0.4rem;
+    }
+
+    .persona-card li::before {
+      content: "↳";
+      color: #787873;
+    }
+
+    .results-shell {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 1.05rem;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .results-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.9rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 500;
+    }
+
+    .results-rail {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(250px, 1fr);
+      gap: 0.8rem;
+      overflow-x: auto;
+      padding-bottom: 0.3rem;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+    }
+
+    .listing {
+      display: grid;
+      grid-template-rows: 210px auto;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      min-height: 100%;
+    }
+
+    .listing img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .listing-body {
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.55rem;
+      align-content: start;
+    }
+
+    .listing h3 {
+      font-size: 1.03rem;
+      letter-spacing: -0.01em;
+      line-height: 1.22;
+    }
+
+    .listing .meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .listing .price {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      font-size: 1rem;
+    }
+
+    .listing .open {
+      margin-top: 0.3rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 0.55rem 0.86rem;
+      background: #111;
+      color: #fff;
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .step .num {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #34342f;
+    }
+
+    .step h3 {
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .final-cta {
+      border-radius: var(--radius-lg);
+      background: #131312;
+      color: #efefec;
+      padding: clamp(1.4rem, 3vw, 2.4rem);
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .final-cta h2 {
+      color: #f7f7f4;
+      margin-bottom: 0.2rem;
+    }
+
+    .final-cta p {
+      max-width: 60ch;
+      color: #c8c8c2;
+    }
+
+    .final-cta .actions {
+      margin-top: 0.4rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .final-cta .actions .btn-primary {
+      background: #efefec;
+      color: #111;
+    }
+
+    footer {
+      padding: 2.4rem 0 2.8rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .foot {
+      border-top: 1px solid var(--line);
+      padding-top: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .photo-credit {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .photo-credit a {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    @media (max-width: 1000px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
       }
 
-      * {
-        box-sizing: border-box;
+      .hero-visual {
+        min-height: 430px;
       }
 
-      html,
-      body {
-        margin: 0;
-        padding: 0;
+      .persona-grid,
+      .workflow-grid {
+        grid-template-columns: 1fr 1fr;
       }
+    }
 
-      body {
-        font-family: "Inter", "Avenir Next", "Segoe UI", sans-serif;
-        color: var(--ink);
-        background: var(--canvas);
-        line-height: 1.4;
-      }
-
-      .ambient {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: -1;
-        background:
-          radial-gradient(700px 400px at 75% 10%, rgba(182, 224, 130, 0.24), transparent 70%),
-          radial-gradient(680px 380px at 20% 85%, rgba(126, 182, 231, 0.2), transparent 72%);
-      }
-
-      .shell {
-        width: min(1120px, calc(100% - 2rem));
-        margin: 0 auto;
-        padding: 1.2rem 0 3rem;
-      }
-
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-      }
-
-      .brand {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.72rem;
-        text-decoration: none;
-        color: inherit;
-      }
-
-      .wordmark {
-        font-size: 1.36rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-      }
-
-      .status {
-        font-size: 0.78rem;
-        color: var(--muted);
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 0.35rem 0.62rem;
-        background: rgba(255, 255, 255, 0.5);
-        white-space: nowrap;
-      }
-
-      .logo {
-        width: 34px;
-        height: 34px;
-        display: block;
+    @media (max-width: 720px) {
+      .top-nav {
+        display: none;
       }
 
       .hero {
-        margin-top: 2rem;
-        display: grid;
-        grid-template-columns: 1.08fr 0.92fr;
-        gap: 1.2rem;
+        padding-top: 2.9rem;
       }
 
-      .hero-copy {
-        background: rgba(255, 255, 255, 0.42);
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        padding: clamp(1.15rem, 2.3vw, 2rem);
+      .persona-grid,
+      .workflow-grid {
+        grid-template-columns: 1fr;
       }
 
-      .eyebrow {
-        margin: 0;
-        font-size: 0.76rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted);
+      .results-rail {
+        grid-auto-columns: minmax(82vw, 1fr);
       }
 
-      h1 {
-        margin: 0.4rem 0 0;
-        font-size: clamp(2rem, 5.5vw, 4rem);
-        line-height: 0.96;
-        letter-spacing: -0.03em;
+      .listing {
+        grid-template-rows: 240px auto;
       }
+    }
+  </style>
+</head>
 
-      .lede {
-        margin-top: 1rem;
-        max-width: 54ch;
-        color: var(--muted);
-        font-size: 1.04rem;
-      }
-
-      .actions {
-        margin-top: 1.35rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.65rem;
-      }
-
-      .btn {
-        appearance: none;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 0.58rem 0.96rem;
-        font-size: 0.92rem;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-      }
-
-      .btn-dark {
-        background: var(--accent);
-        color: var(--accent-ink);
-        border-color: transparent;
-      }
-
-      .btn-light {
-        background: rgba(255, 255, 255, 0.72);
-        color: var(--ink);
-      }
-
-      .hint {
-        margin-top: 0.78rem;
-        color: var(--muted);
-        font-size: 0.85rem;
-      }
-
-      .hero-card {
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        padding: clamp(1rem, 2vw, 1.4rem);
-        background: var(--card);
-        display: grid;
-        align-content: space-between;
-        gap: 1rem;
-      }
-
-      .hero-card-copy {
-        margin: 0;
-        font-size: clamp(1.35rem, 2.5vw, 2rem);
-        line-height: 1.04;
-        letter-spacing: -0.02em;
-      }
-
-      .hero-card-sub {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.92rem;
-      }
-
-      .queries {
-        margin-top: 1.2rem;
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        padding: 0.9rem;
-        background: rgba(255, 255, 255, 0.4);
-      }
-
-      .queries h2 {
-        margin: 0;
-        font-size: 1.1rem;
-        letter-spacing: -0.01em;
-      }
-
-      .query-grid {
-        margin-top: 0.7rem;
-        display: grid;
-        gap: 0.55rem;
-      }
-
-      .query-chip {
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 0.5rem 0.78rem;
-        width: fit-content;
-        max-width: 100%;
-        background: rgba(255, 255, 255, 0.7);
-        color: #2d2f32;
-        font-size: 0.88rem;
-      }
-
-      .sample-row {
-        margin-top: 1.2rem;
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: minmax(280px, 1fr);
-        gap: 0.8rem;
-        overflow-x: auto;
-        padding-bottom: 0.2rem;
-        scroll-snap-type: x mandatory;
-      }
-
-      .sample-card {
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        overflow: hidden;
-        background: #fff;
-        scroll-snap-align: start;
-        min-height: 360px;
-        display: grid;
-        grid-template-rows: auto 1fr;
-      }
-
-      .sample-image {
-        width: 100%;
-        height: 210px;
-        object-fit: cover;
-        display: block;
-      }
-
-      .sample-body {
-        padding: 0.8rem;
-        display: grid;
-        align-content: space-between;
-        gap: 0.7rem;
-      }
-
-      .sample-title {
-        margin: 0;
-        font-size: 1.1rem;
-        letter-spacing: -0.01em;
-      }
-
-      .sample-meta {
-        margin: 0.3rem 0 0;
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-
-      .sample-cta {
-        width: fit-content;
-      }
-
-      .endpoint {
-        margin-top: 1.2rem;
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        padding: 0.95rem;
-        background: rgba(255, 255, 255, 0.52);
-      }
-
-      .endpoint-label {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
-
-      .endpoint-row {
-        margin-top: 0.46rem;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.6rem;
-      }
-
-      code {
-        font-family: "SFMono-Regular", "Consolas", "Menlo", monospace;
-        font-size: 0.86rem;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 0.44rem 0.6rem;
-        background: rgba(255, 255, 255, 0.8);
-      }
-
-      @media (max-width: 930px) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 640px) {
-        .shell {
-          width: calc(100% - 1rem);
-          padding-top: 0.8rem;
-        }
-
-        .topbar {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .status {
-          white-space: normal;
-        }
-
-        .sample-row {
-          grid-auto-columns: minmax(84vw, 88vw);
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="ambient" aria-hidden="true"></div>
-    <div class="shell">
-      <header class="topbar">
-        <a class="brand" href="/">
-          <svg class="logo" viewBox="0 0 240 240" aria-hidden="true">
-            <defs>
-              <linearGradient id="fynG" x1="16%" y1="8%" x2="84%" y2="88%">
-                <stop offset="0%" stop-color="#b8de62"></stop>
-                <stop offset="48%" stop-color="#d7c292"></stop>
-                <stop offset="100%" stop-color="#78b9e5"></stop>
-              </linearGradient>
-              <filter id="fynNoise">
-                <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch"></feTurbulence>
-                <feColorMatrix type="saturate" values="0"></feColorMatrix>
-                <feComponentTransfer>
-                  <feFuncA type="table" tableValues="0 0.06"></feFuncA>
-                </feComponentTransfer>
-              </filter>
-            </defs>
-            <path
-              d="M120 20c10 0 20 4 27 11l53 52c7 7 11 16 11 27v78c0 19-16 35-35 35h-49l-21 19c-7 6-18 1-18-8v-11H64c-19 0-35-16-35-35v-78c0-11 4-20 11-27l53-52c7-7 17-11 27-11z"
-              fill="url(#fynG)"
-            ></path>
-            <rect x="0" y="0" width="240" height="240" filter="url(#fynNoise)"></rect>
-          </svg>
-          <span class="wordmark">Fyn</span>
-        </a>
-        <span class="status">Developer Mode · MCP live at <code>/mcp</code></span>
-      </header>
-
-      <main>
-        <section class="hero">
-          <div class="hero-copy">
-            <p class="eyebrow">Find Your Nest</p>
-            <h1>Search homes like you talk.</h1>
-            <p class="lede">
-              Fyn is a ChatGPT connector for property search in Spain. Ask naturally, get
-              explainable matches, and open the source listing in one click.
-            </p>
-            <div class="actions">
-              <a class="btn btn-dark" href="/mcp">Open MCP Endpoint</a>
-              <button class="btn btn-light" type="button" id="copyEndpointBtn">Copy endpoint URL</button>
-              <a class="btn btn-light" href="/docs/chatgpt-developer-mode-runbook.md">Developer runbook</a>
-            </div>
-            <p class="hint">
-              When the connector is published, this page will include a direct “Open in
-              ChatGPT” link for end users.
-            </p>
-          </div>
-
-          <aside class="hero-card">
-            <p class="hero-card-copy">Clear searches. Better matches. Faster decisions.</p>
-            <p class="hero-card-sub">
-              One query can fan out across locations and portals while keeping results
-              transparent and source-linked.
-            </p>
-          </aside>
-        </section>
-
-        <section class="queries">
-          <h2>Example prompts</h2>
-          <div class="query-grid">
-            <span class="query-chip">Find me an office for +50 people in Valencia</span>
-            <span class="query-chip"
-              >Busco piso en Valencia de 3 habitaciones, cerca de pueblos, máximo 350k</span
-            >
-            <span class="query-chip"
-              >I want a second home in Spain in a beautiful natural area with views</span
-            >
-          </div>
-        </section>
-
-        <section class="sample-row" aria-label="Sample properties">
-          <article class="sample-card">
-            <img
-              class="sample-image"
-              src="https://fotos.imghs.net/mm-wp/1085/953/1085_AG374-1629953_1_2025101107103472420.jpg"
-              alt="Sample listing in Cangas de Onis"
-              loading="lazy"
-            />
-            <div class="sample-body">
-              <div>
-                <p class="sample-title">Chalet en Coraín (Cangas de Onís)</p>
-                <p class="sample-meta">410.000 € · 3 hab.</p>
-              </div>
-              <a class="btn btn-dark sample-cta" href="https://www.pisos.com/comprar/chalet-corain_cangas_de_onis-58369234251_108500/" target="_blank" rel="noopener noreferrer">Open</a>
-            </div>
-          </article>
-
-          <article class="sample-card">
-            <img
-              class="sample-image"
-              src="https://fotos.imghs.net/mm-wp/1005/904/1005_106154904_2_2024100422100286407.jpg"
-              alt="Sample listing in Ronda"
-              loading="lazy"
-            />
-            <div class="sample-body">
-              <div>
-                <p class="sample-title">Casa adosada en Ronda</p>
-                <p class="sample-meta">180.000 € · 3 hab.</p>
-              </div>
-              <a class="btn btn-dark sample-cta" href="https://www.pisos.com/comprar/casa_adosada-ronda_centro_urbano-48358344677_100500/" target="_blank" rel="noopener noreferrer">Open</a>
-            </div>
-          </article>
-
-          <article class="sample-card">
-            <img
-              class="sample-image"
-              src="https://fotos.imghs.net/mm-wp/1018/616/1018_106458616_1_2025050719050397919.jpg"
-              alt="Sample listing in Cudillero"
-              loading="lazy"
-            />
-            <div class="sample-body">
-              <div>
-                <p class="sample-title">Chalet en Cudillero</p>
-                <p class="sample-meta">250.000 € · 4 hab.</p>
-              </div>
-              <a class="btn btn-dark sample-cta" href="https://www.pisos.com/comprar/chalet-cudillero_centro_urbano-54254872647_101800/" target="_blank" rel="noopener noreferrer">Open</a>
-            </div>
-          </article>
-        </section>
-
-        <section class="endpoint">
-          <p class="endpoint-label">Connector endpoint</p>
-          <div class="endpoint-row">
-            <code id="endpointCode"></code>
-            <a class="btn btn-light" href="/health">Health check</a>
-          </div>
-        </section>
-      </main>
+<body>
+  <header class="site-header">
+    <div class="container header-wrap">
+      <a href="/" class="brand" aria-label="Fyn home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Fyn</span>
+      </a>
+      <nav class="top-nav" aria-label="Primary">
+        <a href="#personas">Personas</a>
+        <a href="#results">Preview</a>
+        <a href="#how">How it works</a>
+        <a href="/developers.html">Developers</a>
+      </nav>
     </div>
+  </header>
 
-    <script>
-      (function () {
-        var endpoint = window.location.origin + "/mcp";
-        var endpointCode = document.getElementById("endpointCode");
-        var copyBtn = document.getElementById("copyEndpointBtn");
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Find Your Nest</p>
+          <h1>Describe your next home in plain language.</h1>
+          <p class="lead">
+            Fyn is a property search layer for Spain. You describe what matters, models decide search strategy, and Fyn
+            returns explainable matches with direct portal links and photos.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://chatgpt.com" target="_blank" rel="noreferrer">Open in ChatGPT</a>
+            <a class="btn btn-secondary" href="/developers.html">Read MCP docs</a>
+          </div>
+          <ul class="hero-points">
+            <li>No giant filter maze before you can start.</li>
+            <li>Every result keeps source transparency and deep links.</li>
+            <li>Built for connectors first, product UX second.</li>
+          </ul>
+        </div>
+        <div class="hero-visual">
+          <img src="/public/web/patio-film-zheka-kapusta.jpg"
+            alt="A sunlit patio that reflects natural, warm home search vibes" loading="eager" />
+          <div class="hero-note">
+            <strong>Example prompt</strong>
+            “Busco casa en un pueblo bonito con vistas, cerca de naturaleza, para comprar.”
+          </div>
+        </div>
+      </div>
+    </section>
 
-        if (endpointCode) {
-          endpointCode.textContent = endpoint;
-        }
+    <section id="personas">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Who Fyn serves</p>
+          <h2>Built for real decision moments.</h2>
+          <p class="section-sub">
+            The page now talks to the actual people we need first: buyers and renters under time pressure, lifestyle
+            seekers, and builders integrating Fyn into agents.
+          </p>
+        </div>
+        <div class="persona-grid">
+          <article class="persona-card">
+            <span class="persona-tag">City movers</span>
+            <h3>Buyers and renters comparing neighborhoods fast.</h3>
+            <p>
+              They want clarity in minutes, not dozens of tabs and portal-specific filter logic.
+            </p>
+            <ul>
+              <li>Single intent prompt in ES or EN.</li>
+              <li>Constraint-first results for budget and rooms.</li>
+              <li>Direct jump to the original listing.</li>
+            </ul>
+          </article>
+          <article class="persona-card">
+            <span class="persona-tag">Lifestyle seekers</span>
+            <h3>Second-home and nature buyers searching across towns.</h3>
+            <p>
+              They care about atmosphere first and can refine location after seeing real supply.
+            </p>
+            <ul>
+              <li>Multi-location search in one request.</li>
+              <li>Natural-language intents like “light”, “views”, “quiet”.</li>
+              <li>Explainable match notes per listing.</li>
+            </ul>
+          </article>
+          <article class="persona-card">
+            <span class="persona-tag">AI builders</span>
+            <h3>Teams exposing property search through connectors and agents.</h3>
+            <p>
+              They need stable interfaces, not custom parsing per portal.
+            </p>
+            <ul>
+              <li>MCP tool shape optimized for LLM planning.</li>
+              <li>Normalized response cards across sources.</li>
+              <li>Clear diagnostics for fallback and coverage.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
 
-        if (!copyBtn) {
-          return;
-        }
+    <section id="results">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">Search preview</p>
+          <h2>Real imagery, clean cards, clear actions.</h2>
+          <p class="section-sub">
+            Compact carousel-style layout keeps cards visual without flooding the chat. Each card has one explicit action:
+            open the listing source.
+          </p>
+        </div>
+        <div class="results-shell">
+          <div class="results-meta">
+            <span>Example run: 12 matches from 5 locations</span>
+            <span>Mode: connector-first · source: scrape/API fallback</span>
+          </div>
+          <div class="results-rail">
+            <article class="listing">
+              <img src="/public/web/house-1600596542815.jpg" alt="Stone house with large front garden" loading="lazy" />
+              <div class="listing-body">
+                <h3>Casa con jardín en entorno rural</h3>
+                <p class="meta">Ronda · 4 hab. · matched for nature + views</p>
+                <p class="price">390.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
+              </div>
+            </article>
+            <article class="listing">
+              <img src="/public/web/apartment-8ollvy24dvu.jpg" alt="Apartment block at golden hour in the city" loading="lazy" />
+              <div class="listing-body">
+                <h3>Piso luminoso en zona urbana</h3>
+                <p class="meta">Valencia · 3 hab. · matched for natural light</p>
+                <p class="price">349.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
+              </div>
+            </article>
+            <article class="listing">
+              <img src="/public/web/alley-bjerbstbkhe.jpg"
+                alt="Historic narrow street in Spain with warm evening light" loading="lazy" />
+              <div class="listing-body">
+                <h3>Casa tradicional en casco histórico</h3>
+                <p class="meta">Albarracín · 3 hab. · matched for village lifestyle</p>
+                <p class="price">210.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
+              </div>
+            </article>
+            <article class="listing">
+              <img src="/public/web/tower-3JYIgAKWB2s.jpg" alt="Tall building with greenery nearby" loading="lazy" />
+              <div class="listing-body">
+                <h3>Piso para inversión con alta demanda</h3>
+                <p class="meta">Madrid · 2 hab. · matched for urban rental demand</p>
+                <p class="price">320.000 €</p>
+                <a class="open" href="https://www.pisos.com" target="_blank" rel="noreferrer">Open listing</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        copyBtn.addEventListener("click", async function () {
-          try {
-            await navigator.clipboard.writeText(endpoint);
-            copyBtn.textContent = "Copied";
-            setTimeout(function () {
-              copyBtn.textContent = "Copy endpoint URL";
-            }, 1200);
-          } catch (_err) {
-            copyBtn.textContent = "Copy failed";
-            setTimeout(function () {
-              copyBtn.textContent = "Copy endpoint URL";
-            }, 1200);
-          }
-        });
-      })();
-    </script>
-  </body>
+    <section id="how">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2>Simple flow, connector by connector.</h2>
+        </div>
+        <div class="workflow-grid">
+          <article class="step">
+            <span class="num">1</span>
+            <h3>Model plans the search</h3>
+            <p>The LLM chooses locations, constraint strictness, and search breadth based on user intent.</p>
+          </article>
+          <article class="step">
+            <span class="num">2</span>
+            <h3>Fyn executes connectors</h3>
+            <p>MCP tools run portal searches, normalize cards, and attach diagnostics for transparency.</p>
+          </article>
+          <article class="step">
+            <span class="num">3</span>
+            <h3>User decides faster</h3>
+            <p>People compare cards, read why each match appears, and open the source listing immediately.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="final-cta">
+          <p class="eyebrow" style="color: #a9a99f">Next step</p>
+          <h2>Fyn is live in development mode. Launch path is connector expansion + public landing.</h2>
+          <p>
+            We already have a working ChatGPT connector flow. Next cycle: add more portals, keep interface consistency,
+            and point users from this landing to the live connector experience.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="https://chatgpt.com" target="_blank" rel="noreferrer">Try connector</a>
+            <a class="btn btn-secondary" href="/developers.html">Developer quickstart</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot">
+      <p>© <span id="year"></span> Fyn · Find Your Nest.</p>
+      <p class="photo-credit">
+        Photos:
+        <a href="https://unsplash.com/photos/-JXMvTTmdmY" target="_blank" rel="noreferrer">patio</a>
+        <a href="https://unsplash.com/photos/BjerBstbKHE" target="_blank" rel="noreferrer">street</a>
+        <a href="https://unsplash.com/photos/8OLlVy24DVU" target="_blank" rel="noreferrer">apartment</a>
+        <a href="https://unsplash.com/photos/oRdQBo3Tews" target="_blank" rel="noreferrer">house</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+
 </html>
