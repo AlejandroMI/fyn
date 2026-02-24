@@ -203,7 +203,8 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         --muted: #6b7280;
         --line: #eceff3;
         --surface: #f9fafb;
-        --accent: #2563eb;
+        --accent: #111111;
+        --accent-ink: #ffffff;
       }
 
       @media (prefers-color-scheme: dark) {
@@ -213,7 +214,8 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           --muted: #9ca3af;
           --line: #2b3038;
           --surface: #161a20;
-          --accent: #60a5fa;
+          --accent: #f3f4f6;
+          --accent-ink: #111111;
         }
       }
 
@@ -355,10 +357,11 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
       .compact {
         display: grid;
         grid-auto-flow: column;
-        grid-auto-columns: minmax(220px, 1fr);
-        gap: 10px;
+        grid-auto-columns: minmax(280px, 320px);
+        gap: 12px;
         overflow-x: auto;
-        padding: 10px;
+        padding: 12px;
+        scroll-snap-type: x mandatory;
       }
 
       .compact-card {
@@ -366,6 +369,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         border-radius: 10px;
         overflow: hidden;
         display: grid;
+        scroll-snap-align: start;
       }
 
       .compact-media {
@@ -379,14 +383,14 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
 
       .compact-image {
         width: 100%;
-        aspect-ratio: 4 / 3;
+        height: 220px;
         object-fit: cover;
         display: block;
       }
 
       .compact-empty {
         width: 100%;
-        aspect-ratio: 4 / 3;
+        height: 220px;
         background: var(--surface);
       }
 
@@ -545,9 +549,9 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
       .card-cta {
         border: 0;
         background: var(--accent);
-        color: #ffffff;
+        color: var(--accent-ink);
         border-radius: 999px;
-        padding: 0.33rem 0.62rem;
+        padding: 0.36rem 0.68rem;
         font-size: 0.72rem;
         font-weight: 600;
         cursor: pointer;
@@ -580,13 +584,22 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
       }
 
       .popup-link {
-        color: #1d4ed8;
+        color: var(--accent);
         font-size: 0.73rem;
         text-decoration: underline;
         cursor: pointer;
       }
 
       @media (max-width: 760px) {
+        .compact {
+          grid-auto-columns: minmax(78vw, 88vw);
+        }
+
+        .compact-image,
+        .compact-empty {
+          height: 210px;
+        }
+
         .header {
           flex-direction: column;
           align-items: flex-start;
@@ -638,8 +651,8 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
 
       <section class="toolbar">
         <div class="segmented" role="tablist" aria-label="View mode">
-          <button id="listTab" role="tab" type="button" aria-selected="true">List</button>
-          <button id="compactTab" role="tab" type="button" aria-selected="false">Compact</button>
+          <button id="listTab" role="tab" type="button" aria-selected="false">List</button>
+          <button id="compactTab" role="tab" type="button" aria-selected="true">Compact</button>
           <button id="mapTab" role="tab" type="button" aria-selected="false">Map</button>
         </div>
         <div class="meta">
@@ -649,7 +662,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         </div>
       </section>
 
-      <section id="compactPanel" class="panel" hidden>
+      <section id="compactPanel" class="panel">
         <div id="compactRoot" class="compact"></div>
       </section>
 
@@ -658,7 +671,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         <p class="map-note">Map uses city-level placement unless exact portal coordinates are available in result metadata.</p>
       </section>
 
-      <section id="listPanel" class="panel">
+      <section id="listPanel" class="panel" hidden>
         <div id="listRoot" class="list"></div>
       </section>
     </main>
@@ -685,7 +698,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           cards: [],
           criteria: null,
           diagnostics: null,
-          view: "list"
+          view: "compact"
         };
 
         var leafletPromise = null;
@@ -757,7 +770,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         }
 
         function ctaLabel() {
-          return isSpanish() ? "Ver en pisos.com" : "View on pisos.com";
+          return isSpanish() ? "Abrir" : "Open";
         }
 
         function locationLabelFromCard(card) {
