@@ -74,14 +74,17 @@ function extractPrice(text: string): number | undefined {
 }
 
 function extractRooms(text: string): number | undefined {
-  const digitMatch = text.match(/(?:at\s+least|min(?:imum)?|al\s+menos)\D*(\d+)\s*(?:rooms|habitaciones|dormitorios?)/i)
-    || text.match(/(\d+)\s*(?:rooms|habitaciones|dormitorios?)/i);
+  const roomTerms = "(?:rooms?|bedrooms?|habitaciones|dormitorios?)";
+  const digitMatch = text.match(new RegExp(`(?:at\\s+least|min(?:imum)?|al\\s+menos)\\D*(\\d+)\\s*${roomTerms}`, "i"))
+    || text.match(new RegExp(`(\\d+)\\s*${roomTerms}`, "i"));
 
   if (digitMatch) {
     return Number(digitMatch[1]);
   }
 
-  const wordMatch = text.match(/(one|two|three|four|five|six|una|un|dos|tres|cuatro|cinco|seis)\s*(?:rooms|habitaciones|dormitorios?)/i);
+  const wordMatch = text.match(
+    /(one|two|three|four|five|six|una|un|dos|tres|cuatro|cinco|seis)\s*(?:rooms?|bedrooms?|habitaciones|dormitorios?)/i
+  );
   if (!wordMatch) {
     return undefined;
   }
@@ -150,11 +153,32 @@ function extractTransactionType(text: string): TransactionType | undefined {
 
 function extractTags(text: string): string[] {
   const tags: string[] = [];
-  if (/(\b(nature|natural|naturaleza)\b)/i.test(text)) tags.push("nature");
+
+  if (/\b(natural light|luz natural|bright|well lit|luminos[oa]s?|solead[oa])\b/i.test(text)) {
+    tags.push("natural_light");
+  }
+
+  if (/\b(exterior|outside[- ]facing|all exterior|toda exterior|todo exterior)\b/i.test(text)) {
+    tags.push("exterior");
+  }
+
+  if (/\b(large windows|big windows|ventanales?|grandes ventanales)\b/i.test(text)) {
+    tags.push("large_windows");
+  }
+
+  if (/\b(good orientation|well oriented|orientaci[oó]n|south[- ]facing|east[- ]facing|west[- ]facing)\b/i.test(text)) {
+    tags.push("good_orientation");
+  }
+
+  if (/\b(nature|natural place|naturaleza|entorno natural|rural|monta(?:n|ñ)a|bosque|countryside|beachfront)\b/i.test(text)) {
+    tags.push("nature");
+  }
+
   if (/(\b(views|vistas|view)\b)/i.test(text)) tags.push("views");
   if (/(\b(retreat|retiro|retiros)\b)/i.test(text)) tags.push("retreat");
   if (/(\b(renovation|renovations|reforma|reformas)\b)/i.test(text)) tags.push("renovation");
-  return tags;
+
+  return Array.from(new Set(tags));
 }
 
 function mergePropertyTypes(a: PropertyType[], b: PropertyType[] | undefined): PropertyType[] {

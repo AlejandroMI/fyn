@@ -65,3 +65,5 @@ Last updated: 2026-02-24
 - [x] Feedback loop ownership moved to founder operations so engineering stays build-focused.
 - [x] Vercel HTTP MCP scaffold added (`/api/mcp`, `/api/health`, remote smoke client script).
 - [x] Vercel production MCP endpoint live and reachable (`https://fyn-mcp-server.vercel.app/mcp`) with successful remote smoke.
+- [x] Natural-light intent parsing and ranking upgrade (`natural_light`/`exterior`/`orientation` signals).
+- [x] `search_properties` now returns `presentation_cards` + markdown card preview with image URLs for richer ChatGPT output.

@@ -39,4 +39,24 @@ describe("normalizeSearchInput", () => {
     expect(result.criteria.property_types).toContain("office");
     expect(result.criteria.min_capacity_people).toBe(50);
   });
+
+  it("maps natural-light intent without misclassifying as nature", () => {
+    const result = normalizeSearchInput({
+      query_text: "Good natural light, bright, exterior, large windows or good orientation in Valencia"
+    });
+
+    expect(result.criteria.tags).toContain("natural_light");
+    expect(result.criteria.tags).toContain("exterior");
+    expect(result.criteria.tags).toContain("large_windows");
+    expect(result.criteria.tags).toContain("good_orientation");
+    expect(result.criteria.tags).not.toContain("nature");
+  });
+
+  it("extracts bedrooms constraints in English", () => {
+    const result = normalizeSearchInput({
+      query_text: "Find me a flat in Valencia with at least 3 bedrooms"
+    });
+
+    expect(result.criteria.min_rooms).toBe(3);
+  });
 });

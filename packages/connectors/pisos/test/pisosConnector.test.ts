@@ -45,7 +45,7 @@ describe("PisosConnector", () => {
         <a href="/comprar/piso-sueca_centro_urbano-60932948350_991284/" class="ad-preview__title">Piso en Carrer de l&#x27;Esculptor Beltr&#xE1;n, 58</a>
         <p class="p-sm ad-preview__subtitle">Sueca</p>
         <p class="ad-preview__char p-sm">4 habs.</p>
-        <p class="ad-preview__description">Vivienda reformada con vistas.</p>
+        <p class="ad-preview__description">Vivienda muy luminosa, toda exterior, con grandes ventanales y orientación sur.</p>
         <img src="https://fotos.imghs.net/mm-wp/991284/60932948350.991284/sample.jpg" />
         <script type="application/ld+json">{ "@context":"https://schema.org/" }</script>
       </div>
@@ -63,6 +63,9 @@ describe("PisosConnector", () => {
     expect(result.listings[0]?.portal_listing_id).toBe("60932948350.991284");
     expect(result.listings[0]?.price_eur).toBe(133000);
     expect(result.listings[0]?.rooms).toBe(4);
+    expect(result.listings[0]?.tags).toContain("natural_light");
+    expect(result.listings[0]?.tags).toContain("exterior");
+    expect(result.listings[0]?.tags).toContain("good_orientation");
   });
 
   it("maps auth rejection from upstream", async () => {

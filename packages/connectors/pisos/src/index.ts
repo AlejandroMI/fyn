@@ -136,11 +136,32 @@ function inferPropertyType(rawType: string | null): ListingCard["property_type"]
 
 function inferTags(description: string): string[] {
   const tags: string[] = [];
-  if (/(naturaleza|natural|nature)/i.test(description)) tags.push("nature");
+
+  if (/(luz natural|natural light|luminos[oa]s?|bright|well[- ]lit|solead[oa])/i.test(description)) {
+    tags.push("natural_light");
+  }
+
+  if (/\b(exterior|outside[- ]facing|toda exterior|todo exterior)\b/i.test(description)) {
+    tags.push("exterior");
+  }
+
+  if (/(ventanales?|large windows|big windows)/i.test(description)) {
+    tags.push("large_windows");
+  }
+
+  if (/(orientaci[oó]n|south[- ]facing|east[- ]facing|west[- ]facing)/i.test(description)) {
+    tags.push("good_orientation");
+  }
+
+  if (/(naturaleza|nature|entorno natural|rural|monta(?:n|ñ)a|bosque|countryside|beachfront)/i.test(description)) {
+    tags.push("nature");
+  }
+
   if (/(vistas|views?|panor[aá]m)/i.test(description)) tags.push("views");
   if (/(retiro|retreat)/i.test(description)) tags.push("retreat");
   if (/(reforma|renov)/i.test(description)) tags.push("renovation");
-  return tags;
+
+  return Array.from(new Set(tags));
 }
 
 function decodeHtmlEntities(input: string): string {

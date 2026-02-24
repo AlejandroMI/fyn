@@ -80,4 +80,36 @@ describe("rankListings", () => {
 
     expect(ranked.map((item) => item.canonical_id)).toEqual(["in-city"]);
   });
+
+  it("boosts natural-light candidates when that intent is present", () => {
+    const lightCriteria: NormalizedFilters = {
+      ...baseCriteria,
+      tags: ["natural_light", "exterior", "good_orientation"]
+    };
+
+    const ranked = rankListings(
+      [
+        listing({
+          canonical_id: "bright",
+          description: "Piso muy luminoso, todo exterior con grandes ventanales y orientación sur.",
+          raw: {
+            source_path: "/venta/pisos-valencia_capital_zona_urbana/",
+            chars: ["3 habs.", "7ª planta"]
+          }
+        }),
+        listing({
+          canonical_id: "darker",
+          description: "Piso interior",
+          raw: {
+            source_path: "/venta/pisos-valencia_capital_zona_urbana/",
+            chars: ["3 habs.", "1ª planta"]
+          }
+        })
+      ],
+      lightCriteria
+    );
+
+    expect(ranked[0]?.canonical_id).toBe("bright");
+    expect(ranked[0]?.why_matched.some((reason) => reason.toLowerCase().includes("natural light"))).toBe(true);
+  });
 });

@@ -84,6 +84,42 @@ function matchesHardConstraints(listing: ListingCard, criteria: NormalizedFilter
   return true;
 }
 
+function readRawChars(listing: ListingCard): string[] {
+  const chars = listing.raw?.chars;
+  if (!Array.isArray(chars)) {
+    return [];
+  }
+
+  return chars.filter((value): value is string => typeof value === "string");
+}
+
+function combinedText(listing: ListingCard): string {
+  return [listing.description ?? "", ...readRawChars(listing)].join(" ");
+}
+
+function extractFloor(listing: ListingCard): number | null {
+  for (const item of readRawChars(listing)) {
+    const match = item.match(/(\d+)[ªa]?\s*planta/i);
+    if (!match?.[1]) {
+      continue;
+    }
+
+    const floor = Number(match[1]);
+    if (Number.isFinite(floor)) {
+      return floor;
+    }
+  }
+
+  return null;
+}
+
+function hasLightIntent(criteria: NormalizedFilters): boolean {
+  const wanted = new Set(criteria.tags.map((tag) => tag.toLowerCase()));
+  return ["natural_light", "exterior", "large_windows", "good_orientation"].some((tag) =>
+    wanted.has(tag)
+  );
+}
+
 function scoreListing(listing: ListingCard, criteria: NormalizedFilters): ListingCard {
   const why: string[] = [];
   let score = 45;
@@ -122,6 +158,36 @@ function scoreListing(listing: ListingCard, criteria: NormalizedFilters): Listin
     if (matchedTags.length > 0) {
       score += matchedTags.length * 4;
       why.push(`Tag matches: ${matchedTags.join(", ")}`);
+    }
+  }
+
+  if (hasLightIntent(criteria)) {
+    const text = combinedText(listing);
+    const floor = extractFloor(listing);
+
+    if (floor !== null && floor >= 5) {
+      score += 6;
+      why.push(`High floor (${floor}ª) supports natural light`);
+    }
+
+    if (/\b(exterior|outside[- ]facing|toda exterior|todo exterior)\b/i.test(text)) {
+      score += 6;
+      why.push("Exterior layout mention");
+    }
+
+    if (/(luz natural|natural light|luminos[oa]s?|bright|well[- ]lit|solead[oa])/i.test(text)) {
+      score += 5;
+      why.push("Natural light / bright description");
+    }
+
+    if (/(ventanales?|large windows|big windows)/i.test(text)) {
+      score += 4;
+      why.push("Large windows mention");
+    }
+
+    if (/(orientaci[oó]n|south[- ]facing|east[- ]facing|west[- ]facing)/i.test(text)) {
+      score += 4;
+      why.push("Orientation signal present");
     }
   }
 

@@ -29,6 +29,120 @@ function textContent(text: string) {
   return [{ type: "text" as const, text }];
 }
 
+function readRawChars(listing: Record<string, unknown>): string[] {
+  const raw = listing.raw;
+  if (!raw || typeof raw !== "object") {
+    return [];
+  }
+
+  const chars = (raw as Record<string, unknown>).chars;
+  if (!Array.isArray(chars)) {
+    return [];
+  }
+
+  return chars.filter((value): value is string => typeof value === "string");
+}
+
+function extractFloorLabel(listing: Record<string, unknown>): string | undefined {
+  for (const item of readRawChars(listing)) {
+    if (/planta/i.test(item)) {
+      return item;
+    }
+  }
+
+  return undefined;
+}
+
+function formatPrice(price: unknown, locale: "es" | "en"): string {
+  if (typeof price !== "number" || !Number.isFinite(price)) {
+    return locale === "es" ? "Precio no disponible" : "Price unavailable";
+  }
+
+  const formatter = new Intl.NumberFormat(locale === "es" ? "es-ES" : "en-US", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0
+  });
+
+  return formatter.format(price);
+}
+
+interface PresentationCard {
+  canonical_id: string;
+  title: string;
+  city: string;
+  url: string;
+  image_url: string | null;
+  price: string;
+  facts: string[];
+  score: number;
+  why_matched: string[];
+}
+
+function toPresentationCard(listing: Record<string, unknown>, locale: "es" | "en"): PresentationCard {
+  const floorLabel = extractFloorLabel(listing);
+  const facts: string[] = [];
+
+  if (typeof listing.rooms === "number") {
+    facts.push(locale === "es" ? `${listing.rooms} hab.` : `${listing.rooms} rooms`);
+  }
+
+  if (floorLabel) {
+    facts.push(floorLabel);
+  }
+
+  if (typeof listing.property_type === "string" && listing.property_type.length > 0) {
+    facts.push(listing.property_type);
+  }
+
+  const images = Array.isArray(listing.image_urls)
+    ? listing.image_urls.filter((value): value is string => typeof value === "string")
+    : [];
+  const whyMatched = Array.isArray(listing.why_matched)
+    ? listing.why_matched.filter((value): value is string => typeof value === "string")
+    : [];
+
+  return {
+    canonical_id: typeof listing.canonical_id === "string" ? listing.canonical_id : "",
+    title: typeof listing.title === "string" ? listing.title : "Listing",
+    city: typeof listing.city === "string" ? listing.city : "Unknown",
+    url: typeof listing.url === "string" ? listing.url : "",
+    image_url: images[0] ?? null,
+    price: formatPrice(listing.price_eur, locale),
+    facts,
+    score: typeof listing.score === "number" ? listing.score : 0,
+    why_matched: whyMatched.slice(0, 3)
+  };
+}
+
+function buildCardsMarkdown(cards: PresentationCard[], locale: "es" | "en"): string {
+  if (cards.length === 0) {
+    return locale === "es"
+      ? "No se encontraron propiedades para generar tarjetas."
+      : "No properties found to build cards.";
+  }
+
+  const header = locale === "es" ? "Vista rápida (tarjetas)" : "Quick property cards";
+  const whyLabel = locale === "es" ? "Por qué encaja" : "Why matched";
+  const lines: string[] = [`### ${header}`];
+
+  for (const [index, card] of cards.entries()) {
+    lines.push(`${index + 1}. **[${card.title}](${card.url})**`);
+    lines.push(`${card.price} · ${card.city}${card.facts.length > 0 ? ` · ${card.facts.join(" · ")}` : ""} · score ${card.score}/100`);
+    if (card.image_url) {
+      lines.push(`![${card.title}](${card.image_url})`);
+    }
+
+    if (card.why_matched.length > 0) {
+      lines.push(`${whyLabel}: ${card.why_matched.join("; ")}`);
+    }
+
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   for (const [name, value] of Object.entries(CORS_HEADERS)) {
     res.setHeader(name, value);
@@ -126,9 +240,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       try {
         const connectorResult = await connector.search(parsed.criteria);
         const ranked = rankListings(connectorResult.listings, parsed.criteria);
+        const locale = parsed.criteria.locale === "es" ? "es" : "en";
+        const cards = ranked
+          .slice(0, 8)
+          .map((listing) => toPresentationCard(listing as unknown as Record<string, unknown>, locale));
         const response = {
           criteria: parsed.criteria,
           listings: ranked,
+          presentation_cards: cards,
           diagnostics: {
             ...connectorResult.diagnostics,
             parser_warnings: parsed.warnings,
@@ -138,7 +257,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         };
 
         return {
-          content: textContent(JSON.stringify(response, null, 2))
+          content: [
+            { type: "text", text: buildCardsMarkdown(cards, locale) },
+            { type: "text", text: JSON.stringify(response, null, 2) }
+          ],
+          structuredContent: {
+            criteria: response.criteria,
+            diagnostics: response.diagnostics,
+            presentation_cards: response.presentation_cards
+          }
         };
       } catch (error) {
         if (error instanceof ConnectorError) {

@@ -54,3 +54,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: use root API handlers plus dynamic imports and direct source-path loading where required for serverless compatibility.
 - Action: iterated deployment fixes until `/mcp` and `/health` passed remotely.
 - Expected impact: stable baseline for ChatGPT app connection with zero local tunnel dependencies.
+
+- Date: 2026-02-24
+- Context: Live ChatGPT run showed weak matching for "good natural light" and no richer listing presentation.
+- Signal: parser mapped `natural` to `nature`; ranking ignored floor/exterior/light signals.
+- Decision: split "natural light" semantics from "nature" and add presentation-friendly cards in MCP output.
+- Action: parser/tag fixes, connector tag inference upgrades, scoring boosts for light-related evidence, and `presentation_cards` + markdown card preview in `search_properties`.
+- Expected impact: materially better relevance for bright homes and more visual, link-rich responses in ChatGPT.

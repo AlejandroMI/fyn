@@ -29,8 +29,10 @@ Connect Fyn's remote MCP endpoint to ChatGPT in Developer Mode and validate live
    - `Find me an office for +50 people in Valencia`
    - `Find me a flat in Valencia with at least three rooms, max 350k`
 7. Verify responses include:
+   - card-style preview block (title, image, key facts, deep link)
    - explainable matches (`why_matched`)
    - source portal URLs (`pisos.com`)
+   - `presentation_cards` in JSON payload for structured rendering
    - diagnostics (`source`, warnings, counts)
 
 ## What To Capture
