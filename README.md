@@ -47,6 +47,7 @@ Detailed MCP setup: `docs/mcp-quickstart.md`.
 Execution backlog: `docs/backlog.md`.
 Learning log: `docs/learning-log.md`.
 ChatGPT connector research: `docs/chatgpt-connector-research-2026-02-24.md`.
+ChatGPT Developer Mode runbook: `docs/chatgpt-developer-mode-runbook.md`.
 
 ## Environment
 

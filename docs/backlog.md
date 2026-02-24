@@ -54,8 +54,8 @@ Last updated: 2026-02-24
 
 ## Blocked / Needs From Founder
 
-- [ ] ChatGPT app connection access confirmed in your account (Developer Mode enabled).
 - [ ] Final connector launch URL once we publish the first ChatGPT app entry.
+- [ ] If connection fails in ChatGPT, provide exact error text + timestamp so server logs can be mapped quickly.
 
 ## Done
 
