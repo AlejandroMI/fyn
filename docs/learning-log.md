@@ -89,3 +89,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: remove legacy parser execution path and keep only one structured deterministic backend flow.
 - Action: deleted parser package usage from MCP runtime, removed parser workspace package, updated smoke tools/docs to structured-first behavior, and renamed diagnostics `parser_warnings` to `request_warnings`.
 - Expected impact: simpler architecture, fewer hidden behaviors, and stronger model/tool contract alignment.
+
+- Date: 2026-02-24
+- Context: Tool metadata drift risk between local stdio MCP and deployed Vercel MCP handlers.
+- Signal: duplicated tool descriptions/field docs can diverge and cause inconsistent model behavior.
+- Decision: centralize search tool metadata as shared domain constants and adopt Booking-style action description.
+- Action: moved tool title/description/field descriptions and missing-location guidance strings to `@fyn/domain` and wired both MCP runtimes to those shared exports.
+- Expected impact: one canonical prompt contract for model tool-selection and more stable behavior across environments.

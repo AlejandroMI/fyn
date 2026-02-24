@@ -3,6 +3,13 @@ import { z } from "zod";
 
 import {
   ConnectorError,
+  SEARCH_PROPERTIES_CONTEXT_ONLY_WARNING,
+  SEARCH_PROPERTIES_FIELD_DESCRIPTIONS,
+  SEARCH_PROPERTIES_MISSING_LOCATION_ACTION,
+  SEARCH_PROPERTIES_MISSING_LOCATION_RETRY_HINT,
+  SEARCH_PROPERTIES_MISSING_LOCATION_WARNING,
+  SEARCH_PROPERTIES_TOOL_DESCRIPTION,
+  SEARCH_PROPERTIES_TOOL_TITLE,
   type ConnectorErrorCode,
   type ConnectorSearchResult,
   type ListingCard,
@@ -16,62 +23,69 @@ const propertyTypeSchema = z.enum(["flat", "house", "office", "land"]);
 const localeSchema = z.enum(["es", "en"]);
 const transactionSchema = z.enum(["buy", "rent"]);
 const sourceSchema = z.enum(["pisos"]);
-const SEARCH_TOOL_DESCRIPTION =
-  "Search Spanish properties via MCP. The model must plan explicit constraints and location strategy, then call this tool deterministically. `query_text` is context-only and never a substitute for `city`/`locations`. For broad intents, send 3-10 locations in `locations[]`, then iterate using `diagnostics.coverage`.";
-const MISSING_LOCATION_WARNING =
-  "No `city` or `locations[]` provided. Discovery search is disabled when `strict_constraints=true`.";
-const MISSING_LOCATION_ACTION =
-  "Model action required: choose candidate cities/towns and retry with `locations[]` (recommended 3-10).";
 
 const toolSchema = {
   query_text: z
     .string()
     .optional()
-    .describe("Optional context only. Do not use as the only input; always send structured constraints."),
-  locale: localeSchema.optional().describe("Response locale for cards and formatting (`es` or `en`)."),
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.query_text),
+  locale: localeSchema.optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.locale),
   transaction_type: transactionSchema
     .optional()
-    .describe("Transaction mode (`buy` or `rent`)."),
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.transaction_type),
   property_types: z
     .array(propertyTypeSchema)
     .optional()
-    .describe("Property types (`flat`, `house`, `office`, `land`)."),
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.property_types),
   city: z
     .string()
     .optional()
-    .describe("Single location search target. Prefer `locations[]` for broad or exploratory intent."),
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.city),
   locations: z
     .array(z.string().min(1))
     .optional()
-    .describe("Primary geography control. Provide 3-10 cities/towns for broad searches."),
-  nearby_towns: z.boolean().optional().describe("Allow nearby towns around each requested location."),
-  min_rooms: z.number().int().nonnegative().optional().describe("Minimum bedrooms."),
-  min_capacity_people: z.number().int().nonnegative().optional().describe("Minimum people capacity."),
-  max_price_eur: z.number().int().nonnegative().optional().describe("Maximum budget in EUR."),
-  min_floor: z.number().int().nonnegative().optional().describe("Minimum floor index (0 = ground)."),
-  exclude_ground_floor: z.boolean().optional().describe("Exclude ground-floor properties."),
-  prefer_exterior: z.boolean().optional().describe("Boost exterior properties when true."),
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.locations),
+  nearby_towns: z.boolean().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.nearby_towns),
+  min_rooms: z.number().int().nonnegative().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_rooms),
+  min_capacity_people: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_capacity_people),
+  max_price_eur: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.max_price_eur),
+  min_floor: z.number().int().nonnegative().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_floor),
+  exclude_ground_floor: z
+    .boolean()
+    .optional()
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.exclude_ground_floor),
+  prefer_exterior: z.boolean().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.prefer_exterior),
   strict_constraints: z
     .boolean()
     .optional()
-    .describe("Default true. When true and no location is provided, the tool returns guidance instead of discovery fallback."),
-  renovation_ok: z.boolean().optional().describe("Allow renovation-needed listings."),
-  tags: z.array(z.string()).optional().describe("Preference tags (e.g. `nature`, `views`, `natural_light`)."),
-  sources: z.array(sourceSchema).optional().describe("Source portals. Current deployment supports only `pisos`."),
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.strict_constraints),
+  renovation_ok: z.boolean().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.renovation_ok),
+  tags: z.array(z.string()).optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.tags),
+  sources: z.array(sourceSchema).optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.sources),
   per_location_limit: z
     .number()
     .int()
     .positive()
     .max(50)
     .optional()
-    .describe("Max candidates kept per requested location before global rerank."),
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.per_location_limit),
   max_results_total: z
     .number()
     .int()
     .positive()
     .max(200)
     .optional()
-    .describe("Max returned listings after global rerank.")
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.max_results_total)
 };
 
 type ToolPayload = z.infer<z.ZodObject<typeof toolSchema>>;
@@ -381,9 +395,12 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
       listings: [],
       diagnostics: {
         source: "fixture",
-        connector_warnings: [MISSING_LOCATION_WARNING, MISSING_LOCATION_ACTION],
+        connector_warnings: [
+          SEARCH_PROPERTIES_MISSING_LOCATION_WARNING,
+          SEARCH_PROPERTIES_MISSING_LOCATION_ACTION
+        ],
         request_warnings: [
-          "`query_text` is contextual only. In strict structured mode, geography must be explicit."
+          SEARCH_PROPERTIES_CONTEXT_ONLY_WARNING
         ],
         total_candidates: 0,
         returned_count: 0,
@@ -398,8 +415,8 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
         },
         action_required: {
           code: "MISSING_LOCATIONS",
-          message: MISSING_LOCATION_WARNING,
-          retry_hint: "Send `locations[]` (recommended 3-10) or a single `city` and call the tool again."
+          message: SEARCH_PROPERTIES_MISSING_LOCATION_WARNING,
+          retry_hint: SEARCH_PROPERTIES_MISSING_LOCATION_RETRY_HINT
         }
       }
     };
@@ -534,8 +551,8 @@ export function createFynMcpServer(connector = connectorFromEnv()): McpServer {
   server.registerTool(
     "search_properties",
     {
-      title: "Search Properties (Model-Driven)",
-      description: SEARCH_TOOL_DESCRIPTION,
+      title: SEARCH_PROPERTIES_TOOL_TITLE,
+      description: SEARCH_PROPERTIES_TOOL_DESCRIPTION,
       inputSchema: toolSchema
     },
     async (payload) => {
