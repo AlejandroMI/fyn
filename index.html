@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fyn | Find Your Nest</title>
+    <meta
+      name="description"
+      content="Fyn helps you find homes with natural language. One query, multiple portals, explainable results."
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --canvas: #f4f3ec;
+        --ink: #101112;
+        --muted: #5b5d61;
+        --line: #d6d7cf;
+        --card: #f8f8f4;
+        --accent: #101112;
+        --accent-ink: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--canvas);
+        line-height: 1.4;
+      }
+
+      .ambient {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        background:
+          radial-gradient(700px 400px at 75% 10%, rgba(182, 224, 130, 0.24), transparent 70%),
+          radial-gradient(680px 380px at 20% 85%, rgba(126, 182, 231, 0.2), transparent 72%);
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 1.2rem 0 3rem;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.72rem;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .wordmark {
+        font-size: 1.36rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .status {
+        font-size: 0.78rem;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.35rem 0.62rem;
+        background: rgba(255, 255, 255, 0.5);
+        white-space: nowrap;
+      }
+
+      .logo {
+        width: 34px;
+        height: 34px;
+        display: block;
+      }
+
+      .hero {
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        gap: 1.2rem;
+      }
+
+      .hero-copy {
+        background: rgba(255, 255, 255, 0.42);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: clamp(1.15rem, 2.3vw, 2rem);
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-size: 0.76rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      h1 {
+        margin: 0.4rem 0 0;
+        font-size: clamp(2rem, 5.5vw, 4rem);
+        line-height: 0.96;
+        letter-spacing: -0.03em;
+      }
+
+      .lede {
+        margin-top: 1rem;
+        max-width: 54ch;
+        color: var(--muted);
+        font-size: 1.04rem;
+      }
+
+      .actions {
+        margin-top: 1.35rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+      }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.58rem 0.96rem;
+        font-size: 0.92rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .btn-dark {
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: transparent;
+      }
+
+      .btn-light {
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--ink);
+      }
+
+      .hint {
+        margin-top: 0.78rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .hero-card {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: clamp(1rem, 2vw, 1.4rem);
+        background: var(--card);
+        display: grid;
+        align-content: space-between;
+        gap: 1rem;
+      }
+
+      .hero-card-copy {
+        margin: 0;
+        font-size: clamp(1.35rem, 2.5vw, 2rem);
+        line-height: 1.04;
+        letter-spacing: -0.02em;
+      }
+
+      .hero-card-sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .queries {
+        margin-top: 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 0.9rem;
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .queries h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .query-grid {
+        margin-top: 0.7rem;
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .query-chip {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.5rem 0.78rem;
+        width: fit-content;
+        max-width: 100%;
+        background: rgba(255, 255, 255, 0.7);
+        color: #2d2f32;
+        font-size: 0.88rem;
+      }
+
+      .sample-row {
+        margin-top: 1.2rem;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(280px, 1fr);
+        gap: 0.8rem;
+        overflow-x: auto;
+        padding-bottom: 0.2rem;
+        scroll-snap-type: x mandatory;
+      }
+
+      .sample-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fff;
+        scroll-snap-align: start;
+        min-height: 360px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .sample-image {
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .sample-body {
+        padding: 0.8rem;
+        display: grid;
+        align-content: space-between;
+        gap: 0.7rem;
+      }
+
+      .sample-title {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .sample-meta {
+        margin: 0.3rem 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .sample-cta {
+        width: fit-content;
+      }
+
+      .endpoint {
+        margin-top: 1.2rem;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 0.95rem;
+        background: rgba(255, 255, 255, 0.52);
+      }
+
+      .endpoint-label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .endpoint-row {
+        margin-top: 0.46rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      code {
+        font-family: "SFMono-Regular", "Consolas", "Menlo", monospace;
+        font-size: 0.86rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.44rem 0.6rem;
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      @media (max-width: 930px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          width: calc(100% - 1rem);
+          padding-top: 0.8rem;
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .status {
+          white-space: normal;
+        }
+
+        .sample-row {
+          grid-auto-columns: minmax(84vw, 88vw);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true"></div>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">
+          <svg class="logo" viewBox="0 0 240 240" aria-hidden="true">
+            <defs>
+              <linearGradient id="fynG" x1="16%" y1="8%" x2="84%" y2="88%">
+                <stop offset="0%" stop-color="#b8de62"></stop>
+                <stop offset="48%" stop-color="#d7c292"></stop>
+                <stop offset="100%" stop-color="#78b9e5"></stop>
+              </linearGradient>
+              <filter id="fynNoise">
+                <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch"></feTurbulence>
+                <feColorMatrix type="saturate" values="0"></feColorMatrix>
+                <feComponentTransfer>
+                  <feFuncA type="table" tableValues="0 0.06"></feFuncA>
+                </feComponentTransfer>
+              </filter>
+            </defs>
+            <path
+              d="M120 20c10 0 20 4 27 11l53 52c7 7 11 16 11 27v78c0 19-16 35-35 35h-49l-21 19c-7 6-18 1-18-8v-11H64c-19 0-35-16-35-35v-78c0-11 4-20 11-27l53-52c7-7 17-11 27-11z"
+              fill="url(#fynG)"
+            ></path>
+            <rect x="0" y="0" width="240" height="240" filter="url(#fynNoise)"></rect>
+          </svg>
+          <span class="wordmark">Fyn</span>
+        </a>
+        <span class="status">Developer Mode · MCP live at <code>/mcp</code></span>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Find Your Nest</p>
+            <h1>Search homes like you talk.</h1>
+            <p class="lede">
+              Fyn is a ChatGPT connector for property search in Spain. Ask naturally, get
+              explainable matches, and open the source listing in one click.
+            </p>
+            <div class="actions">
+              <a class="btn btn-dark" href="/mcp">Open MCP Endpoint</a>
+              <button class="btn btn-light" type="button" id="copyEndpointBtn">Copy endpoint URL</button>
+              <a class="btn btn-light" href="/docs/chatgpt-developer-mode-runbook.md">Developer runbook</a>
+            </div>
+            <p class="hint">
+              When the connector is published, this page will include a direct “Open in
+              ChatGPT” link for end users.
+            </p>
+          </div>
+
+          <aside class="hero-card">
+            <p class="hero-card-copy">Clear searches. Better matches. Faster decisions.</p>
+            <p class="hero-card-sub">
+              One query can fan out across locations and portals while keeping results
+              transparent and source-linked.
+            </p>
+          </aside>
+        </section>
+
+        <section class="queries">
+          <h2>Example prompts</h2>
+          <div class="query-grid">
+            <span class="query-chip">Find me an office for +50 people in Valencia</span>
+            <span class="query-chip"
+              >Busco piso en Valencia de 3 habitaciones, cerca de pueblos, máximo 350k</span
+            >
+            <span class="query-chip"
+              >I want a second home in Spain in a beautiful natural area with views</span
+            >
+          </div>
+        </section>
+
+        <section class="sample-row" aria-label="Sample properties">
+          <article class="sample-card">
+            <img
+              class="sample-image"
+              src="https://fotos.imghs.net/mm-wp/1085/953/1085_AG374-1629953_1_2025101107103472420.jpg"
+              alt="Sample listing in Cangas de Onis"
+              loading="lazy"
+            />
+            <div class="sample-body">
+              <div>
+                <p class="sample-title">Chalet en Coraín (Cangas de Onís)</p>
+                <p class="sample-meta">410.000 € · 3 hab.</p>
+              </div>
+              <a class="btn btn-dark sample-cta" href="https://www.pisos.com/comprar/chalet-corain_cangas_de_onis-58369234251_108500/" target="_blank" rel="noopener noreferrer">Open</a>
+            </div>
+          </article>
+
+          <article class="sample-card">
+            <img
+              class="sample-image"
+              src="https://fotos.imghs.net/mm-wp/1005/904/1005_106154904_2_2024100422100286407.jpg"
+              alt="Sample listing in Ronda"
+              loading="lazy"
+            />
+            <div class="sample-body">
+              <div>
+                <p class="sample-title">Casa adosada en Ronda</p>
+                <p class="sample-meta">180.000 € · 3 hab.</p>
+              </div>
+              <a class="btn btn-dark sample-cta" href="https://www.pisos.com/comprar/casa_adosada-ronda_centro_urbano-48358344677_100500/" target="_blank" rel="noopener noreferrer">Open</a>
+            </div>
+          </article>
+
+          <article class="sample-card">
+            <img
+              class="sample-image"
+              src="https://fotos.imghs.net/mm-wp/1018/616/1018_106458616_1_2025050719050397919.jpg"
+              alt="Sample listing in Cudillero"
+              loading="lazy"
+            />
+            <div class="sample-body">
+              <div>
+                <p class="sample-title">Chalet en Cudillero</p>
+                <p class="sample-meta">250.000 € · 4 hab.</p>
+              </div>
+              <a class="btn btn-dark sample-cta" href="https://www.pisos.com/comprar/chalet-cudillero_centro_urbano-54254872647_101800/" target="_blank" rel="noopener noreferrer">Open</a>
+            </div>
+          </article>
+        </section>
+
+        <section class="endpoint">
+          <p class="endpoint-label">Connector endpoint</p>
+          <div class="endpoint-row">
+            <code id="endpointCode"></code>
+            <a class="btn btn-light" href="/health">Health check</a>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      (function () {
+        var endpoint = window.location.origin + "/mcp";
+        var endpointCode = document.getElementById("endpointCode");
+        var copyBtn = document.getElementById("copyEndpointBtn");
+
+        if (endpointCode) {
+          endpointCode.textContent = endpoint;
+        }
+
+        if (!copyBtn) {
+          return;
+        }
+
+        copyBtn.addEventListener("click", async function () {
+          try {
+            await navigator.clipboard.writeText(endpoint);
+            copyBtn.textContent = "Copied";
+            setTimeout(function () {
+              copyBtn.textContent = "Copy endpoint URL";
+            }, 1200);
+          } catch (_err) {
+            copyBtn.textContent = "Copy failed";
+            setTimeout(function () {
+              copyBtn.textContent = "Copy endpoint URL";
+            }, 1200);
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
