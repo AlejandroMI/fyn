@@ -931,7 +931,27 @@ async function runStructuredSearch(
           continue;
         }
 
-        throw error;
+        const fallbackError = new ConnectorError(
+          "UPSTREAM_UNAVAILABLE",
+          `Unhandled connector error on ${source}: ${error instanceof Error ? error.message : String(error)}`,
+          true,
+          source
+        );
+
+        if (!firstConnectorError) {
+          firstConnectorError = fallbackError;
+        }
+
+        coverage.push({
+          location,
+          portal: source,
+          candidates: 0,
+          returned: 0,
+          warnings: [],
+          error_code: fallbackError.code,
+          error_message: fallbackError.message
+        });
+        continue;
       }
     }
   }
