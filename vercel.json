@@ -1,4 +1,10 @@
 {
+  "builds": [
+    {
+      "src": "next.config.mjs",
+      "use": "@vercel/next"
+    }
+  ],
   "rewrites": [
     {
       "source": "/mcp",
