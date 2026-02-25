@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 import { problemCarouselImages, type Locale, type SiteContent } from "@/content/site-content";
 
@@ -11,6 +12,53 @@ interface HomePageProps {
 
 export function HomePage({ locale, content }: HomePageProps) {
   const year = new Date().getFullYear();
+  const heroPromptOptions = useMemo(() => {
+    if (content.hero.promptOptions.length > 0) {
+      return content.hero.promptOptions;
+    }
+
+    return [
+      {
+        image: "/web/patio-table-and-chairs.jpg",
+        imageAlt: content.hero.imageAlt,
+        promptText: content.hero.promptText
+      }
+    ];
+  }, [content.hero.imageAlt, content.hero.promptOptions, content.hero.promptText]);
+  const [activeHeroPromptIndex, setActiveHeroPromptIndex] = useState(0);
+  const activeHeroPrompt = heroPromptOptions[activeHeroPromptIndex];
+  const [typedPromptLength, setTypedPromptLength] = useState(0);
+  const typewriterSpeedMs = 28;
+  const promptHoldMs = 2200;
+
+  useEffect(() => {
+    setTypedPromptLength(0);
+  }, [activeHeroPromptIndex]);
+
+  useEffect(() => {
+    if (typedPromptLength >= activeHeroPrompt.promptText.length) {
+      return;
+    }
+
+    const typingTimeout = window.setTimeout(() => {
+      setTypedPromptLength((currentLength) => currentLength + 1);
+    }, typewriterSpeedMs);
+
+    return () => window.clearTimeout(typingTimeout);
+  }, [activeHeroPrompt.promptText, typedPromptLength]);
+
+  useEffect(() => {
+    if (heroPromptOptions.length < 2) {
+      return;
+    }
+
+    const fullCycleMs = activeHeroPrompt.promptText.length * typewriterSpeedMs + promptHoldMs;
+    const rotationTimeout = window.setTimeout(() => {
+      setActiveHeroPromptIndex((currentIndex) => (currentIndex + 1) % heroPromptOptions.length);
+    }, fullCycleMs);
+
+    return () => window.clearTimeout(rotationTimeout);
+  }, [activeHeroPrompt.promptText, activeHeroPromptIndex, heroPromptOptions.length]);
 
   return (
     <div className="theme-light">
@@ -51,14 +99,22 @@ export function HomePage({ locale, content }: HomePageProps) {
             </div>
 
             <div className="hero-image-wrap">
-              <img
-                src="/web/patio-table-and-chairs.jpg"
-                alt={content.hero.imageAlt}
-                className="hero-image"
-              />
+              {heroPromptOptions.map((option, index) => (
+                <img
+                  key={`${option.image}-${index}`}
+                  src={option.image}
+                  alt={option.imageAlt}
+                  className={`hero-image ${index === activeHeroPromptIndex ? "hero-image-active" : ""}`}
+                />
+              ))}
               <div className="hero-caption">
                 <strong>{content.hero.promptLabel}</strong>
-                <div className="chat-text">{content.hero.promptText}</div>
+                <div className="chat-text">
+                  {activeHeroPrompt.promptText.slice(0, typedPromptLength)}
+                  <span className="chat-cursor" aria-hidden="true">
+                    |
+                  </span>
+                </div>
               </div>
             </div>
           </section>

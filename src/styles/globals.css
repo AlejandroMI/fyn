@@ -308,9 +308,17 @@ img {
 }
 
 .hero-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+.hero-image-active {
+  opacity: 1;
 }
 
 .hero-caption {
@@ -340,6 +348,25 @@ img {
   font-size: 1.2rem;
   color: var(--ink);
   line-height: 1.2;
+  min-height: 3.2rem;
+}
+
+.chat-cursor {
+  display: inline-block;
+  margin-left: 0.1rem;
+  animation: prompt-cursor-blink 1s steps(1, end) infinite;
+}
+
+@keyframes prompt-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
 }
 
 section {
@@ -1034,5 +1061,15 @@ footer {
 
   .card {
     padding: 1.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image {
+    transition: none;
+  }
+
+  .chat-cursor {
+    animation: none;
   }
 }

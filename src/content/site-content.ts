@@ -40,6 +40,11 @@ export interface SiteContent {
     promptLabel: string;
     promptText: string;
     imageAlt: string;
+    promptOptions: Array<{
+      image: string;
+      imageAlt: string;
+      promptText: string;
+    }>;
   };
   problem: {
     eyebrow: string;
@@ -161,7 +166,33 @@ export const siteContent: Record<Locale, SiteContent> = {
       promptLabel: "Ejemplo de prompt",
       promptText:
         "“Busco casa en un pueblo bonito con vistas, cerca de naturaleza, para comprar. Máx 350k.”",
-      imageAlt: "Patio luminoso para representar búsqueda por estilo de vida"
+      imageAlt: "Patio luminoso para representar búsqueda por estilo de vida",
+      promptOptions: [
+        {
+          image: "/web/patio-table-and-chairs.jpg",
+          imageAlt: "Patio luminoso para representar búsqueda por estilo de vida",
+          promptText:
+            "“Busco casa en un pueblo bonito con vistas, cerca de naturaleza, para comprar. Máx 350k.”"
+        },
+        {
+          image: "/web/mountain-house-landscape.jpg",
+          imageAlt: "Casa junto a montañas para búsqueda de entorno natural",
+          promptText:
+            "“Quiero una segunda vivienda en montaña, con jardín y silencio, a menos de 90 minutos de una ciudad.”"
+        },
+        {
+          image: "/web/colorful-townhouses-street.jpg",
+          imageAlt: "Calle con fachadas coloridas en zona urbana",
+          promptText:
+            "“Enséñame pisos en barrios con vida de barrio, calles bonitas y buenas conexiones para teletrabajo.”"
+        },
+        {
+          image: "/web/highrise-sunset-windows.jpg",
+          imageAlt: "Edificio urbano al atardecer para estilo de vida de ciudad",
+          promptText:
+            "“Busco piso moderno con mucha luz, terraza y vistas abiertas dentro de presupuesto de 400k.”"
+        }
+      ]
     },
     problem: {
       eyebrow: "El problema",
@@ -351,7 +382,33 @@ export const siteContent: Record<Locale, SiteContent> = {
       promptLabel: "Example prompt",
       promptText:
         "“I want a home in a beautiful town with views, close to nature, to buy. Max 350k.”",
-      imageAlt: "Sunlit patio representing lifestyle-led property search"
+      imageAlt: "Sunlit patio representing lifestyle-led property search",
+      promptOptions: [
+        {
+          image: "/web/patio-table-and-chairs.jpg",
+          imageAlt: "Sunlit patio representing lifestyle-led property search",
+          promptText:
+            "“I want a home in a beautiful town with views, close to nature, to buy. Max 350k.”"
+        },
+        {
+          image: "/web/mountain-house-landscape.jpg",
+          imageAlt: "Mountain home for nature-focused property searches",
+          promptText:
+            "“Find me a second home in the mountains with a garden and quiet surroundings, under 90 minutes from a city.”"
+        },
+        {
+          image: "/web/colorful-townhouses-street.jpg",
+          imageAlt: "Colorful townhouses in a lively neighborhood",
+          promptText:
+            "“Show me homes in walkable neighborhoods with local character and easy day-to-day amenities.”"
+        },
+        {
+          image: "/web/highrise-sunset-windows.jpg",
+          imageAlt: "Modern residential tower at sunset",
+          promptText:
+            "“I need a bright apartment with open views and a terrace, with a realistic budget around 400k.”"
+        }
+      ]
     },
     problem: {
       eyebrow: "The problem",
