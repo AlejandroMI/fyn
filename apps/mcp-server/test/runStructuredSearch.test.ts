@@ -152,6 +152,48 @@ describe("runStructuredSearch", () => {
     expect(idealistaCoverage?.error_message).toContain("Unhandled connector error on idealista: fetch failed");
   });
 
+  it("times out slow connectors and still returns fast-source results", async () => {
+    const previousTimeout = process.env.CONNECTOR_SEARCH_TIMEOUT_MS;
+    process.env.CONNECTOR_SEARCH_TIMEOUT_MS = "200";
+
+    try {
+      const connectors = makeRegistry({
+        idealista: {
+          portal: "idealista",
+          async search(_criteria: NormalizedFilters): Promise<ConnectorSearchResult> {
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+            return {
+              listings: [makeListing({ portal: "idealista", canonical_id: "idealista-1", portal_listing_id: "1" })],
+              diagnostics: {
+                source: "scrape",
+                connector_warnings: []
+              }
+            };
+          }
+        },
+        habitaclia: okConnector("habitaclia", [makeListing()])
+      });
+
+      const result = await runStructuredSearch(
+        payload({
+          sources: ["idealista", "habitaclia"]
+        }),
+        connectors
+      );
+
+      expect(result.listings).toHaveLength(1);
+      const idealistaCoverage = result.diagnostics.coverage.find((row) => row.portal === "idealista");
+      expect(idealistaCoverage?.error_code).toBe("UPSTREAM_UNAVAILABLE");
+      expect(idealistaCoverage?.error_message).toContain("exceeded 1000ms timeout");
+    } finally {
+      if (previousTimeout === undefined) {
+        delete process.env.CONNECTOR_SEARCH_TIMEOUT_MS;
+      } else {
+        process.env.CONNECTOR_SEARCH_TIMEOUT_MS = previousTimeout;
+      }
+    }
+  });
+
   it("raises stable UPSTREAM_UNAVAILABLE when all selected connectors fail generically", async () => {
     const connectors = makeRegistry({
       idealista: errorConnector("idealista", new TypeError("fetch failed")),

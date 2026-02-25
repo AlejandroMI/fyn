@@ -383,6 +383,54 @@ function uniqueStrings(values: string[]): string[] {
   );
 }
 
+async function withTimeout<T>(
+  task: Promise<T>,
+  timeoutMs: number,
+  onTimeout: () => Error
+): Promise<T> {
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
+    timeoutId = setTimeout(() => reject(onTimeout()), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([task, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const cappedConcurrency = Math.max(1, Math.min(concurrency, items.length));
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+
+  const workers = Array.from({ length: cappedConcurrency }, async () => {
+    while (true) {
+      const index = cursor;
+      cursor += 1;
+      if (index >= items.length) {
+        return;
+      }
+      results[index] = await mapper(items[index]!, index);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
 function listingKey(listing: ListingCard): string {
   return `${listing.portal}:${listing.portal_listing_id}`;
 }
@@ -934,39 +982,64 @@ export async function runStructuredSearch(
   }
 
   const plannedLocations = requestedLocations.length === 0 ? ["__discovery__"] : requestedLocations;
+  const connectorSearchTimeoutMs = Math.max(
+    1_000,
+    readNumberEnv("CONNECTOR_SEARCH_TIMEOUT_MS", 15_000)
+  );
+  const locationConcurrency = Math.max(1, readNumberEnv("MCP_LOCATION_CONCURRENCY", 3));
 
-  for (const location of plannedLocations) {
-    const criteria =
-      location === "__discovery__"
-        ? criteriaForLocation(baseCriteria)
-        : criteriaForLocation(baseCriteria, location);
-    const perSourceCap = location === "__discovery__" ? maxResultsTotal : perLocationLimit;
+  const locationExecutions = await mapWithConcurrency(
+    plannedLocations,
+    locationConcurrency,
+    async (location) => {
+      const criteria =
+        location === "__discovery__"
+          ? criteriaForLocation(baseCriteria)
+          : criteriaForLocation(baseCriteria, location);
+      const perSourceCap = location === "__discovery__" ? maxResultsTotal : perLocationLimit;
 
-    const sourceResults = await Promise.all(
-      allowedSources.map(async (source) => {
-        const connector = connectors[source];
+      const sourceResults = await Promise.all(
+        allowedSources.map(async (source) => {
+          const connector = connectors[source];
 
-        try {
-          const result = await connector.search(criteria);
-          return { location, source, result } as const;
-        } catch (error) {
-          if (error instanceof ConnectorError) {
-            return { location, source, error } as const;
+          try {
+            const result = await withTimeout(
+              connector.search(criteria),
+              connectorSearchTimeoutMs,
+              () =>
+                new ConnectorError(
+                  "UPSTREAM_UNAVAILABLE",
+                  `Connector ${source} exceeded ${connectorSearchTimeoutMs}ms timeout.`,
+                  true,
+                  source
+                )
+            );
+            return { location, source, result } as const;
+          } catch (error) {
+            if (error instanceof ConnectorError) {
+              return { location, source, error } as const;
+            }
+
+            return {
+              location,
+              source,
+              error: new ConnectorError(
+                "UPSTREAM_UNAVAILABLE",
+                `Unhandled connector error on ${source}: ${error instanceof Error ? error.message : String(error)}`,
+                true,
+                source
+              )
+            } as const;
           }
+        })
+      );
 
-          return {
-            location,
-            source,
-            error: new ConnectorError(
-              "UPSTREAM_UNAVAILABLE",
-              `Unhandled connector error on ${source}: ${error instanceof Error ? error.message : String(error)}`,
-              true,
-              source
-            )
-          } as const;
-        }
-      })
-    );
+      return { location, criteria, perSourceCap, sourceResults } as const;
+    }
+  );
+
+  for (const locationExecution of locationExecutions) {
+    const { location, criteria, perSourceCap, sourceResults } = locationExecution;
 
     for (const sourceResult of sourceResults) {
       if ("result" in sourceResult) {
