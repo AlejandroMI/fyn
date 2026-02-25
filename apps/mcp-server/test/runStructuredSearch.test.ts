@@ -322,6 +322,45 @@ describe("runStructuredSearch", () => {
     expect(result.listings.length).toBeGreaterThan(0);
   });
 
+  it("infers neighborhood hints from query_text when locations are missing", async () => {
+    const connectors = makeRegistry({
+      pisos: okConnector("pisos", [
+        makeListing({
+          portal: "pisos",
+          canonical_id: "pisos-malilla",
+          portal_listing_id: "m1",
+          city: "Malilla (Distrito Quatre Carreres. València Capital)",
+          description: "Vivienda en Malilla con buena luz."
+        }),
+        makeListing({
+          portal: "pisos",
+          canonical_id: "pisos-other",
+          portal_listing_id: "o1",
+          city: "La Roqueta (Distrito Extramurs. València Capital)",
+          description: "Vivienda en otro barrio."
+        })
+      ])
+    });
+
+    const result = await runStructuredSearch(
+      payload({
+        city: "València",
+        locations: undefined,
+        query_text:
+          "Pisos en València para comprar, mínimo 3 habitaciones, prioriza barrios Malilla, Quatre Carreres y Benimaclet."
+      }),
+      connectors
+    );
+
+    expect(result.criteria.location_hints).toEqual(["Malilla", "Quatre Carreres", "Benimaclet"]);
+    expect(result.listings[0]?.canonical_id).toBe("pisos-malilla");
+    expect(
+      result.diagnostics.request_warnings.some((warning) =>
+        warning.includes("Inferred location hints from query_text")
+      )
+    ).toBe(true);
+  });
+
   it("caps implicit source fanout for wide multi-location searches", async () => {
     const previousMaxTasks = process.env.MCP_MAX_SEARCH_TASKS;
     process.env.MCP_MAX_SEARCH_TASKS = "4";
