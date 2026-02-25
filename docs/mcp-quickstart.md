@@ -99,6 +99,7 @@ Then set environment variables in Vercel project settings:
 - `PISOS_MAX_SCRAPE_REQUESTS`
 - `PISOS_BASE_URL` (optional)
 - `PISOS_SERIALIZED_SEARCH` (optional)
+- `CONNECTOR_FETCH_TIMEOUT_MS` (optional, default `10000`)
 - `TUCASA_BASE_URL` (optional)
 - `TUCASA_SCRAPE_REQUEST_DELAY_MS`
 - `TUCASA_MAX_SCRAPE_REQUESTS`

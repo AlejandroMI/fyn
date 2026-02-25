@@ -82,6 +82,52 @@ function payload(overrides: Partial<ToolPayload> = {}): ToolPayload {
 }
 
 describe("runStructuredSearch", () => {
+  it("runs selected sources concurrently for the same location", async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+
+    const delayedConnector = (portal: SourceSelection, delayMs: number): ConnectorAdapter => ({
+      portal,
+      async search(_criteria: NormalizedFilters): Promise<ConnectorSearchResult> {
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        inFlight -= 1;
+        return {
+          listings: [
+            makeListing({
+              portal,
+              canonical_id: `${portal}-1`,
+              portal_listing_id: "1",
+              title: `Casa con vistas ${portal}`,
+              price_eur: portal === "idealista" ? 250000 : 290000
+            })
+          ],
+          diagnostics: {
+            source: "scrape",
+            connector_warnings: []
+          }
+        };
+      }
+    });
+
+    const connectors = makeRegistry({
+      idealista: delayedConnector("idealista", 80),
+      habitaclia: delayedConnector("habitaclia", 80)
+    });
+
+    const result = await runStructuredSearch(
+      payload({
+        sources: ["idealista", "habitaclia"]
+      }),
+      connectors
+    );
+
+    expect(result.diagnostics.coverage).toHaveLength(2);
+    expect(result.diagnostics.coverage.filter((entry) => entry.error_code === undefined)).toHaveLength(2);
+    expect(maxInFlight).toBeGreaterThan(1);
+  });
+
   it("continues when one selected connector throws generic fetch error", async () => {
     const connectors = makeRegistry({
       idealista: errorConnector("idealista", new TypeError("fetch failed")),

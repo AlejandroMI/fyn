@@ -191,12 +191,50 @@ function readNumberEnv(name: string, defaultValue: number): number {
 export type SourceSelection = z.infer<typeof sourceSchema>;
 export type ConnectorRegistry = Record<SourceSelection, ConnectorAdapter>;
 
+const DEFAULT_CONNECTOR_FETCH_TIMEOUT_MS = 10_000;
+
+function createTimeoutError(timeoutMs: number): Error {
+  const error = new Error(`fetch timeout after ${timeoutMs}ms`);
+  error.name = "TimeoutError";
+  return error;
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
+}
+
+function createTimedFetch(timeoutMs: number): typeof fetch {
+  return async (input, init) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(createTimeoutError(timeoutMs)), timeoutMs);
+
+    try {
+      return await fetch(input, {
+        ...init,
+        signal: controller.signal
+      });
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw createTimeoutError(timeoutMs);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+}
+
 function connectorsFromEnv(): ConnectorRegistry {
+  const timedFetch = createTimedFetch(
+    Math.max(1_000, readNumberEnv("CONNECTOR_FETCH_TIMEOUT_MS", DEFAULT_CONNECTOR_FETCH_TIMEOUT_MS))
+  );
+
   const pisos = new PisosConnector({
     allowFixtureFallback: readBooleanEnv("PISOS_ALLOW_FIXTURE_FALLBACK", true),
     enableScrapeFallback: readBooleanEnv("PISOS_ENABLE_SCRAPE_FALLBACK", true),
     scrapeRequestDelayMs: readNumberEnv("PISOS_SCRAPE_REQUEST_DELAY_MS", 500),
     maxScrapeRequests: readNumberEnv("PISOS_MAX_SCRAPE_REQUESTS", 6),
+    fetchImpl: timedFetch,
     ...(process.env.PISOS_API_KEY ? { apiKey: process.env.PISOS_API_KEY } : {}),
     ...(process.env.PISOS_BASE_URL ? { baseUrl: process.env.PISOS_BASE_URL } : {}),
     ...(process.env.PISOS_SERIALIZED_SEARCH
@@ -207,12 +245,14 @@ function connectorsFromEnv(): ConnectorRegistry {
   const tucasa = new TucasaConnector({
     requestDelayMs: readNumberEnv("TUCASA_SCRAPE_REQUEST_DELAY_MS", 250),
     maxRequests: readNumberEnv("TUCASA_MAX_SCRAPE_REQUESTS", 6),
+    fetchImpl: timedFetch,
     ...(process.env.TUCASA_BASE_URL ? { baseUrl: process.env.TUCASA_BASE_URL } : {})
   });
 
   const fotocasa = new FotocasaConnector({
     requestDelayMs: readNumberEnv("FOTOCASA_SCRAPE_REQUEST_DELAY_MS", 300),
     maxDetailRequests: readNumberEnv("FOTOCASA_MAX_DETAIL_REQUESTS", 8),
+    fetchImpl: timedFetch,
     ...(process.env.FOTOCASA_BASE_URL ? { baseUrl: process.env.FOTOCASA_BASE_URL } : {})
   });
 
@@ -220,6 +260,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("HABITACLIA_SCRAPE_REQUEST_DELAY_MS", 250),
     maxListings: readNumberEnv("HABITACLIA_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("HABITACLIA_MAX_SCRAPE_REQUESTS", 6),
+    fetchImpl: timedFetch,
     ...(process.env.HABITACLIA_BASE_URL ? { baseUrl: process.env.HABITACLIA_BASE_URL } : {})
   });
 
@@ -227,6 +268,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("YAENCONTRE_SCRAPE_REQUEST_DELAY_MS", 350),
     maxListings: readNumberEnv("YAENCONTRE_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("YAENCONTRE_MAX_SCRAPE_REQUESTS", 4),
+    fetchImpl: timedFetch,
     ...(process.env.YAENCONTRE_BASE_URL ? { baseUrl: process.env.YAENCONTRE_BASE_URL } : {})
   });
 
@@ -234,6 +276,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("MILANUNCIOS_SCRAPE_REQUEST_DELAY_MS", 300),
     maxListings: readNumberEnv("MILANUNCIOS_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("MILANUNCIOS_MAX_SCRAPE_REQUESTS", 6),
+    fetchImpl: timedFetch,
     ...(process.env.MILANUNCIOS_BASE_URL ? { baseUrl: process.env.MILANUNCIOS_BASE_URL } : {})
   });
 
@@ -241,6 +284,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("IDEALISTA_SCRAPE_REQUEST_DELAY_MS", 350),
     maxListings: readNumberEnv("IDEALISTA_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("IDEALISTA_MAX_SCRAPE_REQUESTS", 4),
+    fetchImpl: timedFetch,
     ...(process.env.IDEALISTA_BASE_URL ? { baseUrl: process.env.IDEALISTA_BASE_URL } : {})
   });
 
@@ -248,6 +292,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("GLOBALIZA_SCRAPE_REQUEST_DELAY_MS", 300),
     maxListings: readNumberEnv("GLOBALIZA_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("GLOBALIZA_MAX_SCRAPE_REQUESTS", 6),
+    fetchImpl: timedFetch,
     ...(process.env.GLOBALIZA_BASE_URL ? { baseUrl: process.env.GLOBALIZA_BASE_URL } : {})
   });
 
@@ -255,6 +300,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("HOGARIA_SCRAPE_REQUEST_DELAY_MS", 300),
     maxListings: readNumberEnv("HOGARIA_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("HOGARIA_MAX_SCRAPE_REQUESTS", 8),
+    fetchImpl: timedFetch,
     ...(process.env.HOGARIA_BASE_URL ? { baseUrl: process.env.HOGARIA_BASE_URL } : {})
   });
 
@@ -262,6 +308,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("PISOCOMPARTIDO_SCRAPE_REQUEST_DELAY_MS", 300),
     maxListings: readNumberEnv("PISOCOMPARTIDO_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("PISOCOMPARTIDO_MAX_SCRAPE_REQUESTS", 6),
+    fetchImpl: timedFetch,
     ...(process.env.PISOCOMPARTIDO_BASE_URL ? { baseUrl: process.env.PISOCOMPARTIDO_BASE_URL } : {})
   });
 
@@ -269,6 +316,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("ENALQUILER_SCRAPE_REQUEST_DELAY_MS", 300),
     maxListings: readNumberEnv("ENALQUILER_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("ENALQUILER_MAX_SCRAPE_REQUESTS", 8),
+    fetchImpl: timedFetch,
     ...(process.env.ENALQUILER_BASE_URL ? { baseUrl: process.env.ENALQUILER_BASE_URL } : {})
   });
 
@@ -276,6 +324,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("NUROA_SCRAPE_REQUEST_DELAY_MS", 300),
     maxListings: readNumberEnv("NUROA_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("NUROA_MAX_SCRAPE_REQUESTS", 6),
+    fetchImpl: timedFetch,
     ...(process.env.NUROA_BASE_URL ? { baseUrl: process.env.NUROA_BASE_URL } : {})
   });
 
@@ -283,6 +332,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     requestDelayMs: readNumberEnv("SPAINHOUSES_SCRAPE_REQUEST_DELAY_MS", 300),
     maxListings: readNumberEnv("SPAINHOUSES_MAX_LISTINGS", 20),
     maxRequests: readNumberEnv("SPAINHOUSES_MAX_SCRAPE_REQUESTS", 8),
+    fetchImpl: timedFetch,
     ...(process.env.SPAINHOUSES_BASE_URL ? { baseUrl: process.env.SPAINHOUSES_BASE_URL } : {})
   });
 
@@ -892,11 +942,35 @@ export async function runStructuredSearch(
         : criteriaForLocation(baseCriteria, location);
     const perSourceCap = location === "__discovery__" ? maxResultsTotal : perLocationLimit;
 
-    for (const source of allowedSources) {
-      const connector = connectors[source];
+    const sourceResults = await Promise.all(
+      allowedSources.map(async (source) => {
+        const connector = connectors[source];
 
-      try {
-        const result = await connector.search(criteria);
+        try {
+          const result = await connector.search(criteria);
+          return { location, source, result } as const;
+        } catch (error) {
+          if (error instanceof ConnectorError) {
+            return { location, source, error } as const;
+          }
+
+          return {
+            location,
+            source,
+            error: new ConnectorError(
+              "UPSTREAM_UNAVAILABLE",
+              `Unhandled connector error on ${source}: ${error instanceof Error ? error.message : String(error)}`,
+              true,
+              source
+            )
+          } as const;
+        }
+      })
+    );
+
+    for (const sourceResult of sourceResults) {
+      if ("result" in sourceResult) {
+        const result = sourceResult.result;
         sourceKinds.add(result.diagnostics.source);
         connectorWarnings.push(...result.diagnostics.connector_warnings);
         const ranked = rankListings(result.listings, criteria).slice(0, perSourceCap);
@@ -908,51 +982,28 @@ export async function runStructuredSearch(
         );
         coverage.push({
           location,
-          portal: source,
+          portal: sourceResult.source,
           source: result.diagnostics.source,
           candidates: result.listings.length,
           returned: ranked.length,
           warnings: result.diagnostics.connector_warnings
         });
-      } catch (error) {
-        if (error instanceof ConnectorError) {
-          if (!firstConnectorError) {
-            firstConnectorError = error;
-          }
-          coverage.push({
-            location,
-            portal: source,
-            candidates: 0,
-            returned: 0,
-            warnings: [],
-            error_code: error.code,
-            error_message: error.message
-          });
-          continue;
-        }
-
-        const fallbackError = new ConnectorError(
-          "UPSTREAM_UNAVAILABLE",
-          `Unhandled connector error on ${source}: ${error instanceof Error ? error.message : String(error)}`,
-          true,
-          source
-        );
-
-        if (!firstConnectorError) {
-          firstConnectorError = fallbackError;
-        }
-
-        coverage.push({
-          location,
-          portal: source,
-          candidates: 0,
-          returned: 0,
-          warnings: [],
-          error_code: fallbackError.code,
-          error_message: fallbackError.message
-        });
         continue;
       }
+
+      const error = sourceResult.error;
+      if (!firstConnectorError) {
+        firstConnectorError = error;
+      }
+      coverage.push({
+        location,
+        portal: sourceResult.source,
+        candidates: 0,
+        returned: 0,
+        warnings: [],
+        error_code: error.code,
+        error_message: error.message
+      });
     }
   }
 
