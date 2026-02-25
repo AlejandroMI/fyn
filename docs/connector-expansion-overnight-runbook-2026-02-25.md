@@ -35,7 +35,7 @@ This document is the persistence layer for connector expansion work. If context 
 | `fotocasa.es` | Partially stable | Implemented | Detail parser + list-card fallback; anti-bot variability remains. |
 | `habitaclia.com` | Stable city routes | Implemented | Structured list attributes and good image coverage. |
 | `idealista.com` | Frequently blocked | Blocked adapter | Keep stable diagnostics; revisit with stronger extraction strategy. |
-| `yaencontre.com` | Variable, often DataDome-blocked | Implemented (optional source) | Uses probe + encoded `__INITIAL_STATE__` parser when reachable; emits stable blocked diagnostics otherwise. |
+| `yaencontre.com` | Variable, often DataDome-blocked | Implemented | Uses probe + encoded `__INITIAL_STATE__` parser, plus mixed path retry so one blocked path does not abort other paths. |
 | `milanuncios.com` | Stable with browser-like headers | Implemented | Listing-card parser with city filtering and resilient fallback behavior. |
 
 ## Portal Research Results (Evidence-Based)
@@ -133,9 +133,9 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Wire root deployed MCP handler to same multi-source behavior.
 - [x] Add tests for new connectors and source selection behavior.
 - [x] Update docs.
+- [x] Improve `yaencontre` consistency under mixed block/unblock responses.
 - [ ] Commit.
 - [ ] Continue with next backlog connector tasks:
-  - improve `yaencontre` consistency under mixed block/unblock responses,
   - refine blocked-adapter diagnostics for `idealista`,
   - evaluate one additional regional long-tail source.
 

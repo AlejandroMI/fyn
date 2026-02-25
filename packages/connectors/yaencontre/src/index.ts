@@ -485,6 +485,25 @@ function looksLikeChallengeBody(html: string): boolean {
   return /captcha-delivery\.com|please enable js and disable any ad blocker|datadome|access denied/i.test(html);
 }
 
+function toCityNormalized(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function cityMatches(listingCity: string, requestedCity: string): boolean {
+  const requested = toCityNormalized(requestedCity);
+  if (!requested) {
+    return true;
+  }
+
+  const listing = toCityNormalized(listingCity);
+  return listing.includes(requested);
+}
+
 export class YaencontreConnector implements ConnectorAdapter {
   readonly portal = "yaencontre" as const;
 
@@ -507,6 +526,10 @@ export class YaencontreConnector implements ConnectorAdapter {
     const seenAt = listingNowIso();
     const listings: ListingCard[] = [];
     const paths = buildCandidatePaths(criteria).slice(0, this.maxRequests);
+    let blockedCount = 0;
+    let rateLimitedCount = 0;
+    let unavailableCount = 0;
+    let lastBlockedReason: string | null = null;
 
     for (const [index, path] of paths.entries()) {
       if (index > 0) {
@@ -522,24 +545,29 @@ export class YaencontreConnector implements ConnectorAdapter {
       const html = await response.text();
 
       if (response.status === 429) {
-        throw new ConnectorError("UPSTREAM_RATE_LIMIT", "yaencontre rate limited request.", true, "yaencontre");
+        rateLimitedCount += 1;
+        warnings.push(`yaencontre rate-limited request: ${path}`);
+        continue;
       }
 
       if (response.status === 401 || response.status === 403) {
-        throw new ConnectorError("UPSTREAM_BLOCKED", blockedMessage(response, html), true, "yaencontre");
+        blockedCount += 1;
+        lastBlockedReason = blockedMessage(response, html);
+        warnings.push(`yaencontre blocked request: ${path}`);
+        continue;
       }
 
       if (response.status >= 500) {
-        throw new ConnectorError(
-          "UPSTREAM_UNAVAILABLE",
-          `yaencontre upstream unavailable (HTTP ${response.status}).`,
-          true,
-          "yaencontre"
-        );
+        unavailableCount += 1;
+        warnings.push(`yaencontre upstream unavailable (HTTP ${response.status}) for ${path}.`);
+        continue;
       }
 
       if (looksLikeChallengeBody(html)) {
-        throw new ConnectorError("UPSTREAM_BLOCKED", blockedMessage(response, html), true, "yaencontre");
+        blockedCount += 1;
+        lastBlockedReason = blockedMessage(response, html);
+        warnings.push(`yaencontre anti-bot challenge on path: ${path}`);
+        continue;
       }
 
       if (response.status >= 400) {
@@ -608,12 +636,45 @@ export class YaencontreConnector implements ConnectorAdapter {
       0,
       this.maxListings
     );
-    if (uniqueListings.length === 0) {
+
+    if (uniqueListings.length === 0 && rateLimitedCount === paths.length && paths.length > 0) {
+      throw new ConnectorError("UPSTREAM_RATE_LIMIT", "yaencontre rate limited all candidate requests.", true, "yaencontre");
+    }
+
+    if (uniqueListings.length === 0 && blockedCount === paths.length && paths.length > 0) {
+      throw new ConnectorError(
+        "UPSTREAM_BLOCKED",
+        lastBlockedReason ?? "yaencontre blocked automated access.",
+        true,
+        "yaencontre"
+      );
+    }
+
+    if (uniqueListings.length === 0 && unavailableCount === paths.length && paths.length > 0) {
+      throw new ConnectorError(
+        "UPSTREAM_UNAVAILABLE",
+        "yaencontre upstream unavailable for all candidate requests.",
+        true,
+        "yaencontre"
+      );
+    }
+
+    let finalListings = uniqueListings;
+    if (criteria.city && uniqueListings.length > 0) {
+      const cityFiltered = uniqueListings.filter((listing) => cityMatches(listing.city, criteria.city ?? ""));
+      if (cityFiltered.length > 0) {
+        finalListings = cityFiltered;
+      } else {
+        warnings.push(`No strict city matches for "${criteria.city}" on yaencontre; returning broader listing set.`);
+      }
+    }
+
+    if (finalListings.length === 0) {
       warnings.push("yaencontre returned no parseable listings.");
     }
 
     return {
-      listings: uniqueListings,
+      listings: finalListings,
       diagnostics: {
         source: "scrape",
         connector_warnings: uniqueStrings(warnings)

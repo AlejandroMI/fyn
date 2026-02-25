@@ -208,4 +208,77 @@ describe("YaencontreConnector", () => {
     expect((result.listings[0]?.raw as { lat?: number })?.lat).toBeCloseTo(39.50095, 4);
     expect((result.listings[0]?.raw as { lon?: number })?.lon).toBeCloseTo(-0.39581, 4);
   });
+
+  it("continues after blocked path when a later path is reachable", async () => {
+    const reachableHtml = `
+      <html>
+        <head>
+          <script type="application/ld+json">
+            {
+              "@type": "ItemList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "item": {
+                    "@type": "Residence",
+                    "url": "https://www.yaencontre.com/venta/piso/valencia/7654321",
+                    "name": "Piso reformado en Valencia",
+                    "description": "Con 3 habitaciones y mucha luz.",
+                    "image": "https://img.yaencontre.test/reachable.jpg",
+                    "offers": {
+                      "@type": "Offer",
+                      "price": "280000"
+                    },
+                    "numberOfRooms": "3",
+                    "address": {
+                      "addressLocality": "Valencia"
+                    }
+                  }
+                }
+              ]
+            }
+          </script>
+        </head>
+        <body></body>
+      </html>
+    `;
+
+    let call = 0;
+    const fetchMock: typeof fetch = async () => {
+      call += 1;
+      if (call === 1) {
+        return makeResponse(
+          `<html><body><script src="https://ct.captcha-delivery.com/c.js"></script></body></html>`,
+          403,
+          { "x-dd-b": "2" }
+        );
+      }
+
+      return makeResponse(reachableHtml, 200);
+    };
+
+    const connector = new YaencontreConnector({
+      fetchImpl: fetchMock,
+      maxRequests: 2,
+      requestDelayMs: 0
+    });
+
+    const result = await connector.search({
+      locale: "es",
+      property_types: ["flat"],
+      nearby_towns: false,
+      strict_constraints: true,
+      renovation_ok: false,
+      tags: [],
+      transaction_type: "buy",
+      city: "Valencia"
+    });
+
+    expect(result.listings).toHaveLength(1);
+    expect(result.listings[0]?.title).toContain("reformado");
+    expect(result.diagnostics.connector_warnings).toContain(
+      "yaencontre blocked request: /venta/pisos/valencia"
+    );
+  });
 });

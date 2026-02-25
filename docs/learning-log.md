@@ -161,3 +161,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: implement `milanuncios` as first-class scraper source with strict city filtering plus broad fallback if no exact city matches appear.
 - Action: shipped `@fyn/connectors-milanuncios`, integrated it into MCP defaults and source schema, added blocked/rate-limit error mapping, and smoke-tested with live Valencia queries.
 - Expected impact: larger inventory coverage in key searches and better multi-source ranking diversity when other portals are partially blocked.
+
+- Date: 2026-02-25
+- Context: `yaencontre` frequently blocks one candidate route while another route can still be reachable in the same execution.
+- Signal: previous behavior threw on first blocked path, aborting potentially successful fallback paths.
+- Decision: treat per-path blocked/rate-limit/unavailable responses as recoverable until all candidates fail.
+- Action: updated `@fyn/connectors-yaencontre` to continue across candidate paths, added city-match post-filtering, and added a regression test for mixed blocked+reachable path sequences.
+- Expected impact: fewer false-negative failures and more consistent contribution from `yaencontre` in multi-source aggregation.
