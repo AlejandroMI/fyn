@@ -135,7 +135,7 @@ export interface ConnectorSearchResult {
 
 export const SEARCH_PROPERTIES_TOOL_TITLE = "Search Properties (Model-Driven)";
 export const SEARCH_PROPERTIES_TOOL_DESCRIPTION =
-  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must provide `city` or, for broad requests, plan and send `locations[]` (recommended 3-10); `query_text` is contextual only and is never a substitute for location constraints. Do not set `sources` unless the user explicitly asks for specific portals. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
+  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must provide `city` or, for broad requests, plan and send `locations[]` (recommended 3-5, hard max 5); `query_text` is contextual only and is never a substitute for location constraints. Do not set `sources` unless the user explicitly asks for specific portals. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
 
 export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   query_text:
@@ -144,7 +144,7 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   transaction_type: "Transaction mode (`buy` or `rent`).",
   property_types: "Property types (`flat`, `house`, `office`, `land`).",
   city: "Single location search target. Prefer `locations[]` for broad or exploratory intent.",
-  locations: "Primary geography control. Provide 3-10 cities/towns for broad searches.",
+  locations: "Primary geography control. Provide 3-5 cities/towns for broad searches (hard max: 5).",
   nearby_towns: "Allow nearby towns around each requested location.",
   min_rooms: "Minimum bedrooms.",
   min_capacity_people: "Minimum people capacity.",
@@ -165,9 +165,9 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
 export const SEARCH_PROPERTIES_MISSING_LOCATION_WARNING =
   "No `city` or `locations[]` provided. Discovery search is disabled when `strict_constraints=true`.";
 export const SEARCH_PROPERTIES_MISSING_LOCATION_ACTION =
-  "Model action required: choose candidate cities/towns and retry with `locations[]` (recommended 3-10).";
+  "Model action required: choose candidate cities/towns and retry with `locations[]` (recommended 3-5, hard max 5).";
 export const SEARCH_PROPERTIES_MISSING_LOCATION_RETRY_HINT =
-  "Send `locations[]` (recommended 3-10) or a single `city` and call the tool again.";
+  "Send `locations[]` (recommended 3-5, hard max 5) or a single `city` and call the tool again.";
 export const SEARCH_PROPERTIES_CONTEXT_ONLY_WARNING =
   "`query_text` is contextual only. In strict structured mode, geography must be explicit.";
 

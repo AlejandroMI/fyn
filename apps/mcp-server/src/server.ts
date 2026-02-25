@@ -55,6 +55,7 @@ const sourceSchema = z.enum([
   "enalquiler",
   "nuroa"
 ]);
+const MAX_LOCATIONS = 5;
 
 const toolSchema = {
   query_text: z
@@ -75,6 +76,7 @@ const toolSchema = {
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.city),
   locations: z
     .array(z.string().min(1))
+    .max(MAX_LOCATIONS)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.locations),
   nearby_towns: z.boolean().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.nearby_towns),
@@ -1055,7 +1057,7 @@ export async function runStructuredSearch(
     const { location, criteria, perSourceCap, sourceResults } = locationExecution;
 
     for (const sourceResult of sourceResults) {
-      if ("result" in sourceResult) {
+      if ("result" in sourceResult && sourceResult.result) {
         const result = sourceResult.result;
         sourceKinds.add(result.diagnostics.source);
         connectorWarnings.push(...result.diagnostics.connector_warnings);
