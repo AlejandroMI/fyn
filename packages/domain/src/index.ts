@@ -754,7 +754,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
 
       <section id="mapPanel" class="panel" hidden>
         <div id="mapRoot" class="map-root"></div>
-        <p class="map-note">Map uses city-level placement unless exact portal coordinates are available in result metadata.</p>
+        <p class="map-note">Map uses exact coordinates when available, otherwise it anchors to listing city or requested search location.</p>
       </section>
 
       <section id="listPanel" class="panel" hidden>
@@ -779,6 +779,9 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           cudillero: [43.5637, -6.1451],
           grazalema: [36.7582, -5.3661]
         };
+        var CITY_KEYS = Object.keys(CITY_COORDS).sort(function (a, b) {
+          return b.length - a.length;
+        });
 
         var state = {
           cards: [],
@@ -863,9 +866,41 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         function locationLabelFromCard(card) {
           var city = card && typeof card.city === "string" ? card.city : "";
           if (!city) {
-            return "Unknown";
+            return "";
           }
-          return city.split("(")[0].split(",")[0].trim() || city.trim();
+          return city.trim();
+        }
+
+        function requestedLocationLabels() {
+          var labels = [];
+          if (
+            state.diagnostics &&
+            state.diagnostics.execution &&
+            Array.isArray(state.diagnostics.execution.locations_requested)
+          ) {
+            labels = labels.concat(state.diagnostics.execution.locations_requested);
+          }
+          if (state.criteria && typeof state.criteria.city === "string" && state.criteria.city.trim()) {
+            labels.push(state.criteria.city.trim());
+          }
+          return labels;
+        }
+
+        function knownCityKeyFromLabel(label) {
+          var normalized = normalize(label);
+          if (!normalized) {
+            return "";
+          }
+          if (CITY_COORDS[normalized]) {
+            return normalized;
+          }
+          for (var i = 0; i < CITY_KEYS.length; i += 1) {
+            var key = CITY_KEYS[i];
+            if (normalized.indexOf(key) !== -1) {
+              return key;
+            }
+          }
+          return "";
         }
 
         function hostFromUrl(url) {
@@ -984,24 +1019,32 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           return null;
         }
 
-        function centerForCity(cityLabel) {
-          var key = normalize(cityLabel);
+        function centerForCity(cityLabel, fallbackLabels) {
+          var key = knownCityKeyFromLabel(cityLabel);
           if (CITY_COORDS[key]) {
             return CITY_COORDS[key];
           }
+          var labels = Array.isArray(fallbackLabels) ? fallbackLabels : [];
+          for (var i = 0; i < labels.length; i += 1) {
+            var fallbackKey = knownCityKeyFromLabel(labels[i]);
+            if (CITY_COORDS[fallbackKey]) {
+              return CITY_COORDS[fallbackKey];
+            }
+          }
+
           var h = hash(key || "spain");
           var lat = 36.0 + ((h % 7000) / 7000) * 7.7;
           var lon = -9.2 + (((Math.floor(h / 7000) % 11000) / 11000) * 12.0);
           return [lat, lon];
         }
 
-        function coordinateForCard(card, index) {
+        function coordinateForCard(card, index, fallbackLabels) {
           var exact = maybeRawCoordinate(card);
           if (exact) {
             return exact;
           }
 
-          var center = centerForCity(locationLabelFromCard(card));
+          var center = centerForCity(locationLabelFromCard(card), fallbackLabels);
           var h = hash((card && card.canonical_id) || String(index));
           var jitterLat = (((h % 200) - 100) / 100) * 0.012;
           var jitterLon = ((((Math.floor(h / 200) % 200) - 100) / 100) * 0.014);
@@ -1074,9 +1117,10 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
 
             markerLayer.clearLayers();
             var bounds = [];
+            var fallbackLabels = requestedLocationLabels();
 
             state.cards.forEach(function (card, index) {
-              var point = coordinateForCard(card, index);
+              var point = coordinateForCard(card, index, fallbackLabels);
               var marker = L.marker([point[0], point[1]], {
                 title: card.title || "Listing"
               });
