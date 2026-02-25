@@ -14,6 +14,7 @@ const sourceSet = [
   "globaliza",
   "hogaria",
   "pisocompartido",
+  "enalquiler",
   "idealista"
 ] as const;
 
@@ -59,6 +60,11 @@ function basePayload(overrides: Record<string, unknown>): Record<string, unknown
 
 const sourcePayloadOverrides: Partial<Record<Source, Record<string, unknown>>> = {
   pisocompartido: {
+    transaction_type: "rent",
+    property_types: ["flat"],
+    city: "Valencia"
+  },
+  enalquiler: {
     transaction_type: "rent",
     property_types: ["flat"],
     city: "Valencia"

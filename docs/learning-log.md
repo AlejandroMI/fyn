@@ -217,3 +217,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: keep dedupe behavior but generalize warning wording.
 - Action: changed MCP warning text to “Deduplicated N near-identical listings before ranking.”
 - Expected impact: diagnostics remain accurate and trustworthy in both single-source and multi-source runs.
+
+- Date: 2026-02-25
+- Context: rental coverage needed another high-signal source without API keys.
+- Signal: `enalquiler.com` exposes stable city/province listing routes and parseable `propertyCard` HTML with image, price, room, description, and deep-link fields.
+- Decision: integrate `enalquiler` as a rent-focused connector and include it conditionally in default source selection for rent + flat/house intents.
+- Action: shipped `@fyn/connectors-enalquiler`, added ajax location resolution + route fallback logic, wired MCP/domain/env/docs/smoke harness, and validated live smoke on Valencia.
+- Expected impact: improved rental inventory breadth and more visual card quality while keeping deterministic connector contracts.

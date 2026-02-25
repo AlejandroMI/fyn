@@ -29,6 +29,7 @@ Current connector sources:
 - `globaliza` (scrape list-card extraction, city-filter fallback)
 - `hogaria` (scrape listing-card extraction, province-route discovery fallback)
 - `pisocompartido` (scrape room-rental cards, rent-focused)
+- `enalquiler` (scrape rental listings, city/province route resolution + fallback)
 
 ## Localization
 
@@ -93,3 +94,4 @@ pnpm smoke:mcp:http -- --url https://<your-project>.vercel.app/api/mcp "Find me 
 - `docs/chatgpt-developer-mode-runbook.md`
 - `docs/learning-log.md`
 - `docs/connector-expansion-overnight-runbook-2026-02-25.md`
+- `docs/autonomous-continuation-playbook.md`

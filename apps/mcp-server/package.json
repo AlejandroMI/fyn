@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@fyn/connectors-core": "workspace:*",
+    "@fyn/connectors-enalquiler": "workspace:*",
     "@fyn/connectors-fotocasa": "workspace:*",
     "@fyn/connectors-globaliza": "workspace:*",
     "@fyn/connectors-habitaclia": "workspace:*",

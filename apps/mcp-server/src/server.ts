@@ -22,6 +22,7 @@ import {
   type NormalizedFilters
 } from "@fyn/domain";
 import { type ConnectorAdapter } from "@fyn/connectors-core";
+import { EnalquilerConnector } from "@fyn/connectors-enalquiler";
 import { FotocasaConnector } from "@fyn/connectors-fotocasa";
 import { GlobalizaConnector } from "@fyn/connectors-globaliza";
 import { HabitacliaConnector } from "@fyn/connectors-habitaclia";
@@ -47,7 +48,8 @@ const sourceSchema = z.enum([
   "milanuncios",
   "globaliza",
   "hogaria",
-  "pisocompartido"
+  "pisocompartido",
+  "enalquiler"
 ]);
 
 const toolSchema = {
@@ -259,6 +261,13 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.PISOCOMPARTIDO_BASE_URL ? { baseUrl: process.env.PISOCOMPARTIDO_BASE_URL } : {})
   });
 
+  const enalquiler = new EnalquilerConnector({
+    requestDelayMs: readNumberEnv("ENALQUILER_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxListings: readNumberEnv("ENALQUILER_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("ENALQUILER_MAX_SCRAPE_REQUESTS", 8),
+    ...(process.env.ENALQUILER_BASE_URL ? { baseUrl: process.env.ENALQUILER_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
@@ -269,7 +278,8 @@ function connectorsFromEnv(): ConnectorRegistry {
     idealista,
     globaliza,
     hogaria,
-    pisocompartido
+    pisocompartido,
+    enalquiler
   };
 }
 
@@ -765,6 +775,7 @@ function defaultSourcesForCriteria(criteria: NormalizedFilters): SourceSelection
     criteria.property_types.some((propertyType) => propertyType === "flat" || propertyType === "house");
   if ((transaction === undefined || transaction === "rent") && supportsPropertyType) {
     defaults.push("pisocompartido");
+    defaults.push("enalquiler");
   }
 
   return defaults;
