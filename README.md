@@ -22,7 +22,7 @@ Current connector sources:
 - `pisos` (API + scrape fallback)
 - `habitaclia` (scrape)
 - `tucasa` (scrape)
-- `fotocasa` (scrape, anti-bot sensitive)
+- `fotocasa` (scrape with list-card fallback, anti-bot sensitive)
 - `yaencontre` (scrape probe + state parser, DataDome-sensitive)
 - blocked placeholder with stable diagnostics: `idealista`
 

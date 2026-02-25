@@ -75,6 +75,81 @@ function extractListingPaths(html: string): string[] {
   return uniqueStrings(matches);
 }
 
+function firstImageUrl(html: string, baseUrl: string): string | null {
+  const imageMatch = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+  const raw = imageMatch?.[1];
+  if (!raw) {
+    return null;
+  }
+
+  return toAbsoluteUrl(raw, baseUrl);
+}
+
+function extractSearchListings(html: string, baseUrl: string): ListingCard[] {
+  const listingCards: ListingCard[] = [];
+  const listingPattern =
+    /<article[\s\S]*?href=["'](\/es\/(?:comprar|alquilar)\/vivienda\/[^"']+?\/\d+\/d)(?:\?[^"']*)?["'][\s\S]*?<\/article>/gi;
+  const seenAt = listingNowIso();
+
+  for (const match of html.matchAll(listingPattern)) {
+    const path = match[1];
+    const block = match[0];
+    if (!path || !block) {
+      continue;
+    }
+
+    const detailUrl = toAbsoluteUrl(path, baseUrl);
+    const listingUrl = new URL(detailUrl);
+    const portalListingId = extractListingId(listingUrl.pathname);
+
+    const title =
+      readText(block, /<h3[^>]*>[\s\S]*?<span>([\s\S]*?)<\/span>[\s\S]*?<\/h3>/i) ??
+      readText(block, /<h3[^>]*>([\s\S]*?)<\/h3>/i) ??
+      `Vivienda ${portalListingId}`;
+
+    const flattened = stripTags(block);
+    const price = parsePriceNumber(flattened.match(/([\d.]+)\s*€/)?.[1] ?? null);
+    const rooms = parseRoomsFromText(flattened);
+    const propertyType = inferPropertyTypeFromText(title);
+    const imageUrl = firstImageUrl(block, baseUrl);
+
+    listingCards.push({
+      canonical_id: `fotocasa-${portalListingId}`,
+      portal: "fotocasa",
+      portal_listing_id: portalListingId,
+      url: listingUrl.toString(),
+      title,
+      city: cityFromPath(listingUrl.pathname),
+      price_eur: price,
+      rooms,
+      property_type: propertyType,
+      image_urls: imageUrl ? [imageUrl] : [],
+      last_seen_at: seenAt,
+      score: 0,
+      why_matched: [],
+      description: "",
+      tags: inferTagsFromDescription(title),
+      capacity_people: null,
+      raw: {
+        source_path: listingUrl.pathname,
+        source: "search_card",
+        chars: rooms !== null ? [`${rooms} habs.`] : []
+      }
+    });
+  }
+
+  return uniqueBy(listingCards, (listing) => `${listing.portal}:${listing.portal_listing_id}`);
+}
+
+function readText(html: string, pattern: RegExp): string | null {
+  const match = html.match(pattern);
+  if (!match?.[1]) {
+    return null;
+  }
+
+  return stripTags(match[1]);
+}
+
 function extractListingId(pathOrUrl: string): string {
   const match = pathOrUrl.match(/\/(\d+)\/d(?:$|[/?#])/);
   if (match?.[1]) {
@@ -138,12 +213,24 @@ export class FotocasaConnector implements ConnectorAdapter {
 
     assertNotBotBlocked(searchHtml, "fotocasa");
 
-    const listingPaths = extractListingPaths(searchHtml).slice(0, this.maxDetailRequests);
+    const searchListings = extractSearchListings(searchHtml, this.baseUrl);
+    const listingPaths = uniqueStrings(
+      searchListings.map((listing) => new URL(listing.url).pathname)
+    ).slice(0, this.maxDetailRequests);
+
     if (listingPaths.length === 0) {
-      warnings.push("fotocasa search page returned no listing links (possible anti-bot or markup change).");
+      const legacyPaths = extractListingPaths(searchHtml).slice(0, this.maxDetailRequests);
+      if (legacyPaths.length > 0) {
+        listingPaths.push(...legacyPaths);
+      } else {
+        warnings.push("fotocasa search page returned no listing links (possible anti-bot or markup change).");
+      }
     }
 
-    const listings: ListingCard[] = [];
+    const listingsById = new Map<string, ListingCard>();
+    for (const listing of searchListings.slice(0, this.maxDetailRequests)) {
+      listingsById.set(listing.portal_listing_id, listing);
+    }
 
     for (const [index, listingPath] of listingPaths.entries()) {
       if (index > 0) {
@@ -184,7 +271,7 @@ export class FotocasaConnector implements ConnectorAdapter {
       const rooms = parseRoomsFromText(`${title} ${description}`);
       const propertyType = inferPropertyTypeFromText(`${title} ${description}`);
 
-      listings.push({
+      listingsById.set(portalListingId, {
         canonical_id: `fotocasa-${portalListingId}`,
         portal: "fotocasa",
         portal_listing_id: portalListingId,
@@ -208,7 +295,10 @@ export class FotocasaConnector implements ConnectorAdapter {
       });
     }
 
-    const uniqueListings = uniqueBy(listings, (listing) => `${listing.portal}:${listing.portal_listing_id}`);
+    const uniqueListings = uniqueBy(
+      Array.from(listingsById.values()),
+      (listing) => `${listing.portal}:${listing.portal_listing_id}`
+    );
 
     return {
       listings: uniqueListings,

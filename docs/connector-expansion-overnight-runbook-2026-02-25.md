@@ -32,7 +32,7 @@ This document is the persistence layer for connector expansion work. If context 
 | --- | --- | --- | --- |
 | `pisos.com` | Stable | Implemented | API path exists but keyless mode relies on scraper fallback. |
 | `tucasa.com` | Stable | Implemented | JSON-LD surface is parse-friendly. |
-| `fotocasa.es` | Partially stable | Implemented | Works with browser-like headers; anti-bot variability remains. |
+| `fotocasa.es` | Partially stable | Implemented | Detail parser + list-card fallback; anti-bot variability remains. |
 | `habitaclia.com` | Stable city routes | Implemented | Structured list attributes and good image coverage. |
 | `idealista.com` | Frequently blocked | Blocked adapter | Keep stable diagnostics; revisit with stronger extraction strategy. |
 | `yaencontre.com` | Variable, often DataDome-blocked | Implemented (optional source) | Uses probe + encoded `__INITIAL_STATE__` parser when reachable; emits stable blocked diagnostics otherwise. |
@@ -127,7 +127,6 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Update docs.
 - [ ] Commit.
 - [ ] Continue with next backlog connector tasks:
-  - improve `fotocasa` coverage resilience,
   - improve `yaencontre` consistency under mixed block/unblock responses,
   - add another reachable portal.
 

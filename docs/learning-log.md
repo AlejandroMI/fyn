@@ -147,3 +147,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: replace placeholder with a probe-first connector that parses encoded app state when reachable and emits stable blocked diagnostics when challenged.
 - Action: implemented `@fyn/connectors-yaencontre`, added DataDome-aware error mapping (including challenge cid), and parsed `window.__INITIAL_STATE__` listing payload for title/price/rooms/images/geo.
 - Expected impact: incremental inventory gains when access is open, with deterministic fallback behavior when anti-bot is triggered.
+
+- Date: 2026-02-25
+- Context: `fotocasa` detail pages are often blocked even when search pages remain reachable.
+- Signal: connector lost all results when detail enrichment failed, despite valid list-page cards.
+- Decision: parse and keep list-level cards as first-class fallback, then enrich with details opportunistically.
+- Action: added search-card parser in `@fyn/connectors-fotocasa` and merged detail data over fallback cards when available; added regression test for blocked-detail fallback.
+- Expected impact: fewer empty responses and better resilience under partial anti-bot pressure.

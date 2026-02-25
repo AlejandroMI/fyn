@@ -49,8 +49,8 @@ Last updated: 2026-02-25
 
 - [ ] `P1` Idealista adapter discovery spike
   - Hypothesis: anti-bot behavior is high; keep blocked adapter + stable diagnostics until reliable extraction path exists.
-- [ ] `P1` Fotocasa adapter discovery spike
-  - Hypothesis: detail pages can be parsed but search/listing pages are frequently blocked; keep fallback diagnostics and retry strategy.
+- [x] `P1` Fotocasa adapter discovery spike
+  - Outcome: detail parsing kept, plus search-card fallback so blocked detail pages still produce usable cards when list pages are reachable.
 - [x] `P1` Habitaclia adapter implementation spike
   - Outcome: city-scoped list pages are scrapeable; connector integrated with parser tests and MCP coverage diagnostics.
 - [x] `P2` Yaencontre adapter discovery spike
@@ -81,6 +81,7 @@ Last updated: 2026-02-25
 - [x] `search_properties` now exposes an MCP Apps widget (`ui://widget/fyn-search-results-v1.html`) for map + card rendering in ChatGPT.
 - [x] Added connector adapter framework package (`@fyn/connectors-core`) with shared scraper helpers and stable blocked-portal behavior.
 - [x] Added `@fyn/connectors-tucasa` and `@fyn/connectors-fotocasa` adapters with parser tests and MCP integration.
+- [x] Added Fotocasa search-card fallback parser so detail-blocked flows can still return normalized listings.
 - [x] Added `@fyn/connectors-habitaclia` adapter with city-scoped scraping, parser tests, and MCP integration.
 - [x] Added `@fyn/connectors-yaencontre` adapter with DataDome-aware blocking diagnostics and encoded state parser.
 - [x] Upgraded MCP to multi-source execution (`sources[]`) with per-location and per-portal coverage diagnostics.
