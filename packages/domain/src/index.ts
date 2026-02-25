@@ -9,7 +9,8 @@ export type PortalSource =
   | "habitaclia"
   | "yaencontre"
   | "milanuncios"
-  | "globaliza";
+  | "globaliza"
+  | "hogaria";
 
 export const SUPPORTED_PORTAL_SOURCES: PortalSource[] = [
   "pisos",
@@ -19,7 +20,8 @@ export const SUPPORTED_PORTAL_SOURCES: PortalSource[] = [
   "habitaclia",
   "yaencontre",
   "milanuncios",
-  "globaliza"
+  "globaliza",
+  "hogaria"
 ];
 
 export interface SearchInput {
@@ -147,7 +149,7 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   renovation_ok: "Allow renovation-needed listings.",
   tags: "Preference tags (e.g. `nature`, `views`, `natural_light`).",
   sources:
-    "Source portals to query (e.g. `pisos`, `idealista`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`, `milanuncios`, `globaliza`). Include multiple for aggregator behavior.",
+    "Source portals to query (e.g. `pisos`, `idealista`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`). Include multiple for aggregator behavior.",
   per_location_limit: "Max candidates kept per requested location before global rerank.",
   max_results_total: "Max returned listings after global rerank."
 } as const;
@@ -212,7 +214,8 @@ export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknow
       "https://www.globaliza.com",
       "https://img.resemmedia.com",
       "https://script.resemmedia.com",
-      "https://images.proppit.com"
+      "https://images.proppit.com",
+      "https://www.hogaria.net"
     ]
   };
 

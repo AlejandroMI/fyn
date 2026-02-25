@@ -182,3 +182,24 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: integrate `globaliza` into MCP defaults as a live source.
 - Action: shipped `@fyn/connectors-globaliza`, wired domain/MCP/env/docs, and validated live smoke (`globaliza` only and `idealista + globaliza` mixed).
 - Expected impact: higher hit-rate and stronger multi-source diversity in Spain searches while major anti-bot portals are partially blocked.
+
+- Date: 2026-02-25
+- Context: long-tail town searches needed another source with stable HTML and no API key requirements.
+- Signal: `hogaria.net` city and province routes are reachable and listing cards expose URL, price, rooms, area, city, image, and description directly in list HTML.
+- Decision: integrate `hogaria` as a first-class source with mapped city->province routing plus province-route fallback for discovery.
+- Action: shipped `@fyn/connectors-hogaria`, wired MCP/domain/env/docs, added parser tests, and validated live smoke (`sources:[\"hogaria\"]`, city=`Ronda`).
+- Expected impact: better coverage for rural/small-town intent while keeping deterministic connector behavior and explainable diagnostics.
+
+- Date: 2026-02-25
+- Context: multi-source aggregation started surfacing near-identical listings from different portals.
+- Signal: top results could repeat the same property with only source variation, reducing recommendation diversity.
+- Decision: add conservative near-duplicate collapse before final ranking.
+- Action: implemented cross-source dedupe in MCP (`title/city/price/rooms` compatibility + URL normalization), exposed dedupe count in diagnostics warnings, and validated with live Valencia smoke.
+- Expected impact: cleaner top cards, better diversity, and fewer repetitive recommendations.
+
+- Date: 2026-02-25
+- Context: connector expansion needed a repeatable quality gate while founder is offline.
+- Signal: checking each source manually is slow and easy to miss regressions.
+- Decision: add one-command source smoke harness with contract-aware result classification.
+- Action: shipped `smoke:sources` (`apps/mcp-server/src/smoke-sources.ts`) to run per-source MCP calls and classify `ok`, `upstream_error`, or `failed`.
+- Expected impact: faster regression detection for connector changes and safer overnight autonomous iteration.

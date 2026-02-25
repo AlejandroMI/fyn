@@ -33,9 +33,12 @@ If context is lost or the thread is interrupted, continue with this exact loop:
 ## Snapshot (Current Reality)
 
 - ChatGPT connector path is working in developer mode.
-- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza` default scraping sources.
+- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria` default scraping sources.
 - `idealista` is now a probe connector with cid-aware blocked diagnostics and best-effort parsing for reachable windows.
 - `globaliza` is wired as a live scraping source and validated in smoke runs.
+- `hogaria` is wired as a live scraping source and validated in smoke runs (`Ronda` city path).
+- MCP now deduplicates near-identical cross-source listings before final ranking.
+- A per-source smoke harness is available via `pnpm smoke:sources`.
 - Website phase is closed for now; current priority is connector expansion and search quality.
 - We currently do not rely on portal API keys for expansion tasks.
 
@@ -51,6 +54,7 @@ If context is lost or the thread is interrupted, continue with this exact loop:
 | `yaencontre.com` | Variable, often DataDome-blocked | Implemented | Uses probe + encoded `__INITIAL_STATE__` parser, plus mixed path retry so one blocked path does not abort other paths. |
 | `milanuncios.com` | Stable with browser-like headers | Implemented | Listing-card parser with city filtering and resilient fallback behavior. |
 | `globaliza.com` | Stable | Implemented | Large list-card HTML pages with structured price/rooms/surface metadata and image coverage. |
+| `hogaria.net` | Stable | Implemented | Listing-card HTML is parseable; city routes plus province-route fallback support long-tail towns. |
 
 ## Portal Research Results (Evidence-Based)
 
@@ -109,8 +113,8 @@ Research date: 2026-02-25
 When multiple tasks are open, pick the next one with this order:
 
 1. Any unchecked `P0` in `In Progress`.
-2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`).
-3. Connector reliability tasks for new/default source `globaliza` and best-effort source `idealista`.
+2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`).
+3. Connector reliability tasks for best-effort source `idealista`.
 4. Contract and tooling improvements that reduce integration cost for future portals.
 
 If two tasks have the same priority, choose the one that:
@@ -145,16 +149,18 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Implement `@fyn/connectors-milanuncios`.
 - [x] Implement `@fyn/connectors-idealista` probe adapter with cid-aware diagnostics.
 - [x] Implement `@fyn/connectors-globaliza`.
+- [x] Implement `@fyn/connectors-hogaria`.
 - [x] Wire `apps/mcp-server` to execute multi-source requests and aggregate coverage.
 - [x] Wire root deployed MCP handler to same multi-source behavior.
 - [x] Add tests for new connectors and source selection behavior.
 - [x] Update docs.
 - [x] Improve `yaencontre` consistency under mixed block/unblock responses.
+- [x] Improve cross-source deduplication of near-identical listings.
+- [x] Add minimal connector-level contract smoke set for every default source.
 - [x] Commit.
 - [ ] Continue with next backlog connector tasks:
-  - extend regional long-tail sources (`hogaria` first),
-  - improve cross-portal deduplication of near-identical listings,
-  - add minimal connector-level contract smoke set for every default source.
+  - extend regional long-tail sources (`pisocompartir` next),
+  - expand city->province routing coverage for long-tail location intent.
 
 ## Task Completion Checklist (Per Slice)
 
@@ -214,5 +220,6 @@ git status --short
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios","globaliza"],"strict_constraints":true,"max_results_total":10}'
+pnpm smoke:sources
+pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios","globaliza","hogaria"],"strict_constraints":true,"max_results_total":10}'
 ```

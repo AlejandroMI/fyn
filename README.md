@@ -27,6 +27,7 @@ Current connector sources:
 - `milanuncios` (scrape listing-card extraction, city-filter fallback)
 - `idealista` (scrape probe with cid-aware blocked diagnostics)
 - `globaliza` (scrape list-card extraction, city-filter fallback)
+- `hogaria` (scrape listing-card extraction, province-route discovery fallback)
 
 ## Localization
 
@@ -77,6 +78,7 @@ pnpm test
 
 ```bash
 pnpm smoke:mcp -- "Find me a flat in Valencia with 3 rooms max 350k"
+pnpm smoke:sources
 pnpm smoke:mcp:http -- --url https://<your-project>.vercel.app/api/mcp "Find me an office for +50 people in Valencia"
 ```
 

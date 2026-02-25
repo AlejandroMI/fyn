@@ -25,6 +25,7 @@ import { type ConnectorAdapter } from "@fyn/connectors-core";
 import { FotocasaConnector } from "@fyn/connectors-fotocasa";
 import { GlobalizaConnector } from "@fyn/connectors-globaliza";
 import { HabitacliaConnector } from "@fyn/connectors-habitaclia";
+import { HogariaConnector } from "@fyn/connectors-hogaria";
 import { IdealistaConnector } from "@fyn/connectors-idealista";
 import { MilanunciosConnector } from "@fyn/connectors-milanuncios";
 import { PisosConnector } from "@fyn/connectors-pisos";
@@ -43,7 +44,8 @@ const sourceSchema = z.enum([
   "habitaclia",
   "yaencontre",
   "milanuncios",
-  "globaliza"
+  "globaliza",
+  "hogaria"
 ]);
 
 const toolSchema = {
@@ -241,6 +243,13 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.GLOBALIZA_BASE_URL ? { baseUrl: process.env.GLOBALIZA_BASE_URL } : {})
   });
 
+  const hogaria = new HogariaConnector({
+    requestDelayMs: readNumberEnv("HOGARIA_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxListings: readNumberEnv("HOGARIA_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("HOGARIA_MAX_SCRAPE_REQUESTS", 8),
+    ...(process.env.HOGARIA_BASE_URL ? { baseUrl: process.env.HOGARIA_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
@@ -249,7 +258,8 @@ function connectorsFromEnv(): ConnectorRegistry {
     yaencontre,
     milanuncios,
     idealista,
-    globaliza
+    globaliza,
+    hogaria
   };
 }
 
@@ -285,6 +295,152 @@ function uniqueStrings(values: string[]): string[] {
 
 function listingKey(listing: ListingCard): string {
   return `${listing.portal}:${listing.portal_listing_id}`;
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function normalizeLocation(value: string): string {
+  return normalizeText(value).replace(/\s+/g, " ");
+}
+
+const TITLE_STOPWORDS = new Set([
+  "venta",
+  "alquiler",
+  "piso",
+  "pisos",
+  "casa",
+  "casas",
+  "chalet",
+  "apartamento",
+  "apartamentos",
+  "en",
+  "de",
+  "del",
+  "la",
+  "el",
+  "con"
+]);
+
+function titleTokenSet(title: string): Set<string> {
+  const tokens = normalizeText(title)
+    .split(" ")
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3)
+    .filter((token) => !TITLE_STOPWORDS.has(token));
+  return new Set(tokens);
+}
+
+function overlapCoefficient(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) {
+    return 0;
+  }
+
+  let intersection = 0;
+  for (const token of a) {
+    if (b.has(token)) {
+      intersection += 1;
+    }
+  }
+
+  return intersection / Math.min(a.size, b.size);
+}
+
+function pricesAreCompatible(a: ListingCard, b: ListingCard): boolean {
+  if (a.price_eur === null || b.price_eur === null) {
+    return true;
+  }
+
+  const delta = Math.abs(a.price_eur - b.price_eur);
+  const tolerance = Math.max(5000, Math.round(Math.min(a.price_eur, b.price_eur) * 0.05));
+  return delta <= tolerance;
+}
+
+function roomsAreCompatible(a: ListingCard, b: ListingCard): boolean {
+  if (a.rooms === null || b.rooms === null) {
+    return true;
+  }
+
+  return Math.abs(a.rooms - b.rooms) <= 1;
+}
+
+function citiesAreCompatible(a: ListingCard, b: ListingCard): boolean {
+  const cityA = normalizeLocation(a.city);
+  const cityB = normalizeLocation(b.city);
+  if (!cityA || !cityB) {
+    return true;
+  }
+
+  return cityA.includes(cityB) || cityB.includes(cityA);
+}
+
+function normalizeListingUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.hostname}${parsed.pathname}`.replace(/\/+$/, "").toLowerCase();
+  } catch {
+    return url.trim().toLowerCase();
+  }
+}
+
+function areNearDuplicateListings(a: ListingCard, b: ListingCard): boolean {
+  if (!citiesAreCompatible(a, b)) {
+    return false;
+  }
+
+  if (!pricesAreCompatible(a, b) || !roomsAreCompatible(a, b)) {
+    return false;
+  }
+
+  const titleA = normalizeText(a.title);
+  const titleB = normalizeText(b.title);
+  if (titleA.length === 0 || titleB.length === 0) {
+    return false;
+  }
+
+  if (titleA === titleB) {
+    return true;
+  }
+
+  const tokenOverlap = overlapCoefficient(titleTokenSet(a.title), titleTokenSet(b.title));
+  return tokenOverlap >= 0.9;
+}
+
+function dedupeNearDuplicateCandidates(candidates: CollectedCandidate[]): {
+  candidates: CollectedCandidate[];
+  removed: number;
+} {
+  const sorted = [...candidates].sort((a, b) => compareRankedListings(a.listing, b.listing));
+  const kept: CollectedCandidate[] = [];
+  const seenUrls = new Set<string>();
+
+  let removed = 0;
+  for (const candidate of sorted) {
+    const urlKey = normalizeListingUrl(candidate.listing.url);
+    if (seenUrls.has(urlKey)) {
+      removed += 1;
+      continue;
+    }
+
+    const isNearDuplicate = kept.some((existing) =>
+      areNearDuplicateListings(candidate.listing, existing.listing)
+    );
+    if (isNearDuplicate) {
+      removed += 1;
+      continue;
+    }
+
+    kept.push(candidate);
+    seenUrls.add(urlKey);
+  }
+
+  return { candidates: kept, removed };
 }
 
 function compareRankedListings(a: ListingCard, b: ListingCard): number {
@@ -594,7 +750,8 @@ async function runStructuredSearch(
         "fotocasa",
         "yaencontre",
         "milanuncios",
-        "globaliza"
+        "globaliza",
+        "hogaria"
       ]
     ).map((source) => source)
   ) as SourceSelection[];
@@ -720,6 +877,8 @@ async function runStructuredSearch(
   }
 
   const uniqueCandidates = uniqueBy(collected, (candidate) => listingKey(candidate.listing));
+  const deduped = dedupeNearDuplicateCandidates(uniqueCandidates);
+  const dedupedCandidates = deduped.candidates;
   const rankingCriteria =
     requestedLocations.length === 1
       ? criteriaForLocation(baseCriteria, requestedLocations[0])
@@ -727,11 +886,17 @@ async function runStructuredSearch(
 
   const ranked =
     requestedLocations.length > 1
-      ? selectDiversifiedListings(uniqueCandidates, requestedLocations, maxResultsTotal)
+      ? selectDiversifiedListings(dedupedCandidates, requestedLocations, maxResultsTotal)
       : rankListings(
-        uniqueCandidates.map((candidate) => candidate.listing),
+        dedupedCandidates.map((candidate) => candidate.listing),
         rankingCriteria
       ).slice(0, maxResultsTotal);
+
+  if (deduped.removed > 0) {
+    connectorWarnings.push(
+      `Deduplicated ${deduped.removed} near-identical listings across sources before ranking.`
+    );
+  }
 
   const uniqueWarnings = uniqueStrings(connectorWarnings);
   if (requestedLocations.length > 1) {
@@ -752,7 +917,7 @@ async function runStructuredSearch(
       source: selectSource(sourceKinds),
       connector_warnings: uniqueWarnings,
       request_warnings: [],
-      total_candidates: uniqueCandidates.length,
+      total_candidates: dedupedCandidates.length,
       returned_count: ranked.length,
       coverage,
       execution: {

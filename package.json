@@ -15,6 +15,7 @@
     "dev:web": "next dev -p 3008",
     "start": "next start -p 3008",
     "smoke:mcp": "pnpm --filter @fyn/mcp-server run smoke",
+    "smoke:sources": "pnpm --filter @fyn/mcp-server run smoke:sources",
     "smoke:mcp:http": "pnpm --filter @fyn/mcp-server run smoke:http",
     "smoke:search": "tsx scripts/smoke-search.ts"
   },
