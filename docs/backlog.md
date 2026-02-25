@@ -19,7 +19,7 @@ Last updated: 2026-02-25
   - Definition of done: one successful end-to-end run in ChatGPT with sample prompt.
 - [ ] `P0` Multi-source connector hardening
   - Owner: Codex
-  - Goal: keep `pisos + tucasa + fotocasa` orchestration stable with clear per-portal diagnostics.
+  - Goal: keep `pisos + habitaclia + tucasa + fotocasa` orchestration stable with clear per-portal diagnostics.
   - Definition of done: at least one passing smoke path with multi-source coverage output and no contract regressions.
 - [ ] `P1` Prompt parity smoke snapshots (ES/EN)
   - Owner: Codex
@@ -51,10 +51,10 @@ Last updated: 2026-02-25
   - Hypothesis: anti-bot behavior is high; keep blocked adapter + stable diagnostics until reliable extraction path exists.
 - [ ] `P1` Fotocasa adapter discovery spike
   - Hypothesis: detail pages can be parsed but search/listing pages are frequently blocked; keep fallback diagnostics and retry strategy.
-- [ ] `P2` Habitaclia adapter discovery spike
-  - Hypothesis: anti-bot friction similar to Fotocasa/Idealista.
-- [ ] `P2` Yaencontre adapter discovery spike
-  - Hypothesis: anti-bot friction similar to Habitaclia.
+- [x] `P1` Habitaclia adapter implementation spike
+  - Outcome: city-scoped list pages are scrapeable; connector integrated with parser tests and MCP coverage diagnostics.
+- [x] `P2` Yaencontre adapter discovery spike
+  - Outcome: connector integrated with DataDome-aware diagnostics and `__INITIAL_STATE__` parser path when access is granted.
 - [ ] `P2` Secondary long-tail sources
   - Candidates: smaller regional portals and agency networks with easier integration surfaces.
 
@@ -81,5 +81,7 @@ Last updated: 2026-02-25
 - [x] `search_properties` now exposes an MCP Apps widget (`ui://widget/fyn-search-results-v1.html`) for map + card rendering in ChatGPT.
 - [x] Added connector adapter framework package (`@fyn/connectors-core`) with shared scraper helpers and stable blocked-portal behavior.
 - [x] Added `@fyn/connectors-tucasa` and `@fyn/connectors-fotocasa` adapters with parser tests and MCP integration.
+- [x] Added `@fyn/connectors-habitaclia` adapter with city-scoped scraping, parser tests, and MCP integration.
+- [x] Added `@fyn/connectors-yaencontre` adapter with DataDome-aware blocking diagnostics and encoded state parser.
 - [x] Upgraded MCP to multi-source execution (`sources[]`) with per-location and per-portal coverage diagnostics.
 - [x] Replaced duplicate root MCP handler logic with shared server implementation to prevent metadata/contract drift.

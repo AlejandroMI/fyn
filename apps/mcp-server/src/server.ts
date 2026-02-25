@@ -23,8 +23,10 @@ import {
 } from "@fyn/domain";
 import { BlockedPortalConnector, type ConnectorAdapter } from "@fyn/connectors-core";
 import { FotocasaConnector } from "@fyn/connectors-fotocasa";
+import { HabitacliaConnector } from "@fyn/connectors-habitaclia";
 import { PisosConnector } from "@fyn/connectors-pisos";
 import { TucasaConnector } from "@fyn/connectors-tucasa";
+import { YaencontreConnector } from "@fyn/connectors-yaencontre";
 import { rankListings } from "@fyn/scoring";
 
 const propertyTypeSchema = z.enum(["flat", "house", "office", "land"]);
@@ -192,21 +194,29 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.FOTOCASA_BASE_URL ? { baseUrl: process.env.FOTOCASA_BASE_URL } : {})
   });
 
+  const habitaclia = new HabitacliaConnector({
+    requestDelayMs: readNumberEnv("HABITACLIA_SCRAPE_REQUEST_DELAY_MS", 250),
+    maxListings: readNumberEnv("HABITACLIA_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("HABITACLIA_MAX_SCRAPE_REQUESTS", 6),
+    ...(process.env.HABITACLIA_BASE_URL ? { baseUrl: process.env.HABITACLIA_BASE_URL } : {})
+  });
+
+  const yaencontre = new YaencontreConnector({
+    requestDelayMs: readNumberEnv("YAENCONTRE_SCRAPE_REQUEST_DELAY_MS", 350),
+    maxListings: readNumberEnv("YAENCONTRE_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("YAENCONTRE_MAX_SCRAPE_REQUESTS", 4),
+    ...(process.env.YAENCONTRE_BASE_URL ? { baseUrl: process.env.YAENCONTRE_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
     fotocasa,
+    habitaclia,
+    yaencontre,
     idealista: new BlockedPortalConnector(
       "idealista",
       "idealista currently blocks automated access in this environment."
-    ),
-    habitaclia: new BlockedPortalConnector(
-      "habitaclia",
-      "habitaclia currently blocks automated access in this environment."
-    ),
-    yaencontre: new BlockedPortalConnector(
-      "yaencontre",
-      "yaencontre currently blocks automated access in this environment."
     )
   };
 }
@@ -544,7 +554,7 @@ async function runStructuredSearch(
   connectors: ConnectorRegistry
 ): Promise<SearchExecutionResult> {
   const allowedSources = uniqueStrings(
-    (payload.sources ?? ["pisos", "tucasa", "fotocasa"]).map((source) => source)
+    (payload.sources ?? ["pisos", "habitaclia", "tucasa", "fotocasa"]).map((source) => source)
   ) as SourceSelection[];
   const requestedLocations = resolveLocations(payload);
   const perLocationLimit = payload.per_location_limit ?? 20;

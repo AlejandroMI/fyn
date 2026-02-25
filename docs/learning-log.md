@@ -126,3 +126,24 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: make root handler a thin transport wrapper over the shared MCP server factory.
 - Action: replaced `server/mcp-handler.ts` with shared `createFynMcpServer()` wiring.
 - Expected impact: lower maintenance overhead and fewer production/local behavior mismatches.
+
+- Date: 2026-02-25
+- Context: Major-portal expansion without API keys required another reliable scraper source.
+- Signal: `habitaclia` city-scoped list pages exposed structured listing metadata (`data-href`, `data-pvp`, `data-hab`, subtype) and stable image URLs.
+- Decision: implement `habitaclia` as a first-class connector and include it in default multi-source execution.
+- Action: shipped `@fyn/connectors-habitaclia`, added parser tests, wired MCP defaults/env vars/docs, and validated with Ronda smoke runs.
+- Expected impact: broader inventory coverage and stronger nature/town searches without extra API credentials.
+
+- Date: 2026-02-25
+- Context: Connector anti-bot detection falsely flagged valid pages.
+- Signal: normal `habitaclia` pages include `urlCaptcha` strings, triggering the generic `captcha` heuristic.
+- Decision: tighten bot-block detection to explicit interruption/access-denied signatures instead of raw `captcha` substring.
+- Action: updated shared `looksLikeBotBlockPage` matcher in `@fyn/connectors-core` and revalidated smoke output.
+- Expected impact: fewer false-positive block errors and more stable multi-source execution.
+
+- Date: 2026-02-25
+- Context: `yaencontre` needed major-portal coverage without API keys.
+- Signal: responses alternate between real HTML and DataDome challenge pages; static blocked placeholders wasted reachable windows.
+- Decision: replace placeholder with a probe-first connector that parses encoded app state when reachable and emits stable blocked diagnostics when challenged.
+- Action: implemented `@fyn/connectors-yaencontre`, added DataDome-aware error mapping (including challenge cid), and parsed `window.__INITIAL_STATE__` listing payload for title/price/rooms/images/geo.
+- Expected impact: incremental inventory gains when access is open, with deterministic fallback behavior when anti-bot is triggered.

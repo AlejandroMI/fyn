@@ -52,7 +52,8 @@ You can also pass full JSON arguments:
 pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["house"],"locations":["Náquera","Buñol","Requena"],"tags":["nature","views"],"strict_constraints":true}'
 ```
 
-Default execution queries multiple sources (`pisos`, `tucasa`, `fotocasa`) and returns per-portal coverage diagnostics.
+Default execution queries multiple sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`) and returns per-portal coverage diagnostics.
+You can also explicitly request `yaencontre` via `sources[]`; availability varies by anti-bot response.
 With no Pisos API key, `pisos` first uses HTML scraping fallback, then fixtures if scraping fails.
 
 Diagnostics expose:
@@ -98,6 +99,14 @@ Then set environment variables in Vercel project settings:
 - `FOTOCASA_BASE_URL` (optional)
 - `FOTOCASA_SCRAPE_REQUEST_DELAY_MS`
 - `FOTOCASA_MAX_DETAIL_REQUESTS`
+- `HABITACLIA_BASE_URL` (optional)
+- `HABITACLIA_SCRAPE_REQUEST_DELAY_MS`
+- `HABITACLIA_MAX_LISTINGS`
+- `HABITACLIA_MAX_SCRAPE_REQUESTS`
+- `YAENCONTRE_BASE_URL` (optional)
+- `YAENCONTRE_SCRAPE_REQUEST_DELAY_MS`
+- `YAENCONTRE_MAX_LISTINGS`
+- `YAENCONTRE_MAX_SCRAPE_REQUESTS`
 
 Expected endpoints:
 

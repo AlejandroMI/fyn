@@ -75,12 +75,18 @@ importers:
       '@fyn/connectors-fotocasa':
         specifier: workspace:*
         version: link:../../packages/connectors/fotocasa
+      '@fyn/connectors-habitaclia':
+        specifier: workspace:*
+        version: link:../../packages/connectors/habitaclia
       '@fyn/connectors-pisos':
         specifier: workspace:*
         version: link:../../packages/connectors/pisos
       '@fyn/connectors-tucasa':
         specifier: workspace:*
         version: link:../../packages/connectors/tucasa
+      '@fyn/connectors-yaencontre':
+        specifier: workspace:*
+        version: link:../../packages/connectors/yaencontre
       '@fyn/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -136,6 +142,22 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
 
+  packages/connectors/habitaclia:
+    dependencies:
+      '@fyn/connectors-core':
+        specifier: workspace:*
+        version: link:../core
+      '@fyn/domain':
+        specifier: workspace:*
+        version: link:../../domain
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
+
   packages/connectors/pisos:
     dependencies:
       '@fyn/domain':
@@ -150,6 +172,22 @@ importers:
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
 
   packages/connectors/tucasa:
+    dependencies:
+      '@fyn/connectors-core':
+        specifier: workspace:*
+        version: link:../core
+      '@fyn/domain':
+        specifier: workspace:*
+        version: link:../../domain
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
+
+  packages/connectors/yaencontre:
     dependencies:
       '@fyn/connectors-core':
         specifier: workspace:*

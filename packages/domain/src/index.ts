@@ -137,7 +137,7 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   renovation_ok: "Allow renovation-needed listings.",
   tags: "Preference tags (e.g. `nature`, `views`, `natural_light`).",
   sources:
-    "Source portals to query (e.g. `pisos`, `fotocasa`, `tucasa`). Include multiple for aggregator behavior.",
+    "Source portals to query (e.g. `pisos`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`). Include multiple for aggregator behavior.",
   per_location_limit: "Max candidates kept per requested location before global rerank.",
   max_results_total: "Max returned listings after global rerank."
 } as const;
@@ -191,7 +191,12 @@ export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknow
       "https://www.pisos.com",
       "https://www.fotocasa.es",
       "https://img4.idealista.com",
-      "https://www.tucasa.com"
+      "https://www.tucasa.com",
+      "https://www.habitaclia.com",
+      "https://images.habimg.com",
+      "https://static.habimg.com",
+      "https://www.yaencontre.com",
+      "https://cdn1-static2.yaencontre.com"
     ]
   };
 

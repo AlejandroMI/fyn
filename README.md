@@ -20,9 +20,11 @@ Fyn (Find Your Nest) is an MCP-first property search aggregator for Spain.
 
 Current connector sources:
 - `pisos` (API + scrape fallback)
+- `habitaclia` (scrape)
 - `tucasa` (scrape)
 - `fotocasa` (scrape, anti-bot sensitive)
-- blocked placeholders with stable diagnostics: `idealista`, `habitaclia`, `yaencontre`
+- `yaencontre` (scrape probe + state parser, DataDome-sensitive)
+- blocked placeholder with stable diagnostics: `idealista`
 
 ## Localization
 

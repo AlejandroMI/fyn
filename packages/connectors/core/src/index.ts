@@ -163,7 +163,7 @@ export function inferTagsFromDescription(description: string): string[] {
 }
 
 export function looksLikeBotBlockPage(html: string): boolean {
-  return /(pardon our interruption|enable javascript|captcha|access denied|forbidden|datadome|sentimos la interrupci[oó]n)/i.test(
+  return /pardon our interruption|as you were browsing something about your browser made us think you were a bot|enable javascript(?: and cookies)?|access denied|forbidden|datadome|sentimos la interrupci[oó]n|complete the captcha below|interruption-message/i.test(
     html
   );
 }
