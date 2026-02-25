@@ -120,7 +120,7 @@ const toolSchema = {
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.max_results_total)
 };
 
-type ToolPayload = z.infer<z.ZodObject<typeof toolSchema>>;
+export type ToolPayload = z.infer<z.ZodObject<typeof toolSchema>>;
 
 type ConnectorSource = ConnectorSearchResult["diagnostics"]["source"];
 
@@ -188,8 +188,8 @@ function readNumberEnv(name: string, defaultValue: number): number {
   return Number.isFinite(parsed) ? parsed : defaultValue;
 }
 
-type SourceSelection = z.infer<typeof sourceSchema>;
-type ConnectorRegistry = Record<SourceSelection, ConnectorAdapter>;
+export type SourceSelection = z.infer<typeof sourceSchema>;
+export type ConnectorRegistry = Record<SourceSelection, ConnectorAdapter>;
 
 function connectorsFromEnv(): ConnectorRegistry {
   const pisos = new PisosConnector({
@@ -803,7 +803,7 @@ function defaultSourcesForCriteria(criteria: NormalizedFilters): SourceSelection
   return defaults;
 }
 
-async function runStructuredSearch(
+export async function runStructuredSearch(
   payload: ToolPayload,
   connectors: ConnectorRegistry
 ): Promise<SearchExecutionResult> {
