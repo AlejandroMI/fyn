@@ -154,10 +154,10 @@ export const siteContent: Record<Locale, SiteContent> = {
     hero: {
       eyebrow: "Fyn — Find Your Nest",
       title: "Describe tu próxima casa",
-      titleAccent: "en lenguaje natural.",
+       titleAccent: "en palabras sencillas.",
       body: "Buscar vivienda en España no debería ser un segundo trabajo. Fyn es una capa de búsqueda inmobiliaria que se conecta directamente con tu IA favorita. Tú describes lo que te importa y Fyn devuelve coincidencias explicables del mercado con enlaces directos y fotos reales, en minutos.",
       primaryCta: "Abrir en ChatGPT",
-      secondaryCta: "Ver docs MCP (desarrolladores)",
+       secondaryCta: "Documentación MCP",
       checks: [
         "Sin laberintos de filtros antes de empezar.",
         "Cada resultado mantiene transparencia de fuente y enlace profundo.",
@@ -272,13 +272,13 @@ export const siteContent: Record<Locale, SiteContent> = {
       ]
     },
     preview: {
-      eyebrow: "Vista de búsqueda",
-      title: "Imagen real,",
-      titleAccent: "tarjetas limpias y acciones claras.",
+      eyebrow: "Resultados visuales",
+      title: "Fotos reales,",
+      titleAccent: "tarjetas claras, decisiones rápidas.",
       intro:
-        "Un formato compacto mantiene lo visual sin saturar el chat. En búsquedas reales cada tarjeta incluye enlace fuente y motivos de match.",
+        "Ve propiedades auténticas, compara fácilmente y entiende por qué cada resultado aparece. Cada tarjeta incluye enlace directo y explicación de coincidencia.",
       metaLeft: "Demo · 4 viviendas",
-      metaRight: "Matches explicables · Enlaces directos",
+       metaRight: "Coincidencias explicadas · Enlaces directos",
       sourceTag: "Enlace disponible en búsqueda real",
       cards: [
         {
@@ -373,7 +373,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       titleAccent: "in plain language.",
       body: "Finding a property in Spain should not be a second job. Fyn is a property-search layer that connects directly to your favorite AI. You describe what matters and Fyn returns explainable matches across the market with direct links and real photos in minutes.",
       primaryCta: "Open in ChatGPT",
-      secondaryCta: "Read MCP docs (developers)",
+       secondaryCta: "MCP Docs",
       checks: [
         "No giant filter maze before you can start.",
         "Every result keeps source transparency and deep links.",
@@ -486,11 +486,11 @@ export const siteContent: Record<Locale, SiteContent> = {
       ]
     },
     preview: {
-      eyebrow: "Search preview",
-      title: "Real imagery,",
-      titleAccent: "clean cards, clear actions.",
+      eyebrow: "Visual results",
+      title: "Real photos,",
+      titleAccent: "clear cards, fast decisions.",
       intro:
-        "A compact format keeps results visual without flooding your chat. Live searches include source links and explainable matching notes.",
+        "See authentic properties, compare easily, and understand why each result appears. Every card includes a direct link and match explanation."
       metaLeft: "Demo · 4 homes",
       metaRight: "Explainable matches · Direct links",
       sourceTag: "Source link available in live search",

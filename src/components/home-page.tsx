@@ -78,7 +78,6 @@ export function HomePage({ locale, content }: HomePageProps) {
         <main>
           <section className="hero">
             <div className="hero-content">
-              <span className="eyebrow">{content.hero.eyebrow}</span>
               <h1>
                 {content.hero.title} <i>{content.hero.titleAccent}</i>
               </h1>
