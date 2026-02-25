@@ -19,7 +19,7 @@ Last updated: 2026-02-25
   - Definition of done: one successful end-to-end run in ChatGPT with sample prompt.
 - [ ] `P0` Multi-source connector hardening
   - Owner: Codex
-  - Goal: keep `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria` orchestration stable, while preserving best-effort `idealista` diagnostics.
+  - Goal: keep `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria` orchestration stable, while preserving best-effort `idealista` diagnostics and rent-focused `pisocompartido` coverage.
   - Definition of done: at least one passing smoke path with multi-source coverage output, near-duplicate collapse enabled, and no contract regressions.
 - [ ] `P1` Prompt parity smoke snapshots (ES/EN)
   - Owner: Codex
@@ -61,8 +61,10 @@ Last updated: 2026-02-25
   - Outcome: connector integrated with list-card parser, city filtering, and live smoke validation on Valencia.
 - [x] `P2` Hogaria adapter implementation spike
   - Outcome: connector integrated with listing-card parser, mapped city->province route support, and live smoke validation on Ronda.
+- [x] `P2` Pisocompartido adapter implementation spike
+  - Outcome: connector integrated with rent-focused room-card parser, city-route fallbacks, and live smoke validation on Valencia.
 - [ ] `P2` Secondary long-tail sources
-  - Candidates: smaller regional portals and agency networks with easier integration surfaces (`pisocompartir`, regional MLS-style networks).
+  - Candidates: smaller regional portals and agency networks with easier integration surfaces (regional MLS-style networks beyond `pisocompartido`).
 
 ## Blocked / Needs From Founder
 
@@ -95,6 +97,7 @@ Last updated: 2026-02-25
 - [x] Added `@fyn/connectors-idealista` probe adapter with DataDome cid diagnostics and reachable-window parser paths.
 - [x] Added `@fyn/connectors-globaliza` adapter with list-card parsing and city-filter fallback.
 - [x] Added `@fyn/connectors-hogaria` adapter with listing-card extraction and mapped city/province path strategy.
+- [x] Added `@fyn/connectors-pisocompartido` adapter with city-route fallback and room-rental listing extraction.
 - [x] Upgraded MCP to multi-source execution (`sources[]`) with per-location and per-portal coverage diagnostics.
 - [x] Added near-duplicate cross-source deduplication before ranking in MCP output.
 - [x] Added `smoke:sources` harness to verify connector contract behavior per source in one run.

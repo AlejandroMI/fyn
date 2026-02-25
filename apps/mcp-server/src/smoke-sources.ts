@@ -13,6 +13,7 @@ const sourceSet = [
   "milanuncios",
   "globaliza",
   "hogaria",
+  "pisocompartido",
   "idealista"
 ] as const;
 
@@ -55,6 +56,14 @@ function basePayload(overrides: Record<string, unknown>): Record<string, unknown
     ...overrides
   };
 }
+
+const sourcePayloadOverrides: Partial<Record<Source, Record<string, unknown>>> = {
+  pisocompartido: {
+    transaction_type: "rent",
+    property_types: ["flat"],
+    city: "Valencia"
+  }
+};
 
 function parseErrorEnvelope(result: unknown): { code?: string; message?: string } {
   if (typeof result !== "object" || result === null) {
@@ -177,6 +186,7 @@ async function main() {
   for (const source of sourceSet) {
     const payload = {
       ...basePayload(overrides),
+      ...(sourcePayloadOverrides[source] ?? {}),
       sources: [source]
     };
 

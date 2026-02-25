@@ -19,6 +19,18 @@ This document is the persistence layer for connector expansion work. If context 
   - docs updated before switching tasks.
 - Founder-offline rule: do not wait for approval between backlog tasks; finish one slice and pull the next immediately.
 
+## Context-Loss Recovery (Cold Start)
+
+If a new session starts with little/no prior context, do not stop and ask for direction. Execute this sequence immediately:
+
+1. Open this file and `docs/backlog.md`.
+2. Run `git status --short` to identify local working state.
+3. Run quality sanity checks (`pnpm typecheck`, `pnpm test`) if code changed since last known green run.
+4. Pick the first unchecked connector task in backlog priority order.
+5. Implement, validate, document, commit, and continue to the next task.
+
+No discussion step is required while founder is offline unless a real external dependency is hit.
+
 ## Autonomous Continuation Instructions
 
 If context is lost or the thread is interrupted, continue with this exact loop:
@@ -33,10 +45,11 @@ If context is lost or the thread is interrupted, continue with this exact loop:
 ## Snapshot (Current Reality)
 
 - ChatGPT connector path is working in developer mode.
-- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria` default scraping sources.
+- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria` default scraping sources, plus conditional `pisocompartido` (rent + flat/house intents).
 - `idealista` is now a probe connector with cid-aware blocked diagnostics and best-effort parsing for reachable windows.
 - `globaliza` is wired as a live scraping source and validated in smoke runs.
 - `hogaria` is wired as a live scraping source and validated in smoke runs (`Ronda` city path).
+- `pisocompartido` is wired as a live scraping source and validated in smoke runs (`Valencia` rent path).
 - MCP now deduplicates near-identical cross-source listings before final ranking.
 - A per-source smoke harness is available via `pnpm smoke:sources`.
 - Website phase is closed for now; current priority is connector expansion and search quality.
@@ -55,12 +68,34 @@ If context is lost or the thread is interrupted, continue with this exact loop:
 | `milanuncios.com` | Stable with browser-like headers | Implemented | Listing-card parser with city filtering and resilient fallback behavior. |
 | `globaliza.com` | Stable | Implemented | Large list-card HTML pages with structured price/rooms/surface metadata and image coverage. |
 | `hogaria.net` | Stable | Implemented | Listing-card HTML is parseable; city routes plus province-route fallback support long-tail towns. |
+| `pisocompartido.com` | Stable | Implemented | Rent-focused room inventory with parseable list cards and `application/ld+json` geo metadata. |
+
+## Research Ledger (Connector Expansion Focus)
+
+This is the minimum evidence snapshot needed to continue without searching conversation history:
+
+- `pisos`: live source, dual mode (API key when available + scrape fallback).
+- `tucasa`: live source, parse-friendly metadata surfaces.
+- `fotocasa`: live source, list parsing + detail enrichment fallback when blocked.
+- `habitaclia`: live source, stable city routes with structured fields.
+- `yaencontre`: live but volatile (DataDome); probe/retry behavior implemented.
+- `milanuncios`: live source, resilient list-card extraction.
+- `globaliza`: live source, stable list-card extraction.
+- `hogaria`: live source, province fallback strategy for long-tail towns.
+- `pisocompartido`: live source, rent-focused room listings with city-route fallbacks.
+- `idealista`: best-effort probe; often blocked, diagnostics still useful.
+
+Current expansion target order from backlog:
+
+1. regional/long-tail portals with parseable list pages beyond current set
+2. city->province routing coverage expansion for small-town queries
+3. connector-level quality hardening for anti-bot variability
 
 ## Portal Research Results (Evidence-Based)
 
 Research date: 2026-02-25
 
-### Tier A: Ready to implement now
+### Tier A: Implemented baseline connectors
 
 1. `pisos.com` (already integrated)
 - Reachability: stable.
@@ -91,6 +126,12 @@ Research date: 2026-02-25
 - Integration complexity: medium.
 - Expected value: broad long-tail supply with good media coverage.
 
+6. `pisocompartido.com`
+- Reachability: stable with browser-like headers.
+- Parsing surface: list cards include listing URL, price, location, image gallery fields, plus per-card `application/ld+json` geo data.
+- Integration complexity: medium.
+- Expected value: dedicated rental room/shared-flat coverage where other portals under-index.
+
 ### Tier B: High-friction / anti-bot
 
 1. `idealista.com`
@@ -113,7 +154,7 @@ Research date: 2026-02-25
 When multiple tasks are open, pick the next one with this order:
 
 1. Any unchecked `P0` in `In Progress`.
-2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`).
+2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`) and conditional source (`pisocompartido`).
 3. Connector reliability tasks for best-effort source `idealista`.
 4. Contract and tooling improvements that reduce integration cost for future portals.
 
@@ -139,6 +180,12 @@ Run this cycle continuously:
 
 Never idle after a task closes; always move to next backlog item.
 
+### Mandatory loop guardrails
+
+- If one portal blocks requests, do not pause the run. Log it and continue with the next portal task.
+- If one connector regresses, fix or isolate it, then continue with queued work in the same session.
+- Every completed slice must leave a breadcrumb in `docs/learning-log.md` and update backlog state.
+
 ## Immediate Execution Queue (Current)
 
 - [x] Align domain for multi-portal support (`PortalSource`, error codes, contracts).
@@ -150,6 +197,7 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Implement `@fyn/connectors-idealista` probe adapter with cid-aware diagnostics.
 - [x] Implement `@fyn/connectors-globaliza`.
 - [x] Implement `@fyn/connectors-hogaria`.
+- [x] Implement `@fyn/connectors-pisocompartido`.
 - [x] Wire `apps/mcp-server` to execute multi-source requests and aggregate coverage.
 - [x] Wire root deployed MCP handler to same multi-source behavior.
 - [x] Add tests for new connectors and source selection behavior.
@@ -159,7 +207,7 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Add minimal connector-level contract smoke set for every default source.
 - [x] Commit.
 - [ ] Continue with next backlog connector tasks:
-  - extend regional long-tail sources (`pisocompartir` next),
+  - extend regional long-tail sources (next: regional agency/MLS-style portals),
   - expand city->province routing coverage for long-tail location intent.
 
 ## Task Completion Checklist (Per Slice)
@@ -213,6 +261,16 @@ If one gate fails, fix or isolate to keep trunk usable; do not ignore.
 4. Continue from first unchecked item in **Immediate Execution Queue**.
 5. Do not pause for confirmation unless a true external blocker exists.
 
+## Continue-Until-Blocked Rule
+
+While founder is offline, execution should only stop when:
+
+- credentials/account access are required and unavailable,
+- infrastructure outage prevents local/test execution,
+- or a legal/compliance hold is explicitly added to backlog.
+
+Otherwise, continue pulling connector tasks from backlog without waiting.
+
 ## Quick Resume Commands
 
 ```bash
@@ -222,4 +280,5 @@ pnpm typecheck
 pnpm test
 pnpm smoke:sources
 pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios","globaliza","hogaria"],"strict_constraints":true,"max_results_total":10}'
+pnpm smoke:mcp -- '{"locale":"es","transaction_type":"rent","property_types":["flat"],"city":"Valencia","sources":["pisocompartido"],"strict_constraints":true,"max_results_total":10}'
 ```

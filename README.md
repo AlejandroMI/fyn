@@ -28,6 +28,7 @@ Current connector sources:
 - `idealista` (scrape probe with cid-aware blocked diagnostics)
 - `globaliza` (scrape list-card extraction, city-filter fallback)
 - `hogaria` (scrape listing-card extraction, province-route discovery fallback)
+- `pisocompartido` (scrape room-rental cards, rent-focused)
 
 ## Localization
 

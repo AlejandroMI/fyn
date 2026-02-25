@@ -203,3 +203,17 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: add one-command source smoke harness with contract-aware result classification.
 - Action: shipped `smoke:sources` (`apps/mcp-server/src/smoke-sources.ts`) to run per-source MCP calls and classify `ok`, `upstream_error`, or `failed`.
 - Expected impact: faster regression detection for connector changes and safer overnight autonomous iteration.
+
+- Date: 2026-02-25
+- Context: long-tail expansion queue needed a source that is stable without API keys.
+- Signal: `pisocompartido` list pages are reachable, include parseable card HTML, and expose `application/ld+json` blocks with geo and media data.
+- Decision: integrate `pisocompartido` as a rent-focused connector and include it conditionally in default source selection.
+- Action: shipped `@fyn/connectors-pisocompartido`, wired MCP/domain/env/docs, and validated with live smoke on Valencia rental inventory.
+- Expected impact: stronger rental coverage and better city-level map/card quality for room and shared-flat intents.
+
+- Date: 2026-02-25
+- Context: dedupe diagnostics wording caused confusion when a single source had repeated cards.
+- Signal: warning text said “across sources” even when duplicates came from pagination within one source.
+- Decision: keep dedupe behavior but generalize warning wording.
+- Action: changed MCP warning text to “Deduplicated N near-identical listings before ranking.”
+- Expected impact: diagnostics remain accurate and trustworthy in both single-source and multi-source runs.

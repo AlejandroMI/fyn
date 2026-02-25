@@ -22,6 +22,7 @@
     "@fyn/connectors-hogaria": "workspace:*",
     "@fyn/connectors-idealista": "workspace:*",
     "@fyn/connectors-milanuncios": "workspace:*",
+    "@fyn/connectors-pisocompartido": "workspace:*",
     "@fyn/connectors-pisos": "workspace:*",
     "@fyn/connectors-tucasa": "workspace:*",
     "@fyn/connectors-yaencontre": "workspace:*",

@@ -90,6 +90,9 @@ importers:
       '@fyn/connectors-milanuncios':
         specifier: workspace:*
         version: link:../../packages/connectors/milanuncios
+      '@fyn/connectors-pisocompartido':
+        specifier: workspace:*
+        version: link:../../packages/connectors/pisocompartido
       '@fyn/connectors-pisos':
         specifier: workspace:*
         version: link:../../packages/connectors/pisos
@@ -228,6 +231,25 @@ importers:
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
 
   packages/connectors/milanuncios:
+    dependencies:
+      '@fyn/connectors-core':
+        specifier: workspace:*
+        version: link:../core
+      '@fyn/domain':
+        specifier: workspace:*
+        version: link:../../domain
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.19.11
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
+
+  packages/connectors/pisocompartido:
     dependencies:
       '@fyn/connectors-core':
         specifier: workspace:*

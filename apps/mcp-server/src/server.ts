@@ -28,6 +28,7 @@ import { HabitacliaConnector } from "@fyn/connectors-habitaclia";
 import { HogariaConnector } from "@fyn/connectors-hogaria";
 import { IdealistaConnector } from "@fyn/connectors-idealista";
 import { MilanunciosConnector } from "@fyn/connectors-milanuncios";
+import { PisoCompartidoConnector } from "@fyn/connectors-pisocompartido";
 import { PisosConnector } from "@fyn/connectors-pisos";
 import { TucasaConnector } from "@fyn/connectors-tucasa";
 import { YaencontreConnector } from "@fyn/connectors-yaencontre";
@@ -45,7 +46,8 @@ const sourceSchema = z.enum([
   "yaencontre",
   "milanuncios",
   "globaliza",
-  "hogaria"
+  "hogaria",
+  "pisocompartido"
 ]);
 
 const toolSchema = {
@@ -250,6 +252,13 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.HOGARIA_BASE_URL ? { baseUrl: process.env.HOGARIA_BASE_URL } : {})
   });
 
+  const pisocompartido = new PisoCompartidoConnector({
+    requestDelayMs: readNumberEnv("PISOCOMPARTIDO_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxListings: readNumberEnv("PISOCOMPARTIDO_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("PISOCOMPARTIDO_MAX_SCRAPE_REQUESTS", 6),
+    ...(process.env.PISOCOMPARTIDO_BASE_URL ? { baseUrl: process.env.PISOCOMPARTIDO_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
@@ -259,7 +268,8 @@ function connectorsFromEnv(): ConnectorRegistry {
     milanuncios,
     idealista,
     globaliza,
-    hogaria
+    hogaria,
+    pisocompartido
   };
 }
 
@@ -737,28 +747,42 @@ function selectSource(sources: Set<ConnectorSource>): ConnectorSource {
   return "fixture";
 }
 
+function defaultSourcesForCriteria(criteria: NormalizedFilters): SourceSelection[] {
+  const defaults: SourceSelection[] = [
+    "pisos",
+    "habitaclia",
+    "tucasa",
+    "fotocasa",
+    "yaencontre",
+    "milanuncios",
+    "globaliza",
+    "hogaria"
+  ];
+
+  const transaction = criteria.transaction_type;
+  const supportsPropertyType =
+    criteria.property_types.length === 0 ||
+    criteria.property_types.some((propertyType) => propertyType === "flat" || propertyType === "house");
+  if ((transaction === undefined || transaction === "rent") && supportsPropertyType) {
+    defaults.push("pisocompartido");
+  }
+
+  return defaults;
+}
+
 async function runStructuredSearch(
   payload: ToolPayload,
   connectors: ConnectorRegistry
 ): Promise<SearchExecutionResult> {
+  const baseCriteria = baseCriteriaFromPayload(payload);
   const allowedSources = uniqueStrings(
     (
-      payload.sources ?? [
-        "pisos",
-        "habitaclia",
-        "tucasa",
-        "fotocasa",
-        "yaencontre",
-        "milanuncios",
-        "globaliza",
-        "hogaria"
-      ]
+      payload.sources ?? defaultSourcesForCriteria(baseCriteria)
     ).map((source) => source)
   ) as SourceSelection[];
   const requestedLocations = resolveLocations(payload);
   const perLocationLimit = payload.per_location_limit ?? 20;
   const maxResultsTotal = payload.max_results_total ?? 40;
-  const baseCriteria = baseCriteriaFromPayload(payload);
   const strictConstraints = baseCriteria.strict_constraints ?? true;
 
   if (allowedSources.length === 0) {
@@ -894,7 +918,7 @@ async function runStructuredSearch(
 
   if (deduped.removed > 0) {
     connectorWarnings.push(
-      `Deduplicated ${deduped.removed} near-identical listings across sources before ranking.`
+      `Deduplicated ${deduped.removed} near-identical listings before ranking.`
     );
   }
 
