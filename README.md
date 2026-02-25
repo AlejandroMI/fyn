@@ -78,6 +78,13 @@ pnpm typecheck
 pnpm test
 ```
 
+## Deployment workflow
+
+- Production deploys are handled by Vercel's GitHub integration.
+- Branch rule: every push to `main` triggers a production deployment.
+- No GitHub Actions deploy workflow is required for production deploys.
+- If deployment behavior changes, update this section and `docs/website-architecture.md` in the same PR.
+
 ## MCP smoke checks
 
 ```bash

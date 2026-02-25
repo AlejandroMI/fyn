@@ -80,6 +80,9 @@ This document describes the website layer only (not MCP internals).
 
 - Vercel config is pinned to Next builder through `vercel.json` `builds` entry.
 - Keep this file intact unless deployment strategy changes.
+- Production deploy source of truth is Vercel GitHub integration for repo `AlejandroMI/fyn`.
+- Branch rule: pushes to `main` auto-deploy to production.
+- Do not add a parallel GitHub Actions deploy pipeline unless intentionally replacing this workflow (avoid duplicate deploy triggers).
 
 ## Guardrails for future edits
 
