@@ -19,7 +19,7 @@ Last updated: 2026-02-25
   - Definition of done: one successful end-to-end run in ChatGPT with sample prompt.
 - [ ] `P0` Multi-source connector hardening
   - Owner: Codex
-  - Goal: keep `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios` orchestration stable with clear per-portal diagnostics.
+  - Goal: keep `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza` orchestration stable, while preserving best-effort `idealista` diagnostics.
   - Definition of done: at least one passing smoke path with multi-source coverage output and no contract regressions.
 - [ ] `P1` Prompt parity smoke snapshots (ES/EN)
   - Owner: Codex
@@ -47,8 +47,8 @@ Last updated: 2026-02-25
 
 ## Portal Expansion Queue
 
-- [ ] `P1` Idealista adapter discovery spike
-  - Hypothesis: anti-bot behavior is high; keep blocked adapter + stable diagnostics until reliable extraction path exists.
+- [x] `P1` Idealista adapter diagnostics hardening
+  - Outcome: probe connector shipped with DataDome cid-aware blocked errors and fallback parse paths for reachable windows.
 - [x] `P1` Fotocasa adapter discovery spike
   - Outcome: detail parsing kept, plus search-card fallback so blocked detail pages still produce usable cards when list pages are reachable.
 - [x] `P1` Habitaclia adapter implementation spike
@@ -57,8 +57,10 @@ Last updated: 2026-02-25
   - Outcome: connector integrated with DataDome-aware diagnostics, `__INITIAL_STATE__` parser path, and mixed block/unblock retry behavior across candidate paths.
 - [x] `P2` Milanuncios adapter implementation spike
   - Outcome: connector integrated with listing-card parser, city matching, and stable blocked/rate-limit diagnostics.
+- [x] `P2` Globaliza adapter implementation spike
+  - Outcome: connector integrated with list-card parser, city filtering, and live smoke validation on Valencia.
 - [ ] `P2` Secondary long-tail sources
-  - Candidates: smaller regional portals and agency networks with easier integration surfaces.
+  - Candidates: smaller regional portals and agency networks with easier integration surfaces (`hogaria`, regional MLS-style networks).
 
 ## Blocked / Needs From Founder
 
@@ -88,5 +90,7 @@ Last updated: 2026-02-25
 - [x] Added `@fyn/connectors-yaencontre` adapter with DataDome-aware blocking diagnostics and encoded state parser.
 - [x] Hardened `@fyn/connectors-yaencontre` mixed path behavior so blocked routes do not abort later reachable routes.
 - [x] Added `@fyn/connectors-milanuncios` adapter with listing-card extraction and city-filter fallback.
+- [x] Added `@fyn/connectors-idealista` probe adapter with DataDome cid diagnostics and reachable-window parser paths.
+- [x] Added `@fyn/connectors-globaliza` adapter with list-card parsing and city-filter fallback.
 - [x] Upgraded MCP to multi-source execution (`sources[]`) with per-location and per-portal coverage diagnostics.
 - [x] Replaced duplicate root MCP handler logic with shared server implementation to prevent metadata/contract drift.

@@ -17,12 +17,25 @@ This document is the persistence layer for connector expansion work. If context 
   - one focused commit per vertical slice,
   - tests green before moving on,
   - docs updated before switching tasks.
+- Founder-offline rule: do not wait for approval between backlog tasks; finish one slice and pull the next immediately.
+
+## Autonomous Continuation Instructions
+
+If context is lost or the thread is interrupted, continue with this exact loop:
+
+1. Open `docs/backlog.md` and this runbook.
+2. Resume from the first unchecked connector item in priority order.
+3. Implement + validate (`pnpm typecheck`, `pnpm test`, smoke when MCP changes).
+4. Write learnings to `docs/learning-log.md`.
+5. Commit.
+6. Repeat until no connector task remains or a true external blocker exists.
 
 ## Snapshot (Current Reality)
 
 - ChatGPT connector path is working in developer mode.
-- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios` default scraping sources.
-- `yaencontre` and `milanuncios` are now wired as live scraping sources with stable blocked/rate-limit diagnostics.
+- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza` default scraping sources.
+- `idealista` is now a probe connector with cid-aware blocked diagnostics and best-effort parsing for reachable windows.
+- `globaliza` is wired as a live scraping source and validated in smoke runs.
 - Website phase is closed for now; current priority is connector expansion and search quality.
 - We currently do not rely on portal API keys for expansion tasks.
 
@@ -34,9 +47,10 @@ This document is the persistence layer for connector expansion work. If context 
 | `tucasa.com` | Stable | Implemented | JSON-LD surface is parse-friendly. |
 | `fotocasa.es` | Partially stable | Implemented | Detail parser + list-card fallback; anti-bot variability remains. |
 | `habitaclia.com` | Stable city routes | Implemented | Structured list attributes and good image coverage. |
-| `idealista.com` | Frequently blocked | Blocked adapter | Keep stable diagnostics; revisit with stronger extraction strategy. |
+| `idealista.com` | Frequently blocked | Implemented (probe) | DataDome challenge mapped with cid-aware error message; parsed when reachable. |
 | `yaencontre.com` | Variable, often DataDome-blocked | Implemented | Uses probe + encoded `__INITIAL_STATE__` parser, plus mixed path retry so one blocked path does not abort other paths. |
 | `milanuncios.com` | Stable with browser-like headers | Implemented | Listing-card parser with city filtering and resilient fallback behavior. |
+| `globaliza.com` | Stable | Implemented | Large list-card HTML pages with structured price/rooms/surface metadata and image coverage. |
 
 ## Portal Research Results (Evidence-Based)
 
@@ -77,7 +91,7 @@ Research date: 2026-02-25
 
 1. `idealista.com`
 - Frequent anti-bot/captcha/403 behavior.
-- Strategy: treat as blocked connector with stable diagnostics until reliable extraction path exists.
+- Strategy: keep probe connector active, preserve cid-aware blocked diagnostics, and use parse paths opportunistically.
 
 2. `yaencontre.com`
 - Reachability alternates between accessible and DataDome challenge responses.
@@ -96,7 +110,7 @@ When multiple tasks are open, pick the next one with this order:
 
 1. Any unchecked `P0` in `In Progress`.
 2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`).
-3. New major-portal adapter spike (`idealista`) with stable error reporting.
+3. Connector reliability tasks for new/default source `globaliza` and best-effort source `idealista`.
 4. Contract and tooling improvements that reduce integration cost for future portals.
 
 If two tasks have the same priority, choose the one that:
@@ -129,15 +143,18 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Implement `@fyn/connectors-habitaclia`.
 - [x] Implement `@fyn/connectors-yaencontre` probe adapter.
 - [x] Implement `@fyn/connectors-milanuncios`.
+- [x] Implement `@fyn/connectors-idealista` probe adapter with cid-aware diagnostics.
+- [x] Implement `@fyn/connectors-globaliza`.
 - [x] Wire `apps/mcp-server` to execute multi-source requests and aggregate coverage.
 - [x] Wire root deployed MCP handler to same multi-source behavior.
 - [x] Add tests for new connectors and source selection behavior.
 - [x] Update docs.
 - [x] Improve `yaencontre` consistency under mixed block/unblock responses.
-- [ ] Commit.
+- [x] Commit.
 - [ ] Continue with next backlog connector tasks:
-  - refine blocked-adapter diagnostics for `idealista`,
-  - evaluate one additional regional long-tail source.
+  - extend regional long-tail sources (`hogaria` first),
+  - improve cross-portal deduplication of near-identical listings,
+  - add minimal connector-level contract smoke set for every default source.
 
 ## Task Completion Checklist (Per Slice)
 
@@ -197,5 +214,5 @@ git status --short
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios"],"strict_constraints":true,"max_results_total":10}'
+pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios","globaliza"],"strict_constraints":true,"max_results_total":10}'
 ```

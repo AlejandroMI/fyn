@@ -21,9 +21,11 @@ import {
   type Locale,
   type NormalizedFilters
 } from "@fyn/domain";
-import { BlockedPortalConnector, type ConnectorAdapter } from "@fyn/connectors-core";
+import { type ConnectorAdapter } from "@fyn/connectors-core";
 import { FotocasaConnector } from "@fyn/connectors-fotocasa";
+import { GlobalizaConnector } from "@fyn/connectors-globaliza";
 import { HabitacliaConnector } from "@fyn/connectors-habitaclia";
+import { IdealistaConnector } from "@fyn/connectors-idealista";
 import { MilanunciosConnector } from "@fyn/connectors-milanuncios";
 import { PisosConnector } from "@fyn/connectors-pisos";
 import { TucasaConnector } from "@fyn/connectors-tucasa";
@@ -40,7 +42,8 @@ const sourceSchema = z.enum([
   "idealista",
   "habitaclia",
   "yaencontre",
-  "milanuncios"
+  "milanuncios",
+  "globaliza"
 ]);
 
 const toolSchema = {
@@ -224,6 +227,20 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.MILANUNCIOS_BASE_URL ? { baseUrl: process.env.MILANUNCIOS_BASE_URL } : {})
   });
 
+  const idealista = new IdealistaConnector({
+    requestDelayMs: readNumberEnv("IDEALISTA_SCRAPE_REQUEST_DELAY_MS", 350),
+    maxListings: readNumberEnv("IDEALISTA_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("IDEALISTA_MAX_SCRAPE_REQUESTS", 4),
+    ...(process.env.IDEALISTA_BASE_URL ? { baseUrl: process.env.IDEALISTA_BASE_URL } : {})
+  });
+
+  const globaliza = new GlobalizaConnector({
+    requestDelayMs: readNumberEnv("GLOBALIZA_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxListings: readNumberEnv("GLOBALIZA_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("GLOBALIZA_MAX_SCRAPE_REQUESTS", 6),
+    ...(process.env.GLOBALIZA_BASE_URL ? { baseUrl: process.env.GLOBALIZA_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
@@ -231,10 +248,8 @@ function connectorsFromEnv(): ConnectorRegistry {
     habitaclia,
     yaencontre,
     milanuncios,
-    idealista: new BlockedPortalConnector(
-      "idealista",
-      "idealista currently blocks automated access in this environment."
-    )
+    idealista,
+    globaliza
   };
 }
 
@@ -578,7 +593,8 @@ async function runStructuredSearch(
         "tucasa",
         "fotocasa",
         "yaencontre",
-        "milanuncios"
+        "milanuncios",
+        "globaliza"
       ]
     ).map((source) => source)
   ) as SourceSelection[];

@@ -168,3 +168,17 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: treat per-path blocked/rate-limit/unavailable responses as recoverable until all candidates fail.
 - Action: updated `@fyn/connectors-yaencontre` to continue across candidate paths, added city-match post-filtering, and added a regression test for mixed blocked+reachable path sequences.
 - Expected impact: fewer false-negative failures and more consistent contribution from `yaencontre` in multi-source aggregation.
+
+- Date: 2026-02-25
+- Context: `idealista` is a must-have source but strongly anti-bot in this environment.
+- Signal: requests consistently returned DataDome challenge pages with 403 and embedded challenge ids.
+- Decision: replace static blocked placeholder with a probe connector that captures cid-aware blocked diagnostics and parses listings opportunistically when pages are reachable.
+- Action: shipped `@fyn/connectors-idealista`, mapped blocked/rate-limit/unavailable outcomes, and added parser tests for JSON-LD/card paths.
+- Expected impact: better observability and optional inventory gains without breaking aggregator stability.
+
+- Date: 2026-02-25
+- Context: expansion needed one more live scraper source that actually returns cards now.
+- Signal: `globaliza` city listing pages are reachable and expose stable list-card metadata (title, URL, price, rooms, area, image, city).
+- Decision: integrate `globaliza` into MCP defaults as a live source.
+- Action: shipped `@fyn/connectors-globaliza`, wired domain/MCP/env/docs, and validated live smoke (`globaliza` only and `idealista + globaliza` mixed).
+- Expected impact: higher hit-rate and stronger multi-source diversity in Spain searches while major anti-bot portals are partially blocked.

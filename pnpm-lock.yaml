@@ -75,9 +75,15 @@ importers:
       '@fyn/connectors-fotocasa':
         specifier: workspace:*
         version: link:../../packages/connectors/fotocasa
+      '@fyn/connectors-globaliza':
+        specifier: workspace:*
+        version: link:../../packages/connectors/globaliza
       '@fyn/connectors-habitaclia':
         specifier: workspace:*
         version: link:../../packages/connectors/habitaclia
+      '@fyn/connectors-idealista':
+        specifier: workspace:*
+        version: link:../../packages/connectors/idealista
       '@fyn/connectors-milanuncios':
         specifier: workspace:*
         version: link:../../packages/connectors/milanuncios
@@ -145,6 +151,25 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
 
+  packages/connectors/globaliza:
+    dependencies:
+      '@fyn/connectors-core':
+        specifier: workspace:*
+        version: link:../core
+      '@fyn/domain':
+        specifier: workspace:*
+        version: link:../../domain
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.19.11
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
+
   packages/connectors/habitaclia:
     dependencies:
       '@fyn/connectors-core':
@@ -154,6 +179,25 @@ importers:
         specifier: workspace:*
         version: link:../../domain
     devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@22.19.11)
+
+  packages/connectors/idealista:
+    dependencies:
+      '@fyn/connectors-core':
+        specifier: workspace:*
+        version: link:../core
+      '@fyn/domain':
+        specifier: workspace:*
+        version: link:../../domain
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.19.11
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
