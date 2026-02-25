@@ -28,6 +28,7 @@ Current connector sources:
 - `idealista` (scrape probe with cid-aware blocked diagnostics)
 - `globaliza` (scrape list-card extraction, city-filter fallback)
 - `hogaria` (scrape listing-card extraction, province-route discovery fallback)
+- `spainhouses` (scrape property-block extraction, city/province route fallback)
 - `pisocompartido` (scrape room-rental cards, rent-focused)
 - `enalquiler` (scrape rental listings, city/province route resolution + fallback)
 - `nuroa` (scrape aggregator cards with nested outbound listing URL extraction)
@@ -94,5 +95,6 @@ pnpm smoke:mcp:http -- --url https://<your-project>.vercel.app/api/mcp "Find me 
 - `docs/chatgpt-connector-research-2026-02-24.md`
 - `docs/chatgpt-developer-mode-runbook.md`
 - `docs/learning-log.md`
+- `docs/connector-context-continuity.md`
 - `docs/connector-expansion-overnight-runbook-2026-02-25.md`
 - `docs/autonomous-continuation-playbook.md`

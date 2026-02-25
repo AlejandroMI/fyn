@@ -231,3 +231,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: integrate `nuroa` as a first-class source and decode nested outbound `url` targets to preserve direct source listing links.
 - Action: shipped `@fyn/connectors-nuroa`, wired MCP/domain/env/docs/smoke harness, and validated live Valencia buy-path smoke.
 - Expected impact: broader coverage from a resilient aggregator surface while retaining transparent deep links and deterministic diagnostics.
+
+- Date: 2026-02-25
+- Context: long-tail source queue still had open capacity, and we needed stronger continuity documentation plus fresh MCP validation before founder-side ChatGPT retest.
+- Signal: `spainhouses.net` exposes parseable `article.property_block` listing cards when reachable, but automation access is frequently blocked in this environment.
+- Decision: integrate `spainhouses` as a first-class source with stable blocked-path behavior and keep orchestration resilient when the source is unavailable.
+- Action: shipped `@fyn/connectors-spainhouses` with parser tests, wired domain/MCP/env/docs/smoke harness, and reran full gates (`pnpm typecheck`, `pnpm test`, `pnpm smoke:sources`, structured `pnpm smoke:mcp` paths for Valencia and multi-location nature intent).
+- Expected impact: higher potential inventory coverage during reachable windows, no regression when blocked, and cleaner handoff context for immediate ChatGPT connector testing.

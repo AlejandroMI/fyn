@@ -32,6 +32,7 @@ import { MilanunciosConnector } from "@fyn/connectors-milanuncios";
 import { NuroaConnector } from "@fyn/connectors-nuroa";
 import { PisoCompartidoConnector } from "@fyn/connectors-pisocompartido";
 import { PisosConnector } from "@fyn/connectors-pisos";
+import { SpainhousesConnector } from "@fyn/connectors-spainhouses";
 import { TucasaConnector } from "@fyn/connectors-tucasa";
 import { YaencontreConnector } from "@fyn/connectors-yaencontre";
 import { rankListings } from "@fyn/scoring";
@@ -49,6 +50,7 @@ const sourceSchema = z.enum([
   "milanuncios",
   "globaliza",
   "hogaria",
+  "spainhouses",
   "pisocompartido",
   "enalquiler",
   "nuroa"
@@ -277,6 +279,13 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.NUROA_BASE_URL ? { baseUrl: process.env.NUROA_BASE_URL } : {})
   });
 
+  const spainhouses = new SpainhousesConnector({
+    requestDelayMs: readNumberEnv("SPAINHOUSES_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxListings: readNumberEnv("SPAINHOUSES_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("SPAINHOUSES_MAX_SCRAPE_REQUESTS", 8),
+    ...(process.env.SPAINHOUSES_BASE_URL ? { baseUrl: process.env.SPAINHOUSES_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
@@ -287,6 +296,7 @@ function connectorsFromEnv(): ConnectorRegistry {
     idealista,
     globaliza,
     hogaria,
+    spainhouses,
     pisocompartido,
     enalquiler,
     nuroa
@@ -777,6 +787,7 @@ function defaultSourcesForCriteria(criteria: NormalizedFilters): SourceSelection
     "milanuncios",
     "globaliza",
     "hogaria",
+    "spainhouses",
     "nuroa"
   ];
 

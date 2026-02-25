@@ -6,7 +6,7 @@ Scope: Connector expansion and backlog execution while founder is offline
 
 ## Why this exists
 
-This is the single recovery document for context loss. If a session resets, open this file first and continue without waiting for new prompts.
+This is the primary recovery document for context loss. If a session resets, open this file and `docs/connector-context-continuity.md` first, then continue without waiting for new prompts.
 
 ## Current Research Snapshot (Evidence)
 
@@ -20,6 +20,7 @@ This is the single recovery document for context loss. If a session resets, open
 - `milanuncios` (buy/rent): stable list-card extraction with city filtering.
 - `globaliza` (buy/rent): stable list-card extraction.
 - `hogaria` (buy/rent): city and province fallback support for long-tail towns.
+- `spainhouses` (buy/rent): implemented parser and routing logic; currently frequently blocked in automation context.
 - `pisocompartido` (rent-focused): stable room/shared-flat source with JSON-LD geo/media.
 - `enalquiler` (rent-focused): stable city/province route resolution with strong image-rich cards.
 - `nuroa` (buy/rent): stable aggregator list parsing with nested outbound listing URL extraction.
@@ -28,7 +29,7 @@ This is the single recovery document for context loss. If a session resets, open
 ### Next connector candidates researched
 
 - `indomio.es`: blocked in current automation context.
-- regional agency networks/MLS-style long-tail portals: still open queue after `nuroa`.
+- regional agency networks/MLS-style long-tail portals: still open queue after `spainhouses`.
 
 ## Cold-Start Recovery Steps (Do Immediately)
 
@@ -105,4 +106,4 @@ If blocked:
 ## Next Execution Target
 
 - `P2 Secondary long-tail sources` from backlog.
-- First implementation target: next long-tail source after `nuroa` (regional agency/MLS-style candidate), then reassess connector quality vs. inventory uniqueness.
+- First implementation target: next long-tail source after `spainhouses` (regional agency/MLS-style candidate), then reassess connector quality vs. inventory uniqueness.

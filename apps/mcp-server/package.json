@@ -26,6 +26,7 @@
     "@fyn/connectors-nuroa": "workspace:*",
     "@fyn/connectors-pisocompartido": "workspace:*",
     "@fyn/connectors-pisos": "workspace:*",
+    "@fyn/connectors-spainhouses": "workspace:*",
     "@fyn/connectors-tucasa": "workspace:*",
     "@fyn/connectors-yaencontre": "workspace:*",
     "@fyn/domain": "workspace:*",

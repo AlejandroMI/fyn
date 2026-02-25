@@ -52,7 +52,7 @@ You can also pass full JSON arguments:
 pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["house"],"locations":["Náquera","Buñol","Requena"],"tags":["nature","views"],"strict_constraints":true}'
 ```
 
-Default execution queries multiple sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`, `nuroa`) and conditionally includes `pisocompartido` + `enalquiler` for rent + flat/house intents. Coverage diagnostics are returned per portal.
+Default execution queries multiple sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`, `spainhouses`, `nuroa`) and conditionally includes `pisocompartido` + `enalquiler` for rent + flat/house intents. Coverage diagnostics are returned per portal.
 Availability for `yaencontre` and `idealista` may vary by anti-bot response.
 With no Pisos API key, `pisos` first uses HTML scraping fallback, then fixtures if scraping fails.
 
@@ -129,6 +129,10 @@ Then set environment variables in Vercel project settings:
 - `HOGARIA_SCRAPE_REQUEST_DELAY_MS`
 - `HOGARIA_MAX_LISTINGS`
 - `HOGARIA_MAX_SCRAPE_REQUESTS`
+- `SPAINHOUSES_BASE_URL` (optional)
+- `SPAINHOUSES_SCRAPE_REQUEST_DELAY_MS`
+- `SPAINHOUSES_MAX_LISTINGS`
+- `SPAINHOUSES_MAX_SCRAPE_REQUESTS`
 - `PISOCOMPARTIDO_BASE_URL` (optional)
 - `PISOCOMPARTIDO_SCRAPE_REQUEST_DELAY_MS`
 - `PISOCOMPARTIDO_MAX_LISTINGS`
