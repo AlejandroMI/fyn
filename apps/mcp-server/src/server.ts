@@ -848,6 +848,34 @@ function resolveLocations(payload: ToolPayload): string[] {
   return [];
 }
 
+function splitLocationSegments(value: string): string[] {
+  return value
+    .split(/\s[-–—]\s/)
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0);
+}
+
+function normalizeLocationForSearch(location: string, fallbackCity?: string): string {
+  const segments = splitLocationSegments(location);
+  if (segments.length < 2) {
+    return location;
+  }
+
+  if (fallbackCity) {
+    const normalizedFallback = normalizeLocation(fallbackCity);
+    const matchedFallback = segments.some((segment) => {
+      const normalizedSegment = normalizeLocation(segment);
+      return normalizedSegment.includes(normalizedFallback) || normalizedFallback.includes(normalizedSegment);
+    });
+
+    if (matchedFallback) {
+      return fallbackCity;
+    }
+  }
+
+  return segments[0]!;
+}
+
 function baseCriteriaFromPayload(payload: ToolPayload): NormalizedFilters {
   return {
     locale: payload.locale ?? "en",
@@ -989,6 +1017,7 @@ export async function runStructuredSearch(
   const coverage: CoverageEntry[] = [];
   const collected: CollectedCandidate[] = [];
   let firstConnectorError: ConnectorError | null = null;
+  let successfulSourceCalls = 0;
 
   if (payload.sources && payload.sources.length > 0) {
     requestWarnings.push(
@@ -997,6 +1026,15 @@ export async function runStructuredSearch(
   }
 
   const plannedLocations = requestedLocations.length === 0 ? ["__discovery__"] : requestedLocations;
+  const plannedSearchLocations = plannedLocations.map((location) => {
+    const normalized = normalizeLocationForSearch(location, payload.city);
+    if (normalized !== location) {
+      requestWarnings.push(
+        `Normalized location '${location}' to '${normalized}' for portal compatibility (district-level matching is applied during rerank).`
+      );
+    }
+    return normalized;
+  });
   const connectorSearchTimeoutMs = Math.max(
     1_000,
     readNumberEnv("CONNECTOR_SEARCH_TIMEOUT_MS", 15_000)
@@ -1017,7 +1055,7 @@ export async function runStructuredSearch(
   }
 
   const locationExecutions = await mapWithConcurrency(
-    plannedLocations,
+    plannedSearchLocations,
     locationConcurrency,
     async (location) => {
       const criteria =
@@ -1072,6 +1110,7 @@ export async function runStructuredSearch(
     for (const sourceResult of sourceResults) {
       if ("result" in sourceResult && sourceResult.result) {
         const result = sourceResult.result;
+        successfulSourceCalls += 1;
         sourceKinds.add(result.diagnostics.source);
         connectorWarnings.push(...result.diagnostics.connector_warnings);
         const ranked = rankListings(result.listings, criteria).slice(0, perSourceCap);
@@ -1108,7 +1147,7 @@ export async function runStructuredSearch(
     }
   }
 
-  if (collected.length === 0 && firstConnectorError) {
+  if (collected.length === 0 && firstConnectorError && successfulSourceCalls === 0) {
     throw firstConnectorError;
   }
 

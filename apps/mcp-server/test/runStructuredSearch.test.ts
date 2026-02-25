@@ -224,6 +224,62 @@ describe("runStructuredSearch", () => {
     expect(result.diagnostics.request_warnings).toHaveLength(0);
   });
 
+  it("does not throw when one connector is blocked but another succeeds with zero candidates", async () => {
+    const connectors = makeRegistry({
+      idealista: errorConnector(
+        "idealista",
+        new ConnectorError("UPSTREAM_BLOCKED", "idealista blocked automated access", true, "idealista")
+      ),
+      pisos: okConnector("pisos", [])
+    });
+
+    const result = await runStructuredSearch(
+      payload({
+        sources: ["idealista", "pisos"]
+      }),
+      connectors
+    );
+
+    expect(result.listings).toHaveLength(0);
+    expect(result.diagnostics.coverage).toHaveLength(2);
+    expect(result.diagnostics.coverage.find((row) => row.portal === "idealista")?.error_code).toBe(
+      "UPSTREAM_BLOCKED"
+    );
+  });
+
+  it("normalizes neighborhood-formatted locations to city for connector calls", async () => {
+    let seenCity = "";
+    const connectors = makeRegistry({
+      pisos: {
+        portal: "pisos",
+        async search(criteria: NormalizedFilters): Promise<ConnectorSearchResult> {
+          seenCity = criteria.city || "";
+          return {
+            listings: [],
+            diagnostics: {
+              source: "scrape",
+              connector_warnings: []
+            }
+          };
+        }
+      }
+    });
+
+    const result = await runStructuredSearch(
+      payload({
+        city: "València",
+        locations: ["València - Malilla"],
+        sources: ["pisos"]
+      }),
+      connectors
+    );
+
+    expect(seenCity).toBe("València");
+    expect(result.diagnostics.request_warnings.some((warning) => warning.includes("Normalized location"))).toBe(
+      true
+    );
+  });
+
   it("caps implicit source fanout for wide multi-location searches", async () => {
     const previousMaxTasks = process.env.MCP_MAX_SEARCH_TASKS;
     process.env.MCP_MAX_SEARCH_TASKS = "4";
