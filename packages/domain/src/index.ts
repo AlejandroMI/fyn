@@ -438,18 +438,23 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         background: transparent;
         cursor: pointer;
         text-align: left;
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
       }
 
       .compact-image {
         width: 100%;
-        height: 220px;
+        height: 100%;
         object-fit: cover;
+        object-position: center;
         display: block;
       }
 
       .compact-empty {
         width: 100%;
-        height: 220px;
+        height: 100%;
         background: var(--surface);
       }
 
@@ -469,6 +474,22 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         margin: 0;
         font-size: 0.75rem;
         color: var(--muted);
+      }
+
+      .compact-source,
+      .card-source {
+        margin: 0;
+        font-size: 0.71rem;
+        color: var(--muted);
+      }
+
+      .loading {
+        margin: 10px;
+        padding: 12px;
+        border-radius: 10px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        background: var(--surface);
       }
 
       .map-root {
@@ -656,7 +677,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
 
         .compact-image,
         .compact-empty {
-          height: 210px;
+          height: 100%;
         }
 
         .header {
@@ -702,7 +723,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           <span class="brand-mark" aria-hidden="true"></span>
           <div class="brand-copy">
             <h1 class="brand-title">Fyn shortlist</h1>
-            <p id="headerSubtitle" class="brand-subtitle">No listings yet.</p>
+            <p id="headerSubtitle" class="brand-subtitle">Searching Fyn listings…</p>
           </div>
         </div>
         <button id="openTopBtn" class="top-action" type="button" disabled>Open top match</button>
@@ -717,7 +738,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         <div class="meta">
           <span id="countPill" class="meta-pill">0 results</span>
           <span id="locationPill" class="meta-pill">locations: 0</span>
-          <span id="sourcePill" class="meta-pill">source: --</span>
+          <span id="sourcePill" class="meta-pill">portals: --</span>
         </div>
       </section>
 
@@ -757,6 +778,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           cards: [],
           criteria: null,
           diagnostics: null,
+          loading: true,
           view: "compact"
         };
 
@@ -838,6 +860,61 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
             return "Unknown";
           }
           return city.split("(")[0].split(",")[0].trim() || city.trim();
+        }
+
+        function hostFromUrl(url) {
+          try {
+            var parsed = new URL(url || "");
+            return String(parsed.hostname || "").replace(/^www\\./i, "");
+          } catch (_error) {
+            return "";
+          }
+        }
+
+        function sourceLabel(card) {
+          if (!card || typeof card !== "object") {
+            return "";
+          }
+          if (typeof card.source_domain === "string" && card.source_domain) {
+            return card.source_domain;
+          }
+          if (typeof card.portal === "string" && card.portal) {
+            return card.portal;
+          }
+          return hostFromUrl(card.url || "");
+        }
+
+        function computePortalCount() {
+          var portals = {};
+          if (state.diagnostics && Array.isArray(state.diagnostics.coverage)) {
+            for (var i = 0; i < state.diagnostics.coverage.length; i += 1) {
+              var entry = state.diagnostics.coverage[i];
+              if (!entry || typeof entry !== "object") {
+                continue;
+              }
+              var portal = typeof entry.portal === "string" ? entry.portal : "";
+              var candidates = typeof entry.candidates === "number" ? entry.candidates : 0;
+              var returned = typeof entry.returned === "number" ? entry.returned : 0;
+              if (!portal || (candidates <= 0 && returned <= 0)) {
+                continue;
+              }
+              portals[portal] = true;
+            }
+          }
+
+          var keys = Object.keys(portals);
+          if (keys.length > 0) {
+            return keys.length;
+          }
+
+          for (var j = 0; j < state.cards.length; j += 1) {
+            var source = sourceLabel(state.cards[j]);
+            if (!source) {
+              continue;
+            }
+            portals[source] = true;
+          }
+          return Object.keys(portals).length;
         }
 
         function maybeRawCoordinate(card) {
@@ -1053,6 +1130,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
             '<div class="card-main">' +
             '<h2 class="card-title"><button class="card-title-button" type="button" data-open-url="' + escapeHtml(card.url || "") + '">' + escapeHtml(card.title || "Listing") + "</button></h2>" +
             '<p class="card-meta">' + escapeHtml((card.price || "Price unavailable") + " - " + (card.city || "Unknown")) + "</p>" +
+            '<p class="card-source">' + escapeHtml(sourceLabel(card)) + "</p>" +
             '<div class="facts">' + factsHtml + "</div>" +
             whyHtml +
             "</div>" +
@@ -1075,6 +1153,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
             '<div class="compact-body">' +
             '<h3 class="compact-title">' + escapeHtml(card.title || "Listing") + "</h3>" +
             '<p class="compact-meta">' + escapeHtml((card.price || "Price unavailable") + " - " + (card.city || "Unknown")) + "</p>" +
+            '<p class="compact-source">' + escapeHtml(sourceLabel(card)) + "</p>" +
             '<button class="card-cta" type="button" data-open-url="' + escapeHtml(card.url || "") + '">' + escapeHtml(ctaLabel()) + "</button>" +
             "</div>" +
             "</article>"
@@ -1082,24 +1161,36 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         }
 
         function renderList() {
+          if (state.loading) {
+            listRoot.innerHTML = '<div class="loading">' + (isSpanish() ? "Buscando viviendas en Fyn..." : "Searching Fyn listings...") + "</div>";
+            return;
+          }
           if (!state.cards.length) {
-            listRoot.innerHTML = '<div class="empty">No listings to display. Try broader locations or loosen constraints.</div>';
+            listRoot.innerHTML = '<div class="empty">' + (isSpanish() ? "No se recibieron listados para esta búsqueda." : "No listings were returned for this search.") + "</div>";
             return;
           }
           listRoot.innerHTML = state.cards.map(cardHtml).join("");
         }
 
         function renderCompact() {
+          if (state.loading) {
+            compactRoot.innerHTML = '<div class="loading">' + (isSpanish() ? "Buscando viviendas en Fyn..." : "Searching Fyn listings...") + "</div>";
+            return;
+          }
           if (!state.cards.length) {
-            compactRoot.innerHTML = '<div class="empty">No listings to display. Try broader locations or loosen constraints.</div>';
+            compactRoot.innerHTML = '<div class="empty">' + (isSpanish() ? "No se recibieron listados para esta búsqueda." : "No listings were returned for this search.") + "</div>";
             return;
           }
           compactRoot.innerHTML = state.cards.slice(0, 12).map(compactCardHtml).join("");
         }
 
         function renderMeta() {
-          var count = state.cards.length;
-          countPill.textContent = count + (count === 1 ? " result" : " results");
+          if (state.loading) {
+            countPill.textContent = isSpanish() ? "buscando..." : "searching...";
+          } else {
+            var count = state.cards.length;
+            countPill.textContent = count + (count === 1 ? " result" : " results");
+          }
 
           var requestedLocations = [];
           if (state.diagnostics && state.diagnostics.execution && Array.isArray(state.diagnostics.execution.locations_requested)) {
@@ -1107,10 +1198,8 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           }
           locationPill.textContent = "locations: " + String(requestedLocations.length);
 
-          var source = state.diagnostics && typeof state.diagnostics.source === "string"
-            ? state.diagnostics.source
-            : "--";
-          sourcePill.textContent = "source: " + source;
+          var portalCount = computePortalCount();
+          sourcePill.textContent = "portals: " + String(portalCount || "--");
         }
 
         function renderHeader() {
@@ -1118,8 +1207,13 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           if (state.diagnostics && state.diagnostics.execution && Array.isArray(state.diagnostics.execution.locations_requested)) {
             requestedLocations = state.diagnostics.execution.locations_requested;
           }
+          if (state.loading) {
+            headerSubtitle.textContent = isSpanish() ? "Buscando viviendas en Fyn..." : "Searching Fyn listings...";
+            openTopBtn.disabled = true;
+            return;
+          }
           if (!state.cards.length) {
-            headerSubtitle.textContent = "No listings yet.";
+            headerSubtitle.textContent = isSpanish() ? "Sin resultados por ahora." : "No listings yet.";
             openTopBtn.disabled = true;
             return;
           }
@@ -1165,6 +1259,7 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           state.cards = cards;
           state.criteria = safe.criteria && typeof safe.criteria === "object" ? safe.criteria : null;
           state.diagnostics = safe.diagnostics && typeof safe.diagnostics === "object" ? safe.diagnostics : null;
+          state.loading = false;
           renderAll();
         }
 
@@ -1243,7 +1338,15 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           function (event) {
             var detail = event && event.detail ? event.detail : {};
             var globals = detail.globals || {};
-            if (globals.toolOutput) {
+            if (Object.prototype.hasOwnProperty.call(globals, "toolOutput")) {
+              if (!globals.toolOutput) {
+                state.loading = true;
+                state.cards = [];
+                state.criteria = null;
+                state.diagnostics = null;
+                renderAll();
+                return;
+              }
               applyToolOutput(globals.toolOutput);
             }
           },

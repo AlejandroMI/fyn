@@ -712,6 +712,8 @@ function formatPrice(price: number | null, locale: Locale): string {
 
 interface PresentationCard {
   canonical_id: string;
+  portal: string;
+  source_domain: string;
   title: string;
   city: string;
   url: string;
@@ -722,6 +724,15 @@ interface PresentationCard {
   why_matched: string[];
   latitude?: number;
   longitude?: number;
+}
+
+function readDomainFromUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.replace(/^www\./i, "");
+  } catch {
+    return "";
+  }
 }
 
 function readCoordinatesFromRaw(
@@ -776,6 +787,8 @@ function toPresentationCard(listing: ListingCard, locale: Locale): PresentationC
 
   return {
     canonical_id: listing.canonical_id,
+    portal: listing.portal,
+    source_domain: readDomainFromUrl(listing.url),
     title: listing.title,
     city: listing.city,
     url: listing.url,
