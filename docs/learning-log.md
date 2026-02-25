@@ -154,3 +154,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: parse and keep list-level cards as first-class fallback, then enrich with details opportunistically.
 - Action: added search-card parser in `@fyn/connectors-fotocasa` and merged detail data over fallback cards when available; added regression test for blocked-detail fallback.
 - Expected impact: fewer empty responses and better resilience under partial anti-bot pressure.
+
+- Date: 2026-02-25
+- Context: adding another high-volume source without API keys while keeping deterministic connector behavior.
+- Signal: `milanuncios` list pages expose rich card HTML (title, URL, location, price, tags, images) and are reachable with browser-like headers.
+- Decision: implement `milanuncios` as first-class scraper source with strict city filtering plus broad fallback if no exact city matches appear.
+- Action: shipped `@fyn/connectors-milanuncios`, integrated it into MCP defaults and source schema, added blocked/rate-limit error mapping, and smoke-tested with live Valencia queries.
+- Expected impact: larger inventory coverage in key searches and better multi-source ranking diversity when other portals are partially blocked.

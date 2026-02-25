@@ -19,7 +19,7 @@ Last updated: 2026-02-25
   - Definition of done: one successful end-to-end run in ChatGPT with sample prompt.
 - [ ] `P0` Multi-source connector hardening
   - Owner: Codex
-  - Goal: keep `pisos + habitaclia + tucasa + fotocasa` orchestration stable with clear per-portal diagnostics.
+  - Goal: keep `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios` orchestration stable with clear per-portal diagnostics.
   - Definition of done: at least one passing smoke path with multi-source coverage output and no contract regressions.
 - [ ] `P1` Prompt parity smoke snapshots (ES/EN)
   - Owner: Codex
@@ -55,6 +55,8 @@ Last updated: 2026-02-25
   - Outcome: city-scoped list pages are scrapeable; connector integrated with parser tests and MCP coverage diagnostics.
 - [x] `P2` Yaencontre adapter discovery spike
   - Outcome: connector integrated with DataDome-aware diagnostics and `__INITIAL_STATE__` parser path when access is granted.
+- [x] `P2` Milanuncios adapter implementation spike
+  - Outcome: connector integrated with listing-card parser, city matching, and stable blocked/rate-limit diagnostics.
 - [ ] `P2` Secondary long-tail sources
   - Candidates: smaller regional portals and agency networks with easier integration surfaces.
 
@@ -84,5 +86,6 @@ Last updated: 2026-02-25
 - [x] Added Fotocasa search-card fallback parser so detail-blocked flows can still return normalized listings.
 - [x] Added `@fyn/connectors-habitaclia` adapter with city-scoped scraping, parser tests, and MCP integration.
 - [x] Added `@fyn/connectors-yaencontre` adapter with DataDome-aware blocking diagnostics and encoded state parser.
+- [x] Added `@fyn/connectors-milanuncios` adapter with listing-card extraction and city-filter fallback.
 - [x] Upgraded MCP to multi-source execution (`sources[]`) with per-location and per-portal coverage diagnostics.
 - [x] Replaced duplicate root MCP handler logic with shared server implementation to prevent metadata/contract drift.

@@ -1,7 +1,14 @@
 export type PropertyType = "flat" | "house" | "office" | "land";
 export type Locale = "es" | "en";
 export type TransactionType = "buy" | "rent";
-export type PortalSource = "pisos" | "fotocasa" | "tucasa" | "idealista" | "habitaclia" | "yaencontre";
+export type PortalSource =
+  | "pisos"
+  | "fotocasa"
+  | "tucasa"
+  | "idealista"
+  | "habitaclia"
+  | "yaencontre"
+  | "milanuncios";
 
 export const SUPPORTED_PORTAL_SOURCES: PortalSource[] = [
   "pisos",
@@ -9,7 +16,8 @@ export const SUPPORTED_PORTAL_SOURCES: PortalSource[] = [
   "tucasa",
   "idealista",
   "habitaclia",
-  "yaencontre"
+  "yaencontre",
+  "milanuncios"
 ];
 
 export interface SearchInput {
@@ -137,7 +145,7 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   renovation_ok: "Allow renovation-needed listings.",
   tags: "Preference tags (e.g. `nature`, `views`, `natural_light`).",
   sources:
-    "Source portals to query (e.g. `pisos`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`). Include multiple for aggregator behavior.",
+    "Source portals to query (e.g. `pisos`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`, `milanuncios`). Include multiple for aggregator behavior.",
   per_location_limit: "Max candidates kept per requested location before global rerank.",
   max_results_total: "Max returned listings after global rerank."
 } as const;
@@ -196,7 +204,9 @@ export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknow
       "https://images.habimg.com",
       "https://static.habimg.com",
       "https://www.yaencontre.com",
-      "https://cdn1-static2.yaencontre.com"
+      "https://cdn1-static2.yaencontre.com",
+      "https://www.milanuncios.com",
+      "https://images-re.milanuncios.com"
     ]
   };
 

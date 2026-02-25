@@ -24,6 +24,7 @@ Current connector sources:
 - `tucasa` (scrape)
 - `fotocasa` (scrape with list-card fallback, anti-bot sensitive)
 - `yaencontre` (scrape probe + state parser, DataDome-sensitive)
+- `milanuncios` (scrape listing-card extraction, city-filter fallback)
 - blocked placeholder with stable diagnostics: `idealista`
 
 ## Localization

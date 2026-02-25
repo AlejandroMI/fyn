@@ -24,6 +24,7 @@ import {
 import { BlockedPortalConnector, type ConnectorAdapter } from "@fyn/connectors-core";
 import { FotocasaConnector } from "@fyn/connectors-fotocasa";
 import { HabitacliaConnector } from "@fyn/connectors-habitaclia";
+import { MilanunciosConnector } from "@fyn/connectors-milanuncios";
 import { PisosConnector } from "@fyn/connectors-pisos";
 import { TucasaConnector } from "@fyn/connectors-tucasa";
 import { YaencontreConnector } from "@fyn/connectors-yaencontre";
@@ -32,7 +33,15 @@ import { rankListings } from "@fyn/scoring";
 const propertyTypeSchema = z.enum(["flat", "house", "office", "land"]);
 const localeSchema = z.enum(["es", "en"]);
 const transactionSchema = z.enum(["buy", "rent"]);
-const sourceSchema = z.enum(["pisos", "fotocasa", "tucasa", "idealista", "habitaclia", "yaencontre"]);
+const sourceSchema = z.enum([
+  "pisos",
+  "fotocasa",
+  "tucasa",
+  "idealista",
+  "habitaclia",
+  "yaencontre",
+  "milanuncios"
+]);
 
 const toolSchema = {
   query_text: z
@@ -208,12 +217,20 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.YAENCONTRE_BASE_URL ? { baseUrl: process.env.YAENCONTRE_BASE_URL } : {})
   });
 
+  const milanuncios = new MilanunciosConnector({
+    requestDelayMs: readNumberEnv("MILANUNCIOS_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxListings: readNumberEnv("MILANUNCIOS_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("MILANUNCIOS_MAX_SCRAPE_REQUESTS", 6),
+    ...(process.env.MILANUNCIOS_BASE_URL ? { baseUrl: process.env.MILANUNCIOS_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
     fotocasa,
     habitaclia,
     yaencontre,
+    milanuncios,
     idealista: new BlockedPortalConnector(
       "idealista",
       "idealista currently blocks automated access in this environment."
@@ -554,7 +571,16 @@ async function runStructuredSearch(
   connectors: ConnectorRegistry
 ): Promise<SearchExecutionResult> {
   const allowedSources = uniqueStrings(
-    (payload.sources ?? ["pisos", "habitaclia", "tucasa", "fotocasa"]).map((source) => source)
+    (
+      payload.sources ?? [
+        "pisos",
+        "habitaclia",
+        "tucasa",
+        "fotocasa",
+        "yaencontre",
+        "milanuncios"
+      ]
+    ).map((source) => source)
   ) as SourceSelection[];
   const requestedLocations = resolveLocations(payload);
   const perLocationLimit = payload.per_location_limit ?? 20;

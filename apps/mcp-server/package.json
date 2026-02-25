@@ -17,6 +17,7 @@
     "@fyn/connectors-core": "workspace:*",
     "@fyn/connectors-fotocasa": "workspace:*",
     "@fyn/connectors-habitaclia": "workspace:*",
+    "@fyn/connectors-milanuncios": "workspace:*",
     "@fyn/connectors-pisos": "workspace:*",
     "@fyn/connectors-tucasa": "workspace:*",
     "@fyn/connectors-yaencontre": "workspace:*",

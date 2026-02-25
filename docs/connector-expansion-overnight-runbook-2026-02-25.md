@@ -21,8 +21,8 @@ This document is the persistence layer for connector expansion work. If context 
 ## Snapshot (Current Reality)
 
 - ChatGPT connector path is working in developer mode.
-- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa` default scraping sources.
-- `yaencontre` is now wired as an optional source with live probe behavior and stable DataDome diagnostics.
+- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios` default scraping sources.
+- `yaencontre` and `milanuncios` are now wired as live scraping sources with stable blocked/rate-limit diagnostics.
 - Website phase is closed for now; current priority is connector expansion and search quality.
 - We currently do not rely on portal API keys for expansion tasks.
 
@@ -36,6 +36,7 @@ This document is the persistence layer for connector expansion work. If context 
 | `habitaclia.com` | Stable city routes | Implemented | Structured list attributes and good image coverage. |
 | `idealista.com` | Frequently blocked | Blocked adapter | Keep stable diagnostics; revisit with stronger extraction strategy. |
 | `yaencontre.com` | Variable, often DataDome-blocked | Implemented (optional source) | Uses probe + encoded `__INITIAL_STATE__` parser when reachable; emits stable blocked diagnostics otherwise. |
+| `milanuncios.com` | Stable with browser-like headers | Implemented | Listing-card parser with city filtering and resilient fallback behavior. |
 
 ## Portal Research Results (Evidence-Based)
 
@@ -66,6 +67,12 @@ Research date: 2026-02-25
 - Integration complexity: medium.
 - Expected value: strong geographic coverage and good structured extraction quality.
 
+5. `milanuncios.com`
+- Reachability: stable with browser-like headers.
+- Parsing surface: list-card HTML exposes title, URL, location, price, room tags, image and full snippet.
+- Integration complexity: medium.
+- Expected value: broad long-tail supply with good media coverage.
+
 ### Tier B: High-friction / anti-bot
 
 1. `idealista.com`
@@ -88,8 +95,8 @@ Research date: 2026-02-25
 When multiple tasks are open, pick the next one with this order:
 
 1. Any unchecked `P0` in `In Progress`.
-2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`).
-3. New major-portal adapter spike (`idealista`, `yaencontre`) with stable error reporting.
+2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`).
+3. New major-portal adapter spike (`idealista`) with stable error reporting.
 4. Contract and tooling improvements that reduce integration cost for future portals.
 
 If two tasks have the same priority, choose the one that:
@@ -121,6 +128,7 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Implement `@fyn/connectors-fotocasa`.
 - [x] Implement `@fyn/connectors-habitaclia`.
 - [x] Implement `@fyn/connectors-yaencontre` probe adapter.
+- [x] Implement `@fyn/connectors-milanuncios`.
 - [x] Wire `apps/mcp-server` to execute multi-source requests and aggregate coverage.
 - [x] Wire root deployed MCP handler to same multi-source behavior.
 - [x] Add tests for new connectors and source selection behavior.
@@ -128,7 +136,8 @@ Never idle after a task closes; always move to next backlog item.
 - [ ] Commit.
 - [ ] Continue with next backlog connector tasks:
   - improve `yaencontre` consistency under mixed block/unblock responses,
-  - add another reachable portal.
+  - refine blocked-adapter diagnostics for `idealista`,
+  - evaluate one additional regional long-tail source.
 
 ## Task Completion Checklist (Per Slice)
 
@@ -188,5 +197,5 @@ git status --short
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa"],"strict_constraints":true,"max_results_total":10}'
+pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios"],"strict_constraints":true,"max_results_total":10}'
 ```
