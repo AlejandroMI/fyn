@@ -490,7 +490,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       title: "Real photos,",
       titleAccent: "clear cards, fast decisions.",
       intro:
-        "See authentic properties, compare easily, and understand why each result appears. Every card includes a direct link and match explanation."
+        "See authentic properties, compare easily, and understand why each result appears. Every card includes a direct link and match explanation.",
       metaLeft: "Demo · 4 homes",
       metaRight: "Explainable matches · Direct links",
       sourceTag: "Source link available in live search",
