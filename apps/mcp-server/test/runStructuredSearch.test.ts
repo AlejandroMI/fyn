@@ -223,4 +223,35 @@ describe("runStructuredSearch", () => {
     expect(result.listings.length).toBeGreaterThan(0);
     expect(result.diagnostics.request_warnings).toHaveLength(0);
   });
+
+  it("caps implicit source fanout for wide multi-location searches", async () => {
+    const previousMaxTasks = process.env.MCP_MAX_SEARCH_TASKS;
+    process.env.MCP_MAX_SEARCH_TASKS = "4";
+
+    try {
+      const connectors = makeRegistry({
+        pisos: okConnector("pisos", [makeListing({ portal: "pisos", canonical_id: "pisos-1", portal_listing_id: "1" })]),
+        habitaclia: okConnector("habitaclia", [makeListing({ canonical_id: "habitaclia-2", portal_listing_id: "2" })])
+      });
+
+      const result = await runStructuredSearch(
+        payload({
+          locations: ["Ronda", "Cangas de Onís"],
+          city: undefined
+        }),
+        connectors
+      );
+
+      expect(result.diagnostics.execution.sources.length).toBe(2);
+      expect(result.diagnostics.request_warnings).toContain(
+        "High fanout detected (2 locations x 10 sources). Auto-capped to 2 sources to meet runtime budget."
+      );
+    } finally {
+      if (previousMaxTasks === undefined) {
+        delete process.env.MCP_MAX_SEARCH_TASKS;
+      } else {
+        process.env.MCP_MAX_SEARCH_TASKS = previousMaxTasks;
+      }
+    }
+  });
 });

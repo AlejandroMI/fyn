@@ -906,7 +906,7 @@ export async function runStructuredSearch(
   connectors: ConnectorRegistry
 ): Promise<SearchExecutionResult> {
   const baseCriteria = baseCriteriaFromPayload(payload);
-  const allowedSources = uniqueStrings(
+  let allowedSources = uniqueStrings(
     (
       payload.sources ?? defaultSourcesForCriteria(baseCriteria)
     ).map((source) => source)
@@ -987,6 +987,19 @@ export async function runStructuredSearch(
     readNumberEnv("CONNECTOR_SEARCH_TIMEOUT_MS", 15_000)
   );
   const locationConcurrency = Math.max(1, readNumberEnv("MCP_LOCATION_CONCURRENCY", 3));
+  const maxSearchTasks = Math.max(1, readNumberEnv("MCP_MAX_SEARCH_TASKS", 28));
+
+  if (!payload.sources || payload.sources.length === 0) {
+    const plannedTasks = plannedLocations.length * allowedSources.length;
+    if (plannedTasks > maxSearchTasks) {
+      const maxSources = Math.max(1, Math.floor(maxSearchTasks / plannedLocations.length));
+      const previousSourceCount = allowedSources.length;
+      allowedSources = allowedSources.slice(0, maxSources);
+      requestWarnings.push(
+        `High fanout detected (${plannedLocations.length} locations x ${previousSourceCount} sources). Auto-capped to ${allowedSources.length} sources to meet runtime budget.`
+      );
+    }
+  }
 
   const locationExecutions = await mapWithConcurrency(
     plannedLocations,
