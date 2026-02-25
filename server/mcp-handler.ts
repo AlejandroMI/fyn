@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { createFynMcpServer } from "../apps/mcp-server/src/server.js";
+import { createFynMcpServer } from "../apps/mcp-server/src/server";
 
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
