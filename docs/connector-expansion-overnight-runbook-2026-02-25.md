@@ -46,12 +46,13 @@ If context is lost or the thread is interrupted, continue with this exact loop:
 ## Snapshot (Current Reality)
 
 - ChatGPT connector path is working in developer mode.
-- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria` default scraping sources, plus conditional `pisocompartido + enalquiler` (rent + flat/house intents).
+- MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria + nuroa` default scraping sources, plus conditional `pisocompartido + enalquiler` (rent + flat/house intents).
 - `idealista` is now a probe connector with cid-aware blocked diagnostics and best-effort parsing for reachable windows.
 - `globaliza` is wired as a live scraping source and validated in smoke runs.
 - `hogaria` is wired as a live scraping source and validated in smoke runs (`Ronda` city path).
 - `pisocompartido` is wired as a live scraping source and validated in smoke runs (`Valencia` rent path).
 - `enalquiler` is wired as a live scraping source and validated in smoke runs (`Valencia` rent path).
+- `nuroa` is wired as a live scraping source and validated in smoke runs (`Valencia` buy path).
 - MCP now deduplicates near-identical cross-source listings before final ranking.
 - A per-source smoke harness is available via `pnpm smoke:sources`.
 - Website phase is closed for now; current priority is connector expansion and search quality.
@@ -72,6 +73,7 @@ If context is lost or the thread is interrupted, continue with this exact loop:
 | `hogaria.net` | Stable | Implemented | Listing-card HTML is parseable; city routes plus province-route fallback support long-tail towns. |
 | `pisocompartido.com` | Stable | Implemented | Rent-focused room inventory with parseable list cards and `application/ld+json` geo metadata. |
 | `enalquiler.com` | Stable | Implemented | Rent-focused city/province routes with parseable property cards and strong image coverage. |
+| `nuroa.es` | Stable | Implemented | Aggregator list pages are parseable; connector extracts nested outbound listing URLs from conversion links. |
 
 ## Research Ledger (Connector Expansion Focus)
 
@@ -87,6 +89,7 @@ This is the minimum evidence snapshot needed to continue without searching conve
 - `hogaria`: live source, province fallback strategy for long-tail towns.
 - `pisocompartido`: live source, rent-focused room listings with city-route fallbacks.
 - `enalquiler`: live source, rent-focused city/province route resolution with stable card extraction.
+- `nuroa`: live source, parseable aggregator cards with outbound URL extraction and city-filter fallback.
 - `idealista`: best-effort probe; often blocked, diagnostics still useful.
 
 Current expansion target order from backlog:
@@ -142,6 +145,12 @@ Research date: 2026-02-25
 - Integration complexity: medium.
 - Expected value: high-quality rental inventory and strong media coverage for chat cards.
 
+8. `nuroa.es`
+- Reachability: stable with browser-like headers.
+- Parsing surface: list pages expose `group nu_row` cards with title, city, price, images, and conversion links with nested outbound listing URLs.
+- Integration complexity: medium.
+- Expected value: broad long-tail coverage through aggregator inventory with direct-source deep-link extraction.
+
 ### Tier B: High-friction / anti-bot
 
 1. `idealista.com`
@@ -164,7 +173,7 @@ Research date: 2026-02-25
 When multiple tasks are open, pick the next one with this order:
 
 1. Any unchecked `P0` in `In Progress`.
-2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`) and conditional sources (`pisocompartido`, `enalquiler`).
+2. Connector reliability tasks affecting current default sources (`pisos`, `habitaclia`, `tucasa`, `fotocasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`, `nuroa`) and conditional sources (`pisocompartido`, `enalquiler`).
 3. Connector reliability tasks for best-effort source `idealista`.
 4. Contract and tooling improvements that reduce integration cost for future portals.
 
@@ -209,6 +218,7 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Implement `@fyn/connectors-hogaria`.
 - [x] Implement `@fyn/connectors-pisocompartido`.
 - [x] Implement `@fyn/connectors-enalquiler`.
+- [x] Implement `@fyn/connectors-nuroa`.
 - [x] Wire `apps/mcp-server` to execute multi-source requests and aggregate coverage.
 - [x] Wire root deployed MCP handler to same multi-source behavior.
 - [x] Add tests for new connectors and source selection behavior.
@@ -218,7 +228,7 @@ Never idle after a task closes; always move to next backlog item.
 - [x] Add minimal connector-level contract smoke set for every default source.
 - [x] Commit.
 - [ ] Continue with next backlog connector tasks:
-  - extend regional long-tail sources (next: regional agency/MLS-style portals),
+  - extend regional long-tail sources (next: regional agency/MLS-style portals after `nuroa`),
   - expand city->province routing coverage for long-tail location intent.
 
 ## Task Completion Checklist (Per Slice)
@@ -290,6 +300,6 @@ pnpm install
 pnpm typecheck
 pnpm test
 pnpm smoke:sources
-pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios","globaliza","hogaria"],"strict_constraints":true,"max_results_total":10}'
+pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["flat"],"city":"Valencia","min_rooms":3,"max_price_eur":350000,"sources":["pisos","habitaclia","tucasa","fotocasa","yaencontre","milanuncios","globaliza","hogaria","nuroa"],"strict_constraints":true,"max_results_total":10}'
 pnpm smoke:mcp -- '{"locale":"es","transaction_type":"rent","property_types":["flat"],"city":"Valencia","sources":["pisocompartido","enalquiler"],"strict_constraints":true,"max_results_total":10}'
 ```

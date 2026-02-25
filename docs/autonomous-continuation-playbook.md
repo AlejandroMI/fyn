@@ -22,13 +22,13 @@ This is the single recovery document for context loss. If a session resets, open
 - `hogaria` (buy/rent): city and province fallback support for long-tail towns.
 - `pisocompartido` (rent-focused): stable room/shared-flat source with JSON-LD geo/media.
 - `enalquiler` (rent-focused): stable city/province route resolution with strong image-rich cards.
+- `nuroa` (buy/rent): stable aggregator list parsing with nested outbound listing URL extraction.
 - `idealista` (probe): frequent DataDome blocks; diagnostics source, opportunistic parsing.
 
 ### Next connector candidates researched
 
-- `nuroa.es`: reachable but largely re-aggregated outbound inventory.
 - `indomio.es`: blocked in current automation context.
-- regional agency networks/MLS-style long-tail portals: still open queue after `enalquiler`.
+- regional agency networks/MLS-style long-tail portals: still open queue after `nuroa`.
 
 ## Cold-Start Recovery Steps (Do Immediately)
 
@@ -105,4 +105,4 @@ If blocked:
 ## Next Execution Target
 
 - `P2 Secondary long-tail sources` from backlog.
-- First implementation target: next long-tail source after `enalquiler` (candidate: `nuroa` spike), then reassess connector quality vs. inventory uniqueness.
+- First implementation target: next long-tail source after `nuroa` (regional agency/MLS-style candidate), then reassess connector quality vs. inventory uniqueness.

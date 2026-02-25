@@ -30,6 +30,7 @@ Current connector sources:
 - `hogaria` (scrape listing-card extraction, province-route discovery fallback)
 - `pisocompartido` (scrape room-rental cards, rent-focused)
 - `enalquiler` (scrape rental listings, city/province route resolution + fallback)
+- `nuroa` (scrape aggregator cards with nested outbound listing URL extraction)
 
 ## Localization
 

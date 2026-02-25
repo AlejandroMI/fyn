@@ -12,7 +12,8 @@ export type PortalSource =
   | "globaliza"
   | "hogaria"
   | "pisocompartido"
-  | "enalquiler";
+  | "enalquiler"
+  | "nuroa";
 
 export const SUPPORTED_PORTAL_SOURCES: PortalSource[] = [
   "pisos",
@@ -25,7 +26,8 @@ export const SUPPORTED_PORTAL_SOURCES: PortalSource[] = [
   "globaliza",
   "hogaria",
   "pisocompartido",
-  "enalquiler"
+  "enalquiler",
+  "nuroa"
 ];
 
 export interface SearchInput {
@@ -153,7 +155,7 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   renovation_ok: "Allow renovation-needed listings.",
   tags: "Preference tags (e.g. `nature`, `views`, `natural_light`).",
   sources:
-    "Source portals to query (e.g. `pisos`, `idealista`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`, `pisocompartido`, `enalquiler`). Include multiple for aggregator behavior.",
+    "Source portals to query (e.g. `pisos`, `idealista`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`, `pisocompartido`, `enalquiler`, `nuroa`). Include multiple for aggregator behavior.",
   per_location_limit: "Max candidates kept per requested location before global rerank.",
   max_results_total: "Max returned listings after global rerank."
 } as const;
@@ -222,7 +224,9 @@ export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknow
       "https://www.hogaria.net",
       "https://www.pisocompartido.com",
       "https://www.enalquiler.com",
-      "https://images.enalquiler.com"
+      "https://images.enalquiler.com",
+      "https://www.nuroa.es",
+      "https://pics.nuroa.com"
     ]
   };
 

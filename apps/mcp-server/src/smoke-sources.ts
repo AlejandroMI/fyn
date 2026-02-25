@@ -13,6 +13,7 @@ const sourceSet = [
   "milanuncios",
   "globaliza",
   "hogaria",
+  "nuroa",
   "pisocompartido",
   "enalquiler",
   "idealista"

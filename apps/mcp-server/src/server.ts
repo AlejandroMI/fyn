@@ -29,6 +29,7 @@ import { HabitacliaConnector } from "@fyn/connectors-habitaclia";
 import { HogariaConnector } from "@fyn/connectors-hogaria";
 import { IdealistaConnector } from "@fyn/connectors-idealista";
 import { MilanunciosConnector } from "@fyn/connectors-milanuncios";
+import { NuroaConnector } from "@fyn/connectors-nuroa";
 import { PisoCompartidoConnector } from "@fyn/connectors-pisocompartido";
 import { PisosConnector } from "@fyn/connectors-pisos";
 import { TucasaConnector } from "@fyn/connectors-tucasa";
@@ -49,7 +50,8 @@ const sourceSchema = z.enum([
   "globaliza",
   "hogaria",
   "pisocompartido",
-  "enalquiler"
+  "enalquiler",
+  "nuroa"
 ]);
 
 const toolSchema = {
@@ -268,6 +270,13 @@ function connectorsFromEnv(): ConnectorRegistry {
     ...(process.env.ENALQUILER_BASE_URL ? { baseUrl: process.env.ENALQUILER_BASE_URL } : {})
   });
 
+  const nuroa = new NuroaConnector({
+    requestDelayMs: readNumberEnv("NUROA_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxListings: readNumberEnv("NUROA_MAX_LISTINGS", 20),
+    maxRequests: readNumberEnv("NUROA_MAX_SCRAPE_REQUESTS", 6),
+    ...(process.env.NUROA_BASE_URL ? { baseUrl: process.env.NUROA_BASE_URL } : {})
+  });
+
   return {
     pisos,
     tucasa,
@@ -279,7 +288,8 @@ function connectorsFromEnv(): ConnectorRegistry {
     globaliza,
     hogaria,
     pisocompartido,
-    enalquiler
+    enalquiler,
+    nuroa
   };
 }
 
@@ -766,7 +776,8 @@ function defaultSourcesForCriteria(criteria: NormalizedFilters): SourceSelection
     "yaencontre",
     "milanuncios",
     "globaliza",
-    "hogaria"
+    "hogaria",
+    "nuroa"
   ];
 
   const transaction = criteria.transaction_type;

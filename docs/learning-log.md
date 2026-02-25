@@ -224,3 +224,10 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: integrate `enalquiler` as a rent-focused connector and include it conditionally in default source selection for rent + flat/house intents.
 - Action: shipped `@fyn/connectors-enalquiler`, added ajax location resolution + route fallback logic, wired MCP/domain/env/docs/smoke harness, and validated live smoke on Valencia.
 - Expected impact: improved rental inventory breadth and more visual card quality while keeping deterministic connector contracts.
+
+- Date: 2026-02-25
+- Context: long-tail expansion continued after `enalquiler` with no API-key dependency.
+- Signal: `nuroa.es` search pages remained reachable and exposed stable listing cards, but deep links were wrapped in nested conversion URLs.
+- Decision: integrate `nuroa` as a first-class source and decode nested outbound `url` targets to preserve direct source listing links.
+- Action: shipped `@fyn/connectors-nuroa`, wired MCP/domain/env/docs/smoke harness, and validated live Valencia buy-path smoke.
+- Expected impact: broader coverage from a resilient aggregator surface while retaining transparent deep links and deterministic diagnostics.
