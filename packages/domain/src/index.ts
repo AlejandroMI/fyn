@@ -1,6 +1,16 @@
 export type PropertyType = "flat" | "house" | "office" | "land";
 export type Locale = "es" | "en";
 export type TransactionType = "buy" | "rent";
+export type PortalSource = "pisos" | "fotocasa" | "tucasa" | "idealista" | "habitaclia" | "yaencontre";
+
+export const SUPPORTED_PORTAL_SOURCES: PortalSource[] = [
+  "pisos",
+  "fotocasa",
+  "tucasa",
+  "idealista",
+  "habitaclia",
+  "yaencontre"
+];
 
 export interface SearchInput {
   query_text?: string;
@@ -19,6 +29,9 @@ export interface SearchInput {
   strict_constraints?: boolean;
   renovation_ok?: boolean;
   tags?: string[];
+  sources?: PortalSource[];
+  per_location_limit?: number;
+  max_results_total?: number;
 }
 
 export interface NormalizedFilters {
@@ -41,7 +54,7 @@ export interface NormalizedFilters {
 
 export interface ListingCard {
   canonical_id: string;
-  portal: "pisos";
+  portal: PortalSource;
   portal_listing_id: string;
   url: string;
   title: string;
@@ -63,18 +76,21 @@ export type ConnectorErrorCode =
   | "MISSING_API_KEY"
   | "AUTH_REJECTED"
   | "UPSTREAM_RATE_LIMIT"
-  | "UPSTREAM_SCHEMA_CHANGED";
+  | "UPSTREAM_SCHEMA_CHANGED"
+  | "UPSTREAM_BLOCKED"
+  | "UPSTREAM_UNAVAILABLE";
 
 export class ConnectorError extends Error {
   readonly code: ConnectorErrorCode;
   readonly retryable: boolean;
-  readonly source_portal = "pisos" as const;
+  readonly source_portal: PortalSource;
 
-  constructor(code: ConnectorErrorCode, message: string, retryable = false) {
+  constructor(code: ConnectorErrorCode, message: string, retryable = false, sourcePortal: PortalSource = "pisos") {
     super(message);
     this.name = "ConnectorError";
     this.code = code;
     this.retryable = retryable;
+    this.source_portal = sourcePortal;
   }
 }
 
@@ -99,7 +115,7 @@ export interface ConnectorSearchResult {
 
 export const SEARCH_PROPERTIES_TOOL_TITLE = "Search Properties (Model-Driven)";
 export const SEARCH_PROPERTIES_TOOL_DESCRIPTION =
-  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must provide `city` or, for broad requests, plan and send `locations[]` (recommended 3-10); `query_text` is contextual only and is never a substitute for location constraints. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location coverage.";
+  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must provide `city` or, for broad requests, plan and send `locations[]` (recommended 3-10); `query_text` is contextual only and is never a substitute for location constraints. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
 
 export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   query_text:
@@ -120,7 +136,8 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
     "Default true. When true and no location is provided, the tool returns guidance instead of discovery fallback.",
   renovation_ok: "Allow renovation-needed listings.",
   tags: "Preference tags (e.g. `nature`, `views`, `natural_light`).",
-  sources: "Source portals. Current deployment supports only `pisos`.",
+  sources:
+    "Source portals to query (e.g. `pisos`, `fotocasa`, `tucasa`). Include multiple for aggregator behavior.",
   per_location_limit: "Max candidates kept per requested location before global rerank.",
   max_results_total: "Max returned listings after global rerank."
 } as const;
@@ -171,7 +188,10 @@ export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknow
       "https://c.tile.openstreetmap.org",
       "https://fotos.imghs.net",
       "https://st3.idealista.com",
-      "https://www.pisos.com"
+      "https://www.pisos.com",
+      "https://www.fotocasa.es",
+      "https://img4.idealista.com",
+      "https://www.tucasa.com"
     ]
   };
 

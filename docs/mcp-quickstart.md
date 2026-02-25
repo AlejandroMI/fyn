@@ -12,7 +12,7 @@ pnpm install
 cp .env.example .env
 ```
 
-Set `PISOS_API_KEY` when available.
+Set `PISOS_API_KEY` when available. Other connectors run in scraper mode.
 
 ## 3. Run the MCP server (stdio)
 
@@ -33,6 +33,7 @@ Use structured constraints so the model can act as an agent and Fyn stays determ
 - `property_types[]`, `transaction_type`, `max_price_eur`, `min_rooms`
 - `min_floor`, `exclude_ground_floor`, `prefer_exterior`
 - `strict_constraints`
+- `sources[]` (for explicit portal selection)
 - `per_location_limit`, `max_results_total`
 
 `query_text` is contextual and optional in this mode.
@@ -51,9 +52,13 @@ You can also pass full JSON arguments:
 pnpm smoke:mcp -- '{"locale":"es","transaction_type":"buy","property_types":["house"],"locations":["Náquera","Buñol","Requena"],"tags":["nature","views"],"strict_constraints":true}'
 ```
 
-With no API key, the connector first uses HTML scraping fallback, then fixtures if scraping fails.
+Default execution queries multiple sources (`pisos`, `tucasa`, `fotocasa`) and returns per-portal coverage diagnostics.
+With no Pisos API key, `pisos` first uses HTML scraping fallback, then fixtures if scraping fails.
 
-Diagnostics now expose `request_warnings` (request-shape guidance) and `connector_warnings` (upstream/source warnings).
+Diagnostics expose:
+- `request_warnings` (request-shape guidance)
+- `connector_warnings` (upstream/source warnings)
+- `coverage[]` with `location`, `portal`, and optional `error_code` / `error_message`
 
 ## 5. Live connector mode
 
@@ -67,6 +72,7 @@ Then run the same smoke command again and check diagnostics:
 - `"source": "live"` means API-backed data
 - `"source": "scrape"` means HTML scraping fallback
 - `"source": "fixture"` means fixture fallback mode
+- `coverage[].portal` shows which source succeeded/failed per location.
 
 ## 6. Vercel HTTP deployment (for ChatGPT app connection)
 
@@ -86,6 +92,12 @@ Then set environment variables in Vercel project settings:
 - `PISOS_MAX_SCRAPE_REQUESTS`
 - `PISOS_BASE_URL` (optional)
 - `PISOS_SERIALIZED_SEARCH` (optional)
+- `TUCASA_BASE_URL` (optional)
+- `TUCASA_SCRAPE_REQUEST_DELAY_MS`
+- `TUCASA_MAX_SCRAPE_REQUESTS`
+- `FOTOCASA_BASE_URL` (optional)
+- `FOTOCASA_SCRAPE_REQUEST_DELAY_MS`
+- `FOTOCASA_MAX_DETAIL_REQUESTS`
 
 Expected endpoints:
 

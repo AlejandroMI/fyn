@@ -103,3 +103,26 @@ Purpose: capture compact, reusable lessons from each shipping cycle.
 - Decision: attach an MCP Apps UI component to `search_properties` using shared resource/template metadata.
 - Action: registered `ui://widget/fyn-search-results-v1.html`, added `_meta.ui.resourceUri` + `openai/outputTemplate`, and shipped a logo-inspired map + list widget that renders from `presentation_cards`.
 - Expected impact: immediate visual UX lift in ChatGPT while keeping backend deterministic and model-driven.
+
+## 2026-02-25
+
+- Date: 2026-02-25
+- Context: Connector expansion required multi-portal support without backend AI orchestration.
+- Signal: domain contracts still encoded `pisos` as the only source and could not represent blocked portals cleanly.
+- Decision: generalize contracts to `PortalSource` and extend error taxonomy with `UPSTREAM_BLOCKED` + `UPSTREAM_UNAVAILABLE`.
+- Action: updated shared domain types, tool metadata descriptions, and connector error envelope handling.
+- Expected impact: stable, scalable MCP contract as new portals are added.
+
+- Date: 2026-02-25
+- Context: Expansion work needed practical progress despite anti-bot behavior across major portals.
+- Signal: `fotocasa` and `tucasa` behavior varied by route and anti-bot checks.
+- Decision: ship real connectors where parsing is possible, and expose explicit portal-level failures via coverage diagnostics.
+- Action: implemented `@fyn/connectors-tucasa` and `@fyn/connectors-fotocasa`, integrated both in MCP source orchestration, and added parser unit tests.
+- Expected impact: aggregator behavior improves immediately while failures remain transparent and non-silent.
+
+- Date: 2026-02-25
+- Context: Root deployed MCP handler duplicated server logic and risked divergence.
+- Signal: metadata, schema, and orchestration changes had to be updated in two places.
+- Decision: make root handler a thin transport wrapper over the shared MCP server factory.
+- Action: replaced `server/mcp-handler.ts` with shared `createFynMcpServer()` wiring.
+- Expected impact: lower maintenance overhead and fewer production/local behavior mismatches.

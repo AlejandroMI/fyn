@@ -14,7 +14,10 @@
     "smoke:http": "tsx src/smoke-http.ts"
   },
   "dependencies": {
+    "@fyn/connectors-core": "workspace:*",
+    "@fyn/connectors-fotocasa": "workspace:*",
     "@fyn/connectors-pisos": "workspace:*",
+    "@fyn/connectors-tucasa": "workspace:*",
     "@fyn/domain": "workspace:*",
     "@fyn/scoring": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.27.0",

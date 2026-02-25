@@ -21,13 +21,16 @@ import {
   type Locale,
   type NormalizedFilters
 } from "@fyn/domain";
+import { BlockedPortalConnector, type ConnectorAdapter } from "@fyn/connectors-core";
+import { FotocasaConnector } from "@fyn/connectors-fotocasa";
 import { PisosConnector } from "@fyn/connectors-pisos";
+import { TucasaConnector } from "@fyn/connectors-tucasa";
 import { rankListings } from "@fyn/scoring";
 
 const propertyTypeSchema = z.enum(["flat", "house", "office", "land"]);
 const localeSchema = z.enum(["es", "en"]);
 const transactionSchema = z.enum(["buy", "rent"]);
-const sourceSchema = z.enum(["pisos"]);
+const sourceSchema = z.enum(["pisos", "fotocasa", "tucasa", "idealista", "habitaclia", "yaencontre"]);
 
 const toolSchema = {
   query_text: z
@@ -99,6 +102,7 @@ type ConnectorSource = ConnectorSearchResult["diagnostics"]["source"];
 
 interface CoverageEntry {
   location: string;
+  portal?: SourceSelection;
   source?: ConnectorSource;
   candidates: number;
   returned: number;
@@ -160,8 +164,11 @@ function readNumberEnv(name: string, defaultValue: number): number {
   return Number.isFinite(parsed) ? parsed : defaultValue;
 }
 
-function connectorFromEnv(): PisosConnector {
-  return new PisosConnector({
+type SourceSelection = z.infer<typeof sourceSchema>;
+type ConnectorRegistry = Record<SourceSelection, ConnectorAdapter>;
+
+function connectorsFromEnv(): ConnectorRegistry {
+  const pisos = new PisosConnector({
     allowFixtureFallback: readBooleanEnv("PISOS_ALLOW_FIXTURE_FALLBACK", true),
     enableScrapeFallback: readBooleanEnv("PISOS_ENABLE_SCRAPE_FALLBACK", true),
     scrapeRequestDelayMs: readNumberEnv("PISOS_SCRAPE_REQUEST_DELAY_MS", 500),
@@ -172,6 +179,36 @@ function connectorFromEnv(): PisosConnector {
       ? { serializedSearchOverride: process.env.PISOS_SERIALIZED_SEARCH }
       : {})
   });
+
+  const tucasa = new TucasaConnector({
+    requestDelayMs: readNumberEnv("TUCASA_SCRAPE_REQUEST_DELAY_MS", 250),
+    maxRequests: readNumberEnv("TUCASA_MAX_SCRAPE_REQUESTS", 6),
+    ...(process.env.TUCASA_BASE_URL ? { baseUrl: process.env.TUCASA_BASE_URL } : {})
+  });
+
+  const fotocasa = new FotocasaConnector({
+    requestDelayMs: readNumberEnv("FOTOCASA_SCRAPE_REQUEST_DELAY_MS", 300),
+    maxDetailRequests: readNumberEnv("FOTOCASA_MAX_DETAIL_REQUESTS", 8),
+    ...(process.env.FOTOCASA_BASE_URL ? { baseUrl: process.env.FOTOCASA_BASE_URL } : {})
+  });
+
+  return {
+    pisos,
+    tucasa,
+    fotocasa,
+    idealista: new BlockedPortalConnector(
+      "idealista",
+      "idealista currently blocks automated access in this environment."
+    ),
+    habitaclia: new BlockedPortalConnector(
+      "habitaclia",
+      "habitaclia currently blocks automated access in this environment."
+    ),
+    yaencontre: new BlockedPortalConnector(
+      "yaencontre",
+      "yaencontre currently blocks automated access in this environment."
+    )
+  };
 }
 
 function textContent(text: string) {
@@ -502,21 +539,26 @@ function selectSource(sources: Set<ConnectorSource>): ConnectorSource {
   return "fixture";
 }
 
-async function runStructuredSearch(payload: ToolPayload, connector: PisosConnector): Promise<SearchExecutionResult> {
-  const allowedSources = payload.sources ?? ["pisos"];
+async function runStructuredSearch(
+  payload: ToolPayload,
+  connectors: ConnectorRegistry
+): Promise<SearchExecutionResult> {
+  const allowedSources = uniqueStrings(
+    (payload.sources ?? ["pisos", "tucasa", "fotocasa"]).map((source) => source)
+  ) as SourceSelection[];
   const requestedLocations = resolveLocations(payload);
   const perLocationLimit = payload.per_location_limit ?? 20;
   const maxResultsTotal = payload.max_results_total ?? 40;
   const baseCriteria = baseCriteriaFromPayload(payload);
   const strictConstraints = baseCriteria.strict_constraints ?? true;
 
-  if (!allowedSources.includes("pisos")) {
+  if (allowedSources.length === 0) {
     return {
       criteria: criteriaForLocation(baseCriteria),
       listings: [],
       diagnostics: {
         source: "fixture",
-        connector_warnings: ["No supported source selected. Current deployment supports only `pisos`."],
+        connector_warnings: ["No source portals selected."],
         request_warnings: [],
         total_candidates: 0,
         returned_count: 0,
@@ -525,7 +567,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
           mode: "structured",
           locations_requested: requestedLocations,
           locations_searched: [],
-          sources: allowedSources,
+          sources: [],
           ...(requestedLocations.length > 0 ? { per_location_limit: perLocationLimit } : {}),
           max_results_total: maxResultsTotal,
           strict_constraints: strictConstraints
@@ -540,13 +582,8 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
       listings: [],
       diagnostics: {
         source: "fixture",
-        connector_warnings: [
-          SEARCH_PROPERTIES_MISSING_LOCATION_WARNING,
-          SEARCH_PROPERTIES_MISSING_LOCATION_ACTION
-        ],
-        request_warnings: [
-          SEARCH_PROPERTIES_CONTEXT_ONLY_WARNING
-        ],
+        connector_warnings: [SEARCH_PROPERTIES_MISSING_LOCATION_WARNING, SEARCH_PROPERTIES_MISSING_LOCATION_ACTION],
+        request_warnings: [SEARCH_PROPERTIES_CONTEXT_ONLY_WARNING],
         total_candidates: 0,
         returned_count: 0,
         coverage: [],
@@ -573,53 +610,23 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
   const collected: CollectedCandidate[] = [];
   let firstConnectorError: ConnectorError | null = null;
 
-  if (requestedLocations.length === 0) {
-    const criteria = criteriaForLocation(baseCriteria);
-    try {
-      const result = await connector.search(criteria);
-      sourceKinds.add(result.diagnostics.source);
-      const discoveryWarnings = uniqueStrings([
-        "No city/locations provided; running discovery search because `strict_constraints=false`.",
-        ...result.diagnostics.connector_warnings
-      ]);
-      connectorWarnings.push(...discoveryWarnings);
-      const ranked = rankListings(result.listings, criteria).slice(0, maxResultsTotal);
-      collected.push(
-        ...ranked.map((listing) => ({
-          listing,
-          search_location: "__discovery__"
-        }))
-      );
-      coverage.push({
-        location: "__discovery__",
-        source: result.diagnostics.source,
-        candidates: result.listings.length,
-        returned: ranked.length,
-        warnings: discoveryWarnings
-      });
-    } catch (error) {
-      if (error instanceof ConnectorError) {
-        firstConnectorError = error;
-        coverage.push({
-          location: "__discovery__",
-          candidates: 0,
-          returned: 0,
-          warnings: [],
-          error_code: error.code,
-          error_message: error.message
-        });
-      } else {
-        throw error;
-      }
-    }
-  } else {
-    for (const location of requestedLocations) {
-      const criteria = criteriaForLocation(baseCriteria, location);
+  const plannedLocations = requestedLocations.length === 0 ? ["__discovery__"] : requestedLocations;
+
+  for (const location of plannedLocations) {
+    const criteria =
+      location === "__discovery__"
+        ? criteriaForLocation(baseCriteria)
+        : criteriaForLocation(baseCriteria, location);
+    const perSourceCap = location === "__discovery__" ? maxResultsTotal : perLocationLimit;
+
+    for (const source of allowedSources) {
+      const connector = connectors[source];
+
       try {
         const result = await connector.search(criteria);
         sourceKinds.add(result.diagnostics.source);
         connectorWarnings.push(...result.diagnostics.connector_warnings);
-        const ranked = rankListings(result.listings, criteria).slice(0, perLocationLimit);
+        const ranked = rankListings(result.listings, criteria).slice(0, perSourceCap);
         collected.push(
           ...ranked.map((listing) => ({
             listing,
@@ -628,6 +635,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
         );
         coverage.push({
           location,
+          portal: source,
           source: result.diagnostics.source,
           candidates: result.listings.length,
           returned: ranked.length,
@@ -640,6 +648,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
           }
           coverage.push({
             location,
+            portal: source,
             candidates: 0,
             returned: 0,
             warnings: [],
@@ -658,23 +667,30 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
     throw firstConnectorError;
   }
 
-  const uniqueCandidates = uniqueBy(
-    collected,
-    (candidate) => listingKey(candidate.listing)
-  );
-  const rankingCriteria = requestedLocations.length === 1
-    ? criteriaForLocation(baseCriteria, requestedLocations[0])
-    : criteriaForLocation(baseCriteria);
-  const ranked = requestedLocations.length > 1
-    ? selectDiversifiedListings(uniqueCandidates, requestedLocations, maxResultsTotal)
-    : rankListings(
-      uniqueCandidates.map((candidate) => candidate.listing),
-      rankingCriteria
-    ).slice(0, maxResultsTotal);
-  const uniqueWarnings = uniqueStrings(connectorWarnings);
+  const uniqueCandidates = uniqueBy(collected, (candidate) => listingKey(candidate.listing));
+  const rankingCriteria =
+    requestedLocations.length === 1
+      ? criteriaForLocation(baseCriteria, requestedLocations[0])
+      : criteriaForLocation(baseCriteria);
 
+  const ranked =
+    requestedLocations.length > 1
+      ? selectDiversifiedListings(uniqueCandidates, requestedLocations, maxResultsTotal)
+      : rankListings(
+        uniqueCandidates.map((candidate) => candidate.listing),
+        rankingCriteria
+      ).slice(0, maxResultsTotal);
+
+  const uniqueWarnings = uniqueStrings(connectorWarnings);
   if (requestedLocations.length > 1) {
-    uniqueWarnings.unshift(`Executed multi-location search across ${requestedLocations.length} locations.`);
+    uniqueWarnings.unshift(
+      `Executed multi-location search across ${requestedLocations.length} locations and ${allowedSources.length} sources.`
+    );
+  }
+  if (requestedLocations.length === 0) {
+    uniqueWarnings.unshift(
+      `No city/locations provided; running discovery search across ${allowedSources.length} sources because strict_constraints=false.`
+    );
   }
 
   return {
@@ -690,9 +706,11 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
       execution: {
         mode: "structured",
         locations_requested: requestedLocations,
-        locations_searched: coverage
-          .filter((entry) => entry.error_code === undefined)
-          .map((entry) => entry.location),
+        locations_searched: uniqueStrings(
+          coverage
+            .filter((entry) => entry.error_code === undefined)
+            .map((entry) => entry.location)
+        ),
         sources: allowedSources,
         ...(requestedLocations.length > 0 ? { per_location_limit: perLocationLimit } : {}),
         max_results_total: maxResultsTotal,
@@ -702,7 +720,7 @@ async function runStructuredSearch(payload: ToolPayload, connector: PisosConnect
   };
 }
 
-export function createFynMcpServer(connector = connectorFromEnv()): McpServer {
+export function createFynMcpServer(connectors = connectorsFromEnv()): McpServer {
   const server = new McpServer({
     name: "fyn-mcp-server",
     version: "0.1.0"
@@ -744,7 +762,7 @@ export function createFynMcpServer(connector = connectorFromEnv()): McpServer {
     },
     async (payload) => {
       try {
-        const execution = await runStructuredSearch(payload, connector);
+        const execution = await runStructuredSearch(payload, connectors);
         const cards = execution.listings
           .slice(0, 20)
           .map((listing) => toPresentationCard(listing, execution.criteria.locale));

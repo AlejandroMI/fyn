@@ -535,6 +535,8 @@ async function sleep(ms: number): Promise<void> {
 }
 
 export class PisosConnector {
+  readonly portal = "pisos" as const;
+
   private readonly apiKey: string | undefined;
   private readonly baseUrl: string;
   private readonly allowFixtureFallback: boolean;

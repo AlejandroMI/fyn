@@ -1,6 +1,6 @@
 # Fyn Backlog
 
-Last updated: 2026-02-24
+Last updated: 2026-02-25
 
 ## Working Rules
 
@@ -17,6 +17,10 @@ Last updated: 2026-02-24
   - Owner: Codex
   - Goal: run Fyn from ChatGPT app connection using real listings.
   - Definition of done: one successful end-to-end run in ChatGPT with sample prompt.
+- [ ] `P0` Multi-source connector hardening
+  - Owner: Codex
+  - Goal: keep `pisos + tucasa + fotocasa` orchestration stable with clear per-portal diagnostics.
+  - Definition of done: at least one passing smoke path with multi-source coverage output and no contract regressions.
 - [ ] `P1` Prompt parity smoke snapshots (ES/EN)
   - Owner: Codex
   - Goal: equivalent intent gives equivalent normalized filters.
@@ -44,11 +48,13 @@ Last updated: 2026-02-24
 ## Portal Expansion Queue
 
 - [ ] `P1` Idealista adapter discovery spike
-  - Hypothesis: official access may require onboarding; if blocked, evaluate compliant scrape feasibility.
+  - Hypothesis: anti-bot behavior is high; keep blocked adapter + stable diagnostics until reliable extraction path exists.
 - [ ] `P1` Fotocasa adapter discovery spike
-  - Hypothesis: strong anti-bot controls; likely slower path and higher risk.
+  - Hypothesis: detail pages can be parsed but search/listing pages are frequently blocked; keep fallback diagnostics and retry strategy.
 - [ ] `P2` Habitaclia adapter discovery spike
-  - Hypothesis: anti-bot friction similar to Fotocasa.
+  - Hypothesis: anti-bot friction similar to Fotocasa/Idealista.
+- [ ] `P2` Yaencontre adapter discovery spike
+  - Hypothesis: anti-bot friction similar to Habitaclia.
 - [ ] `P2` Secondary long-tail sources
   - Candidates: smaller regional portals and agency networks with easier integration surfaces.
 
@@ -73,3 +79,7 @@ Last updated: 2026-02-24
 - [x] Legacy parser execution path removed; MCP backend now runs a single structured deterministic flow.
 - [x] MCP tool metadata centralized in shared domain constants and rewritten in Booking-style action language.
 - [x] `search_properties` now exposes an MCP Apps widget (`ui://widget/fyn-search-results-v1.html`) for map + card rendering in ChatGPT.
+- [x] Added connector adapter framework package (`@fyn/connectors-core`) with shared scraper helpers and stable blocked-portal behavior.
+- [x] Added `@fyn/connectors-tucasa` and `@fyn/connectors-fotocasa` adapters with parser tests and MCP integration.
+- [x] Upgraded MCP to multi-source execution (`sources[]`) with per-location and per-portal coverage diagnostics.
+- [x] Replaced duplicate root MCP handler logic with shared server implementation to prevent metadata/contract drift.
