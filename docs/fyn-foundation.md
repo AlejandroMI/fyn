@@ -52,6 +52,7 @@ Supporting KPIs:
 - Build for observability from day one.
 - Constraint-to-capability mindset: when APIs are closed, build compliant scraping systems that are rate-limited, monitorable, and replaceable.
 - "What stands in the way becomes the way": blockers are signals to evolve architecture, not reasons to stall.
+- Refactor proactively when implementation drift appears: simplify interfaces early, remove accidental complexity, and keep the default path easy to reason about.
 
 ## Operating Model
 

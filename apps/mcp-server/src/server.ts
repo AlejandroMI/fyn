@@ -171,6 +171,12 @@ interface CollectedCandidate {
   search_location: string;
 }
 
+interface SearchLocationContext {
+  requested: string[];
+  search: string;
+  hints: string[];
+}
+
 function readBooleanEnv(name: string, defaultValue: boolean): boolean {
   const raw = process.env[name];
   if (!raw) {
@@ -876,6 +882,66 @@ function normalizeLocationForSearch(location: string, fallbackCity?: string): st
   return segments[0]!;
 }
 
+function extractLocationHints(location: string, searchLocation: string): string[] {
+  const segments = splitLocationSegments(location);
+  if (segments.length < 2) {
+    return [];
+  }
+
+  const normalizedSearch = normalizeLocation(searchLocation);
+  const hints = segments.filter((segment) => {
+    const normalizedSegment = normalizeLocation(segment);
+    if (!normalizedSegment) {
+      return false;
+    }
+    return !(
+      normalizedSegment === normalizedSearch ||
+      normalizedSegment.includes(normalizedSearch) ||
+      normalizedSearch.includes(normalizedSegment)
+    );
+  });
+
+  return uniqueStrings(hints);
+}
+
+function buildSearchLocationContexts(
+  requestedLocations: string[],
+  fallbackCity: string | undefined,
+  requestWarnings: string[]
+): SearchLocationContext[] {
+  if (requestedLocations.length === 1 && requestedLocations[0] === "__discovery__") {
+    return [{ requested: ["__discovery__"], search: "__discovery__", hints: [] }];
+  }
+
+  const bySearch = new Map<string, SearchLocationContext>();
+
+  for (const requested of requestedLocations) {
+    const search = normalizeLocationForSearch(requested, fallbackCity);
+    if (search !== requested) {
+      requestWarnings.push(
+        `Normalized location '${requested}' to '${search}' for portal compatibility (district-level matching is applied during rerank).`
+      );
+    }
+
+    const key = normalizeLocation(search);
+    const existing = bySearch.get(key);
+    const hints = extractLocationHints(requested, search);
+    if (existing) {
+      existing.requested.push(requested);
+      existing.hints = uniqueStrings([...existing.hints, ...hints]);
+      continue;
+    }
+
+    bySearch.set(key, {
+      requested: [requested],
+      search,
+      hints
+    });
+  }
+
+  return Array.from(bySearch.values());
+}
+
 function baseCriteriaFromPayload(payload: ToolPayload): NormalizedFilters {
   return {
     locale: payload.locale ?? "en",
@@ -1026,15 +1092,8 @@ export async function runStructuredSearch(
   }
 
   const plannedLocations = requestedLocations.length === 0 ? ["__discovery__"] : requestedLocations;
-  const plannedSearchLocations = plannedLocations.map((location) => {
-    const normalized = normalizeLocationForSearch(location, payload.city);
-    if (normalized !== location) {
-      requestWarnings.push(
-        `Normalized location '${location}' to '${normalized}' for portal compatibility (district-level matching is applied during rerank).`
-      );
-    }
-    return normalized;
-  });
+  const locationContexts = buildSearchLocationContexts(plannedLocations, payload.city, requestWarnings);
+  const searchedLocations = locationContexts.map((context) => context.search);
   const connectorSearchTimeoutMs = Math.max(
     1_000,
     readNumberEnv("CONNECTOR_SEARCH_TIMEOUT_MS", 15_000)
@@ -1043,25 +1102,33 @@ export async function runStructuredSearch(
   const maxSearchTasks = Math.max(1, readNumberEnv("MCP_MAX_SEARCH_TASKS", 28));
 
   if (!payload.sources || payload.sources.length === 0) {
-    const plannedTasks = plannedLocations.length * allowedSources.length;
+    const plannedTasks = searchedLocations.length * allowedSources.length;
     if (plannedTasks > maxSearchTasks) {
-      const maxSources = Math.max(1, Math.floor(maxSearchTasks / plannedLocations.length));
+      const maxSources = Math.max(1, Math.floor(maxSearchTasks / searchedLocations.length));
       const previousSourceCount = allowedSources.length;
       allowedSources = allowedSources.slice(0, maxSources);
       requestWarnings.push(
-        `High fanout detected (${plannedLocations.length} locations x ${previousSourceCount} sources). Auto-capped to ${allowedSources.length} sources to meet runtime budget.`
+        `High fanout detected (${searchedLocations.length} search locations x ${previousSourceCount} sources). Auto-capped to ${allowedSources.length} sources to meet runtime budget.`
       );
     }
   }
 
   const locationExecutions = await mapWithConcurrency(
-    plannedSearchLocations,
+    locationContexts,
     locationConcurrency,
-    async (location) => {
+    async (locationContext) => {
+      const location = locationContext.search;
+      const criteriaBase =
+        locationContext.hints.length > 0
+          ? {
+            ...baseCriteria,
+            location_hints: locationContext.hints
+          }
+          : baseCriteria;
       const criteria =
         location === "__discovery__"
-          ? criteriaForLocation(baseCriteria)
-          : criteriaForLocation(baseCriteria, location);
+          ? criteriaForLocation(criteriaBase)
+          : criteriaForLocation(criteriaBase, location);
       const perSourceCap = location === "__discovery__" ? maxResultsTotal : perLocationLimit;
 
       const sourceResults = await Promise.all(
@@ -1100,12 +1167,13 @@ export async function runStructuredSearch(
         })
       );
 
-      return { location, criteria, perSourceCap, sourceResults } as const;
+      return { locationContext, criteria, perSourceCap, sourceResults } as const;
     }
   );
 
   for (const locationExecution of locationExecutions) {
-    const { location, criteria, perSourceCap, sourceResults } = locationExecution;
+    const { locationContext, criteria, perSourceCap, sourceResults } = locationExecution;
+    const location = locationContext.search;
 
     for (const sourceResult of sourceResults) {
       if ("result" in sourceResult && sourceResult.result) {
@@ -1155,13 +1223,21 @@ export async function runStructuredSearch(
   const deduped = dedupeNearDuplicateCandidates(uniqueCandidates);
   const dedupedCandidates = deduped.candidates;
   const rankingCriteria =
-    requestedLocations.length === 1
-      ? criteriaForLocation(baseCriteria, requestedLocations[0])
+    locationContexts.length === 1
+      ? criteriaForLocation(
+        locationContexts[0]?.hints.length
+          ? {
+            ...baseCriteria,
+            location_hints: locationContexts[0].hints
+          }
+          : baseCriteria,
+        locationContexts[0]?.search === "__discovery__" ? undefined : locationContexts[0]?.search
+      )
       : criteriaForLocation(baseCriteria);
 
   const ranked =
-    requestedLocations.length > 1
-      ? selectDiversifiedListings(dedupedCandidates, requestedLocations, maxResultsTotal)
+    locationContexts.length > 1
+      ? selectDiversifiedListings(dedupedCandidates, searchedLocations, maxResultsTotal)
       : rankListings(
         dedupedCandidates.map((candidate) => candidate.listing),
         rankingCriteria
@@ -1176,7 +1252,7 @@ export async function runStructuredSearch(
   const uniqueWarnings = uniqueStrings(connectorWarnings);
   if (requestedLocations.length > 1) {
     uniqueWarnings.unshift(
-      `Executed multi-location search across ${requestedLocations.length} locations and ${allowedSources.length} sources.`
+      `Executed multi-location search across ${requestedLocations.length} requested locations (${searchedLocations.length} search locations) and ${allowedSources.length} sources.`
     );
   }
   if (requestedLocations.length === 0) {

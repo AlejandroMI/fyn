@@ -141,4 +141,32 @@ describe("rankListings", () => {
 
     expect(ranked.map((item) => item.canonical_id)).toEqual(["fourth"]);
   });
+
+  it("boosts listings matching location_hints without turning them into hard filters", () => {
+    const hintCriteria: NormalizedFilters = {
+      ...baseCriteria,
+      city: "València",
+      location_hints: ["Malilla"]
+    };
+
+    const ranked = rankListings(
+      [
+        listing({
+          canonical_id: "malilla-match",
+          city: "Malilla (Distrito Quatre Carreres. València Capital)",
+          description: "Piso exterior en Malilla con buena luz."
+        }),
+        listing({
+          canonical_id: "other-district",
+          city: "Benicalap (València Capital)",
+          description: "Piso amplio en otro barrio."
+        })
+      ],
+      hintCriteria
+    );
+
+    expect(ranked).toHaveLength(2);
+    expect(ranked[0]?.canonical_id).toBe("malilla-match");
+    expect(ranked[0]?.why_matched.some((reason) => reason.includes("Location hint match"))).toBe(true);
+  });
 });

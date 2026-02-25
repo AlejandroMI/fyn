@@ -113,6 +113,26 @@ function combinedText(listing: ListingCard): string {
   return [listing.description ?? "", ...readRawChars(listing)].join(" ");
 }
 
+function combinedSearchableText(listing: ListingCard): string {
+  const sourcePath =
+    listing.raw && typeof listing.raw.source_path === "string" ? listing.raw.source_path : "";
+  return normalizeText([listing.city, listing.title, combinedText(listing), sourcePath].join(" "));
+}
+
+function matchesLocationHint(listing: ListingCard, hint: string): boolean {
+  const normalizedHint = normalizeText(hint);
+  if (!normalizedHint) {
+    return false;
+  }
+
+  const searchable = combinedSearchableText(listing);
+  if (!searchable) {
+    return false;
+  }
+
+  return new RegExp(`\\b${escapeRegex(normalizedHint)}\\b`, "i").test(searchable);
+}
+
 function extractFloor(listing: ListingCard): number | null {
   for (const item of readRawChars(listing)) {
     if (/\b(bajo|ground floor)\b/i.test(item)) {
@@ -178,6 +198,15 @@ function scoreListing(listing: ListingCard, criteria: NormalizedFilters): Listin
     if (matchedTags.length > 0) {
       score += matchedTags.length * 4;
       why.push(`Tag matches: ${matchedTags.join(", ")}`);
+    }
+  }
+
+  const locationHints = criteria.location_hints ?? [];
+  if (locationHints.length > 0) {
+    const matchedHints = locationHints.filter((hint) => matchesLocationHint(listing, hint));
+    if (matchedHints.length > 0) {
+      score += Math.min(12, matchedHints.length * 5);
+      why.push(`Location hint match: ${matchedHints.slice(0, 3).join(", ")}`);
     }
   }
 

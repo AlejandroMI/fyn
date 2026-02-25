@@ -249,10 +249,12 @@ describe("runStructuredSearch", () => {
 
   it("normalizes neighborhood-formatted locations to city for connector calls", async () => {
     let seenCity = "";
+    let callCount = 0;
     const connectors = makeRegistry({
       pisos: {
         portal: "pisos",
         async search(criteria: NormalizedFilters): Promise<ConnectorSearchResult> {
+          callCount += 1;
           seenCity = criteria.city || "";
           return {
             listings: [],
@@ -275,9 +277,49 @@ describe("runStructuredSearch", () => {
     );
 
     expect(seenCity).toBe("València");
+    expect(callCount).toBe(1);
     expect(result.diagnostics.request_warnings.some((warning) => warning.includes("Normalized location"))).toBe(
       true
     );
+  });
+
+  it("merges neighborhood variants that map to the same city into one connector search", async () => {
+    let callCount = 0;
+    const connectors = makeRegistry({
+      pisos: {
+        portal: "pisos",
+        async search(criteria: NormalizedFilters): Promise<ConnectorSearchResult> {
+          callCount += 1;
+          return {
+            listings: [
+              makeListing({
+                portal: "pisos",
+                canonical_id: "pisos-neighborhood",
+                portal_listing_id: "n1",
+                city: "Malilla (Distrito Quatre Carreres. València Capital)",
+                description: "Piso en Malilla con buena luz."
+              })
+            ],
+            diagnostics: {
+              source: "scrape",
+              connector_warnings: []
+            }
+          };
+        }
+      }
+    });
+
+    const result = await runStructuredSearch(
+      payload({
+        city: "València",
+        locations: ["València - Malilla", "València - Quatre Carreres", "València - Benimaclet"],
+        sources: ["pisos"]
+      }),
+      connectors
+    );
+
+    expect(callCount).toBe(1);
+    expect(result.listings.length).toBeGreaterThan(0);
   });
 
   it("caps implicit source fanout for wide multi-location searches", async () => {
@@ -300,7 +342,7 @@ describe("runStructuredSearch", () => {
 
       expect(result.diagnostics.execution.sources.length).toBe(2);
       expect(result.diagnostics.request_warnings).toContain(
-        "High fanout detected (2 locations x 10 sources). Auto-capped to 2 sources to meet runtime budget."
+        "High fanout detected (2 search locations x 10 sources). Auto-capped to 2 sources to meet runtime budget."
       );
     } finally {
       if (previousMaxTasks === undefined) {

@@ -59,6 +59,7 @@ export interface NormalizedFilters {
   transaction_type?: TransactionType;
   property_types: PropertyType[];
   city?: string;
+  location_hints?: string[];
   nearby_towns: boolean;
   min_rooms?: number;
   min_capacity_people?: number;
@@ -144,7 +145,8 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   transaction_type: "Transaction mode (`buy` or `rent`).",
   property_types: "Property types (`flat`, `house`, `office`, `land`).",
   city: "Single location search target. Prefer `locations[]` for broad or exploratory intent.",
-  locations: "Primary geography control. Provide 3-5 cities/towns for broad searches (hard max: 5).",
+  locations:
+    "Primary geography control. Provide 3-5 cities/towns for broad searches (hard max: 5). If users mention neighborhoods, prefer city-level locations and keep neighborhoods in query context.",
   nearby_towns: "Allow nearby towns around each requested location.",
   min_rooms: "Minimum bedrooms.",
   min_capacity_people: "Minimum people capacity.",
