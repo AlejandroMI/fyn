@@ -79,6 +79,10 @@ const toolSchema = {
     .max(MAX_LOCATIONS)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.locations),
+  location_hints: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.location_hints),
   nearby_towns: z.boolean().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.nearby_towns),
   min_rooms: z.number().int().nonnegative().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_rooms),
   min_capacity_people: z
@@ -854,62 +858,6 @@ function resolveLocations(payload: ToolPayload): string[] {
   return [];
 }
 
-function splitHintsSegment(segment: string): string[] {
-  const trimmed = segment
-    .split(/\b(?:con|para|mínimo|minimo|max|presupuesto|budget|with|at least)\b/i)[0] ?? segment;
-
-  return trimmed
-    .split(/,|;|\/|\s+y\s+|\s+e\s+|\s+and\s+|\s+or\s+/i)
-    .map((part) => part.trim())
-    .map((part) => part.replace(/^["'`]+|["'`]+$/g, ""))
-    .filter((part) => part.length >= 3);
-}
-
-function extractLocationHintsFromQuery(queryText: string | undefined, city: string | undefined): string[] {
-  if (!queryText || !city) {
-    return [];
-  }
-
-  const text = queryText.trim();
-  if (!text) {
-    return [];
-  }
-
-  const segments: string[] = [];
-  const patterns = [
-    /\bbarrios?\s*(?:de|del)?\s+([^.;]+)/gi,
-    /\bzonas?\s*(?:de|del)?\s+([^.;]+)/gi,
-    /\bneighbou?rhoods?\s+(?:in|of|like)?\s*([^.;]+)/gi,
-    /\bareas?\s+(?:in|of|like)?\s*([^.;]+)/gi
-  ];
-
-  for (const pattern of patterns) {
-    let match: RegExpExecArray | null = null;
-    while ((match = pattern.exec(text)) !== null) {
-      if (match[1]) {
-        segments.push(match[1]);
-      }
-    }
-  }
-
-  const normalizedCity = normalizeLocation(city);
-  return uniqueStrings(
-    segments
-      .flatMap(splitHintsSegment)
-      .filter((hint) => {
-        const normalizedHint = normalizeLocation(hint);
-        if (!normalizedHint) {
-          return false;
-        }
-        return !(
-          normalizedHint === normalizedCity ||
-          normalizedHint.includes(normalizedCity) ||
-          normalizedCity.includes(normalizedHint)
-        );
-      })
-  );
-}
-
 function splitLocationSegments(value: string): string[] {
   return value
     .split(/\s[-–—]\s/)
@@ -999,11 +947,6 @@ function buildSearchLocationContexts(
 }
 
 function baseCriteriaFromPayload(payload: ToolPayload): NormalizedFilters {
-  const inferredLocationHints =
-    !payload.locations || payload.locations.length === 0
-      ? extractLocationHintsFromQuery(payload.query_text, payload.city)
-      : [];
-
   return {
     locale: payload.locale ?? "en",
     property_types: payload.property_types ? [...payload.property_types] : [],
@@ -1022,7 +965,9 @@ function baseCriteriaFromPayload(payload: ToolPayload): NormalizedFilters {
       ? { exclude_ground_floor: payload.exclude_ground_floor }
       : {}),
     ...(payload.prefer_exterior !== undefined ? { prefer_exterior: payload.prefer_exterior } : {}),
-    ...(inferredLocationHints.length > 0 ? { location_hints: inferredLocationHints } : {}),
+    ...(payload.location_hints && payload.location_hints.length > 0
+      ? { location_hints: uniqueStrings(payload.location_hints) }
+      : {}),
     ...(payload.query_text ? { original_query: payload.query_text } : {})
   };
 }
@@ -1152,11 +1097,6 @@ export async function runStructuredSearch(
       `Explicit sources were provided (${allowedSources.length}). Coverage is restricted to selected portals; omit sources for default broad aggregation.`
     );
   }
-  if ((!payload.locations || payload.locations.length === 0) && (baseCriteria.location_hints?.length ?? 0) > 0) {
-    requestWarnings.push(
-      `Inferred location hints from query_text (${(baseCriteria.location_hints ?? []).slice(0, 3).join(", ")}). Send locations[] for stronger neighborhood targeting.`
-    );
-  }
 
   const plannedLocations = requestedLocations.length === 0 ? ["__discovery__"] : requestedLocations;
   const locationContexts = buildSearchLocationContexts(plannedLocations, payload.city, requestWarnings);
@@ -1185,11 +1125,15 @@ export async function runStructuredSearch(
     locationConcurrency,
     async (locationContext) => {
       const location = locationContext.search;
+      const mergedHints = uniqueStrings([
+        ...(baseCriteria.location_hints ?? []),
+        ...locationContext.hints
+      ]);
       const criteriaBase =
-        locationContext.hints.length > 0
+        mergedHints.length > 0
           ? {
             ...baseCriteria,
-            location_hints: locationContext.hints
+            location_hints: mergedHints
           }
           : baseCriteria;
       const criteria =
@@ -1289,15 +1233,24 @@ export async function runStructuredSearch(
   const uniqueCandidates = uniqueBy(collected, (candidate) => listingKey(candidate.listing));
   const deduped = dedupeNearDuplicateCandidates(uniqueCandidates);
   const dedupedCandidates = deduped.candidates;
+  const singleLocationHints =
+    locationContexts.length === 1
+      ? uniqueStrings([
+        ...(baseCriteria.location_hints ?? []),
+        ...(locationContexts[0]?.hints ?? [])
+      ])
+      : [];
+  const rankingBaseCriteria =
+    singleLocationHints.length > 0
+      ? {
+        ...baseCriteria,
+        location_hints: singleLocationHints
+      }
+      : baseCriteria;
   const rankingCriteria =
     locationContexts.length === 1
       ? criteriaForLocation(
-        locationContexts[0]?.hints.length
-          ? {
-            ...baseCriteria,
-            location_hints: locationContexts[0].hints
-          }
-          : baseCriteria,
+        rankingBaseCriteria,
         locationContexts[0]?.search === "__discovery__" ? undefined : locationContexts[0]?.search
       )
       : criteriaForLocation(baseCriteria);

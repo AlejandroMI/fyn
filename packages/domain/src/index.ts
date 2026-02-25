@@ -39,6 +39,7 @@ export interface SearchInput {
   property_types?: PropertyType[];
   city?: string;
   locations?: string[];
+  location_hints?: string[];
   nearby_towns?: boolean;
   min_rooms?: number;
   min_capacity_people?: number;
@@ -136,17 +137,20 @@ export interface ConnectorSearchResult {
 
 export const SEARCH_PROPERTIES_TOOL_TITLE = "Search Properties (Model-Driven)";
 export const SEARCH_PROPERTIES_TOOL_DESCRIPTION =
-  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must provide `city` or, for broad requests, plan and send `locations[]` (recommended 3-5, hard max 5); `query_text` is contextual and may be used for best-effort neighborhood hints only, but it is never a substitute for location constraints. Do not set `sources` unless the user explicitly asks for specific portals. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
+  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must send either `city` (single municipality) or `locations[]` (multiple municipalities/towns, recommended 3-5, hard max 5). If the user mentions neighborhoods, districts, comarcas, or regions, send those in `location_hints[]` (soft preference for reranking), not in `city`. `query_text` is context only and never a substitute for structured constraints. Do not set `sources` unless the user explicitly asks for specific portals. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
 
 export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   query_text:
-    "Optional context only. Do not use as the only input; always send structured constraints.",
+    "Optional context only. Never rely on this field as constraints; always send structured fields.",
   locale: "Response locale for cards and formatting (`es` or `en`).",
   transaction_type: "Transaction mode (`buy` or `rent`).",
   property_types: "Property types (`flat`, `house`, `office`, `land`).",
-  city: "Single location search target. Prefer `locations[]` for broad or exploratory intent.",
+  city:
+    "Single municipality or town search target (e.g., `València`, `Ronda`). Do not send neighborhoods here.",
   locations:
-    "Primary geography control. Provide 3-5 cities/towns for broad searches (hard max: 5). If users mention neighborhoods, prefer city-level locations and keep neighborhoods in query context.",
+    "Primary geography control for broad intent. Provide municipality/town names (recommended 3-5, hard max: 5).",
+  location_hints:
+    "Optional soft location preferences (e.g., neighborhoods, districts, comarcas, regions). Used for reranking, not as hard filters.",
   nearby_towns: "Allow nearby towns around each requested location.",
   min_rooms: "Minimum bedrooms.",
   min_capacity_people: "Minimum people capacity.",

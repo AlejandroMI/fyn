@@ -322,7 +322,7 @@ describe("runStructuredSearch", () => {
     expect(result.listings.length).toBeGreaterThan(0);
   });
 
-  it("infers neighborhood hints from query_text when locations are missing", async () => {
+  it("uses explicit location_hints to prioritize neighborhood matches", async () => {
     const connectors = makeRegistry({
       pisos: okConnector("pisos", [
         makeListing({
@@ -346,19 +346,17 @@ describe("runStructuredSearch", () => {
       payload({
         city: "València",
         locations: undefined,
-        query_text:
-          "Pisos en València para comprar, mínimo 3 habitaciones, prioriza barrios Malilla, Quatre Carreres y Benimaclet."
+        location_hints: ["Malilla", "Quatre Carreres", "Benimaclet"],
+        query_text: "Pisos en València para comprar, mínimo 3 habitaciones."
       }),
       connectors
     );
 
     expect(result.criteria.location_hints).toEqual(["Malilla", "Quatre Carreres", "Benimaclet"]);
     expect(result.listings[0]?.canonical_id).toBe("pisos-malilla");
-    expect(
-      result.diagnostics.request_warnings.some((warning) =>
-        warning.includes("Inferred location hints from query_text")
-      )
-    ).toBe(true);
+    expect(result.diagnostics.request_warnings.some((warning) => warning.includes("Inferred location hints"))).toBe(
+      false
+    );
   });
 
   it("caps implicit source fanout for wide multi-location searches", async () => {
