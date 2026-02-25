@@ -135,7 +135,7 @@ export interface ConnectorSearchResult {
 
 export const SEARCH_PROPERTIES_TOOL_TITLE = "Search Properties (Model-Driven)";
 export const SEARCH_PROPERTIES_TOOL_DESCRIPTION =
-  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must provide `city` or, for broad requests, plan and send `locations[]` (recommended 3-10); `query_text` is contextual only and is never a substitute for location constraints. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
+  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must provide `city` or, for broad requests, plan and send `locations[]` (recommended 3-10); `query_text` is contextual only and is never a substitute for location constraints. Do not set `sources` unless the user explicitly asks for specific portals. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
 
 export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   query_text:
@@ -157,7 +157,7 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   renovation_ok: "Allow renovation-needed listings.",
   tags: "Preference tags (e.g. `nature`, `views`, `natural_light`).",
   sources:
-    "Source portals to query (e.g. `pisos`, `idealista`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`, `spainhouses`, `pisocompartido`, `enalquiler`, `nuroa`). Include multiple for aggregator behavior.",
+    "Optional explicit source portals (e.g. `pisos`, `idealista`, `habitaclia`, `fotocasa`, `tucasa`, `yaencontre`, `milanuncios`, `globaliza`, `hogaria`, `spainhouses`, `pisocompartido`, `enalquiler`, `nuroa`). Leave unset by default so Fyn can query all relevant sources. Set only when the user explicitly requests specific portals.",
   per_location_limit: "Max candidates kept per requested location before global rerank.",
   max_results_total: "Max returned listings after global rerank."
 } as const;

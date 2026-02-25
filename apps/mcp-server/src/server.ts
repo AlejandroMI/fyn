@@ -872,9 +872,16 @@ async function runStructuredSearch(
 
   const sourceKinds = new Set<ConnectorSource>();
   const connectorWarnings: string[] = [];
+  const requestWarnings: string[] = [];
   const coverage: CoverageEntry[] = [];
   const collected: CollectedCandidate[] = [];
   let firstConnectorError: ConnectorError | null = null;
+
+  if (payload.sources && payload.sources.length > 0) {
+    requestWarnings.push(
+      `Explicit sources were provided (${allowedSources.length}). Coverage is restricted to selected portals; omit sources for default broad aggregation.`
+    );
+  }
 
   const plannedLocations = requestedLocations.length === 0 ? ["__discovery__"] : requestedLocations;
 
@@ -973,7 +980,7 @@ async function runStructuredSearch(
     diagnostics: {
       source: selectSource(sourceKinds),
       connector_warnings: uniqueWarnings,
-      request_warnings: [],
+      request_warnings: uniqueStrings(requestWarnings),
       total_candidates: dedupedCandidates.length,
       returned_count: ranked.length,
       coverage,
