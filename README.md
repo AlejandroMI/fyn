@@ -72,6 +72,7 @@ pnpm smoke:mcp:http -- --url https://<your-project>.vercel.app/api/mcp "Find me 
 
 ## Docs
 
+- `docs/website-architecture.md`
 - `docs/fyn-foundation.md`
 - `docs/backlog.md`
 - `docs/mcp-quickstart.md`
