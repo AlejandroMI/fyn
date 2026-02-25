@@ -18,6 +18,12 @@ Fyn (Find Your Nest) is an MCP-first property search aggregator for Spain.
 - `apps/mcp-server/`: MCP server app used by the connector runtime
 - `packages/*`: shared domain, scoring, and connector logic
 
+Current connector sources:
+- `pisos` (API + scrape fallback)
+- `tucasa` (scrape)
+- `fotocasa` (scrape, anti-bot sensitive)
+- blocked placeholders with stable diagnostics: `idealista`, `habitaclia`, `yaencontre`
+
 ## Localization
 
 - Default locale: Spanish (`es`)
@@ -79,3 +85,4 @@ pnpm smoke:mcp:http -- --url https://<your-project>.vercel.app/api/mcp "Find me 
 - `docs/chatgpt-connector-research-2026-02-24.md`
 - `docs/chatgpt-developer-mode-runbook.md`
 - `docs/learning-log.md`
+- `docs/connector-expansion-overnight-runbook-2026-02-25.md`
