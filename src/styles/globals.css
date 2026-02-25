@@ -385,7 +385,7 @@ section {
 }
 
 .statement-box h2 {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-weight: 500;
   letter-spacing: -0.02em;
   font-size: clamp(2rem, 3.5vw, 2.5rem);
