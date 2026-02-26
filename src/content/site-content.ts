@@ -155,7 +155,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       eyebrow: "Fyn — Find Your Nest",
       title: "Describe tu próxima casa",
        titleAccent: "en palabras sencillas.",
-      body: "Buscar vivienda en España no debería ser un segundo trabajo. Fyn es una capa de búsqueda inmobiliaria que se conecta directamente con tu IA favorita. Tú describes lo que te importa y Fyn devuelve coincidencias explicables del mercado con enlaces directos y fotos reales, en minutos.",
+      body: "Buscar vivienda en España no debería ser un segundo trabajo. Fyn conecta tu IA con el mercado inmobiliario: describes lo que te importa y recibes coincidencias explicables con enlaces directos y fotos reales, en minutos.",
       primaryCta: "Abrir en ChatGPT",
        secondaryCta: "Documentación MCP",
       checks: [
@@ -371,7 +371,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       eyebrow: "Fyn — Find Your Nest",
       title: "Describe your next home",
       titleAccent: "in plain language.",
-      body: "Finding a property in Spain should not be a second job. Fyn is a property-search layer that connects directly to your favorite AI. You describe what matters and Fyn returns explainable matches across the market with direct links and real photos in minutes.",
+      body: "Finding a property in Spain should not be a second job. Fyn connects your AI to the real estate market: describe what matters and get explainable matches with direct links and real photos in minutes.",
       primaryCta: "Open in ChatGPT",
        secondaryCta: "MCP Docs",
       checks: [

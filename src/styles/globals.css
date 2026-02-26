@@ -128,10 +128,11 @@ img {
 }
 
 .logo-img {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  object-fit: cover;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  transform: rotate(-2deg);
+  transform-origin: center;
 }
 
 .brand-text {
@@ -242,7 +243,7 @@ img {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
-  align-items: center;
+  align-items: start;
 }
 
 .hero-content {
@@ -265,10 +266,11 @@ img {
 }
 
 .hero p {
-  font-size: clamp(1.05rem, 1.9vw, 1.18rem);
+  font-size: clamp(0.98rem, 1.6vw, 1.08rem);
   color: var(--ink-light);
-  margin-bottom: 2.5rem;
-  line-height: 1.6;
+  margin-bottom: 2.2rem;
+  line-height: 1.55;
+  max-width: 58ch;
 }
 
 .hero-actions {
@@ -277,6 +279,20 @@ img {
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 2rem;
+}
+
+.chatgpt-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  object-fit: contain;
+  margin-right: 0.52rem;
+  flex-shrink: 0;
+  transform: rotate(-9deg);
+  transform-origin: center;
+}
+
+.btn-primary .chatgpt-icon {
+  filter: brightness(0) invert(1);
 }
 
 .checks {
@@ -313,6 +329,7 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   opacity: 0;
   transition: opacity 900ms ease;
 }
@@ -714,6 +731,43 @@ section {
   justify-content: center;
 }
 
+#trust {
+  padding: 2rem 0 0;
+}
+
+.trust-panel {
+  border-radius: var(--radius-xl);
+  background: linear-gradient(125deg, #f2f4ea 0%, #fbfaf7 48%, #eef1f5 100%);
+  border: 1px solid #d8ddd0;
+  box-shadow: var(--shadow-soft);
+  padding: 2.2rem;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1.6rem;
+  align-items: start;
+}
+
+.trust-panel h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 3.4vw, 2.35rem);
+  line-height: 1.08;
+  font-weight: 500;
+}
+
+.trust-panel h2 i {
+  color: var(--brand-blue);
+}
+
+.trust-panel p {
+  color: #40403b;
+  font-size: 1.04rem;
+  line-height: 1.62;
+  max-width: 60ch;
+}
+
 footer {
   border-top: 1px solid var(--border);
   padding: 4rem 0;
@@ -996,6 +1050,11 @@ footer {
     padding: 3.7rem 0 4.8rem;
   }
 
+  .trust-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
   .grid-3 {
     grid-template-columns: 1fr;
   }
@@ -1018,6 +1077,11 @@ footer {
 @media (max-width: 860px) {
   .container {
     padding: 0 1.2rem;
+  }
+
+  .logo-img {
+    width: 34px;
+    height: 34px;
   }
 
   .nav-links {
@@ -1061,6 +1125,10 @@ footer {
 
   .card {
     padding: 1.4rem;
+  }
+
+  .hero p {
+    font-size: 0.99rem;
   }
 }
 

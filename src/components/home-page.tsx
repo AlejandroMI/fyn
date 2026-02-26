@@ -84,17 +84,13 @@ export function HomePage({ locale, content }: HomePageProps) {
               <p>{content.hero.body}</p>
               <div className="hero-actions">
                 <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="btn btn-primary">
+                  <img src="/web/chatgpt-logo.svg" alt="" aria-hidden="true" className="chatgpt-icon" />
                   {content.hero.primaryCta}
                 </a>
                 <Link href="/developers" locale={locale} className="btn btn-outline">
                   {content.hero.secondaryCta}
                 </Link>
               </div>
-              <ul className="checks">
-                {content.hero.checks.map((check) => (
-                  <li key={check}>{check}</li>
-                ))}
-              </ul>
             </div>
 
             <div className="hero-image-wrap">
@@ -244,15 +240,15 @@ export function HomePage({ locale, content }: HomePageProps) {
 
       <section id="trust">
         <div className="container">
-          <div className="statement-box statement-box-outline">
-            <div className="section-head">
-              <span className="eyebrow center">{content.trust.eyebrow}</span>
+          <div className="trust-panel">
+            <span className="eyebrow">{content.trust.eyebrow}</span>
+            <div className="trust-grid">
               <h2>
                 {content.trust.title}
                 <i> {content.trust.titleAccent}</i>
               </h2>
+              <p>{content.trust.body}</p>
             </div>
-            <p className="section-copy problem-copy">{content.trust.body}</p>
           </div>
         </div>
       </section>
@@ -266,6 +262,7 @@ export function HomePage({ locale, content }: HomePageProps) {
           <p>{content.finalCta.body}</p>
           <div className="final-actions">
             <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="btn btn-primary">
+              <img src="/web/chatgpt-logo.svg" alt="" aria-hidden="true" className="chatgpt-icon" />
               {content.finalCta.primary}
             </a>
             <Link href="/developers" locale={locale} className="btn btn-outline">
