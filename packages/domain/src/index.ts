@@ -185,6 +185,18 @@ export const SEARCH_PROPERTIES_TOOL_INVOKED_LABEL = "Listings ready.";
 export const SEARCH_PROPERTIES_WIDGET_MODEL_DESCRIPTION =
   "Interactive Fyn shortlist with map + cards, prices, and source links.";
 
+function normalizeWidgetDomain(origin: string | undefined): string | undefined {
+  if (!origin) {
+    return undefined;
+  }
+
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 export function buildSearchPropertiesToolMeta(): Record<string, unknown> {
   return {
     ui: {
@@ -199,6 +211,7 @@ export function buildSearchPropertiesToolMeta(): Record<string, unknown> {
 }
 
 export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknown> {
+  const widgetDomain = normalizeWidgetDomain(process.env.OPENAI_WIDGET_DOMAIN);
   const csp = {
     connectDomains: [
       "https://tile.openstreetmap.org",
@@ -237,19 +250,37 @@ export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknow
       "https://images.enalquiler.com",
       "https://www.nuroa.es",
       "https://pics.nuroa.com"
+    ],
+    redirectDomains: [
+      "https://www.pisos.com",
+      "https://www.fotocasa.es",
+      "https://www.idealista.com",
+      "https://www.tucasa.com",
+      "https://www.habitaclia.com",
+      "https://www.yaencontre.com",
+      "https://www.milanuncios.com",
+      "https://www.globaliza.com",
+      "https://www.hogaria.net",
+      "https://www.spainhouses.net",
+      "https://www.pisocompartido.com",
+      "https://www.enalquiler.com",
+      "https://www.nuroa.es"
     ]
   };
 
   return {
     ui: {
       prefersBorder: false,
+      ...(widgetDomain ? { domain: widgetDomain } : {}),
       csp
     },
     "openai/widgetDescription": SEARCH_PROPERTIES_WIDGET_MODEL_DESCRIPTION,
     "openai/widgetPrefersBorder": false,
+    ...(widgetDomain ? { "openai/widgetDomain": widgetDomain } : {}),
     "openai/widgetCSP": {
       connect_domains: csp.connectDomains,
-      resource_domains: csp.resourceDomains
+      resource_domains: csp.resourceDomains,
+      redirect_domains: csp.redirectDomains
     }
   };
 }

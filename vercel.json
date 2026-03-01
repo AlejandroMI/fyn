@@ -14,5 +14,11 @@
       "source": "/health",
       "destination": "/api/health"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/connector-status/refresh",
+      "schedule": "0 9 * * *"
+    }
   ]
 }

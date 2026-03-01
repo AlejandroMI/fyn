@@ -17,6 +17,14 @@ export interface PreviewCardContent {
   alt: string;
 }
 
+export interface ConnectorStatusContent {
+  name: string;
+  portalUrl: string;
+  status: string;
+  tone: "neutral" | "healthy" | "warning" | "error";
+  note: string;
+}
+
 export interface SiteContent {
   localeLabel: string;
   nav: {
@@ -75,11 +83,14 @@ export interface SiteContent {
     sourceTag: string;
     cards: PreviewCardContent[];
   };
-  trust: {
+  connectors: {
     eyebrow: string;
     title: string;
     titleAccent: string;
-    body: string;
+    intro: string;
+    expandLabel: string;
+    collapseLabel: string;
+    items: ConnectorStatusContent[];
   };
   finalCta: {
     eyebrow: string;
@@ -311,11 +322,107 @@ export const siteContent: Record<Locale, SiteContent> = {
         }
       ]
     },
-    trust: {
-      eyebrow: "Confianza y transparencia",
-      title: "Práctico, transparente",
-      titleAccent: "y honesto.",
-      body: "Fyn no oculta información para encerrarte en su producto. Muestra siempre la fuente original, explica cada coincidencia y respeta tus límites exactos."
+    connectors: {
+      eyebrow: "Fuentes",
+      title: "Así están hoy",
+      titleAccent: "nuestras fuentes.",
+      intro:
+        "Acabamos de comprobarlas con una búsqueda real. Así ves de un vistazo qué fuentes están respondiendo, cuáles están bloqueando y cuáles no devolvieron resultados en esta prueba.",
+      expandLabel: "Ver más fuentes",
+      collapseLabel: "Ver menos",
+      items: [
+        {
+          name: "Pisos.com",
+          portalUrl: "https://www.pisos.com",
+          status: "Disponible",
+          tone: "healthy",
+          note: "10 resultados en la última prueba"
+        },
+        {
+          name: "Habitaclia",
+          portalUrl: "https://www.habitaclia.com",
+          status: "Disponible",
+          tone: "healthy",
+          note: "10 resultados en la última prueba"
+        },
+        {
+          name: "Tucasa",
+          portalUrl: "https://www.tucasa.com",
+          status: "Disponible",
+          tone: "healthy",
+          note: "10 resultados en la última prueba"
+        },
+        {
+          name: "Fotocasa",
+          portalUrl: "https://www.fotocasa.es",
+          status: "Bloqueado",
+          tone: "error",
+          note: "Bloqueó el acceso automático"
+        },
+        {
+          name: "Yaencontre",
+          portalUrl: "https://www.yaencontre.com",
+          status: "Sin resultados",
+          tone: "warning",
+          note: "0 resultados en la última prueba"
+        },
+        {
+          name: "Milanuncios",
+          portalUrl: "https://www.milanuncios.com",
+          status: "Disponible",
+          tone: "healthy",
+          note: "5 resultados en la última prueba"
+        },
+        {
+          name: "Globaliza",
+          portalUrl: "https://www.globaliza.com",
+          status: "Disponible",
+          tone: "healthy",
+          note: "10 resultados en la última prueba"
+        },
+        {
+          name: "Hogaria",
+          portalUrl: "https://www.hogaria.net",
+          status: "Disponible",
+          tone: "healthy",
+          note: "10 resultados en la última prueba"
+        },
+        {
+          name: "Spainhouses",
+          portalUrl: "https://www.spainhouses.net",
+          status: "Bloqueado",
+          tone: "error",
+          note: "Bloqueó el acceso automático"
+        },
+        {
+          name: "Nuroa",
+          portalUrl: "https://www.nuroa.es",
+          status: "Disponible",
+          tone: "healthy",
+          note: "9 resultados en la última prueba"
+        },
+        {
+          name: "PisoCompartido",
+          portalUrl: "https://www.pisocompartido.com",
+          status: "Sin resultados",
+          tone: "warning",
+          note: "0 resultados en la última prueba"
+        },
+        {
+          name: "Enalquiler",
+          portalUrl: "https://www.enalquiler.com",
+          status: "Disponible",
+          tone: "healthy",
+          note: "6 resultados en la última prueba"
+        },
+        {
+          name: "Idealista",
+          portalUrl: "https://www.idealista.com",
+          status: "Bloqueado",
+          tone: "error",
+          note: "Bloqueó el acceso automático"
+        }
+      ]
     },
     finalCta: {
       eyebrow: "Cierre",
@@ -525,11 +632,107 @@ export const siteContent: Record<Locale, SiteContent> = {
         }
       ]
     },
-    trust: {
-      eyebrow: "Trust & transparency",
-      title: "Practical, transparent",
-      titleAccent: "and honest.",
-      body: "Fyn does not hide details to lock you in. We always show the original source link, explain each match, and respect your exact constraints."
+    connectors: {
+      eyebrow: "Sources",
+      title: "Here is how",
+      titleAccent: "our sources look today.",
+      intro:
+        "We just checked them with a real search. This gives a quick snapshot of which sources are responding, which are blocking access, and which returned no results in this check.",
+      expandLabel: "See more sources",
+      collapseLabel: "See less",
+      items: [
+        {
+          name: "Pisos.com",
+          portalUrl: "https://www.pisos.com",
+          status: "Available",
+          tone: "healthy",
+          note: "10 results in the latest check"
+        },
+        {
+          name: "Habitaclia",
+          portalUrl: "https://www.habitaclia.com",
+          status: "Available",
+          tone: "healthy",
+          note: "10 results in the latest check"
+        },
+        {
+          name: "Tucasa",
+          portalUrl: "https://www.tucasa.com",
+          status: "Available",
+          tone: "healthy",
+          note: "10 results in the latest check"
+        },
+        {
+          name: "Fotocasa",
+          portalUrl: "https://www.fotocasa.es",
+          status: "Blocked",
+          tone: "error",
+          note: "Automated access was blocked"
+        },
+        {
+          name: "Yaencontre",
+          portalUrl: "https://www.yaencontre.com",
+          status: "No results",
+          tone: "warning",
+          note: "0 results in the latest check"
+        },
+        {
+          name: "Milanuncios",
+          portalUrl: "https://www.milanuncios.com",
+          status: "Available",
+          tone: "healthy",
+          note: "5 results in the latest check"
+        },
+        {
+          name: "Globaliza",
+          portalUrl: "https://www.globaliza.com",
+          status: "Available",
+          tone: "healthy",
+          note: "10 results in the latest check"
+        },
+        {
+          name: "Hogaria",
+          portalUrl: "https://www.hogaria.net",
+          status: "Available",
+          tone: "healthy",
+          note: "10 results in the latest check"
+        },
+        {
+          name: "Spainhouses",
+          portalUrl: "https://www.spainhouses.net",
+          status: "Blocked",
+          tone: "error",
+          note: "Automated access was blocked"
+        },
+        {
+          name: "Nuroa",
+          portalUrl: "https://www.nuroa.es",
+          status: "Available",
+          tone: "healthy",
+          note: "9 results in the latest check"
+        },
+        {
+          name: "PisoCompartido",
+          portalUrl: "https://www.pisocompartido.com",
+          status: "No results",
+          tone: "warning",
+          note: "0 results in the latest check"
+        },
+        {
+          name: "Enalquiler",
+          portalUrl: "https://www.enalquiler.com",
+          status: "Available",
+          tone: "healthy",
+          note: "6 results in the latest check"
+        },
+        {
+          name: "Idealista",
+          portalUrl: "https://www.idealista.com",
+          status: "Blocked",
+          tone: "error",
+          note: "Automated access was blocked"
+        }
+      ]
     },
     finalCta: {
       eyebrow: "Final call",

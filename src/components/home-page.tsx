@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { problemCarouselImages, type Locale, type SiteContent } from "@/content/site-content";
 
+import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
 interface HomePageProps {
@@ -10,8 +11,16 @@ interface HomePageProps {
   content: SiteContent;
 }
 
+interface ConnectorStatusSnapshot {
+  generatedAt: string;
+  items: Array<{
+    portalUrl: string;
+    state: "available" | "blocked" | "no_results";
+    returnedCount: number;
+  }>;
+}
+
 export function HomePage({ locale, content }: HomePageProps) {
-  const year = new Date().getFullYear();
   const heroPromptOptions = useMemo(() => {
     if (content.hero.promptOptions.length > 0) {
       return content.hero.promptOptions;
@@ -28,6 +37,9 @@ export function HomePage({ locale, content }: HomePageProps) {
   const [activeHeroPromptIndex, setActiveHeroPromptIndex] = useState(0);
   const activeHeroPrompt = heroPromptOptions[activeHeroPromptIndex];
   const [typedPromptLength, setTypedPromptLength] = useState(0);
+  const [isCompactConnectors, setIsCompactConnectors] = useState(false);
+  const [showAllConnectors, setShowAllConnectors] = useState(false);
+  const [connectorItems, setConnectorItems] = useState(content.connectors.items);
   const typewriterSpeedMs = 28;
   const promptHoldMs = 2200;
 
@@ -59,6 +71,99 @@ export function HomePage({ locale, content }: HomePageProps) {
 
     return () => window.clearTimeout(rotationTimeout);
   }, [activeHeroPrompt.promptText, activeHeroPromptIndex, heroPromptOptions.length]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 860px)");
+    const syncCompactState = () => {
+      setIsCompactConnectors(mediaQuery.matches);
+    };
+
+    syncCompactState();
+    mediaQuery.addEventListener("change", syncCompactState);
+
+    return () => mediaQuery.removeEventListener("change", syncCompactState);
+  }, []);
+
+  useEffect(() => {
+    setConnectorItems(content.connectors.items);
+  }, [content.connectors.items]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSnapshot = async () => {
+      try {
+        const response = await fetch("/api/connector-status/latest", { cache: "no-store" });
+        if (!response.ok) {
+          return;
+        }
+
+        const snapshot = (await response.json()) as ConnectorStatusSnapshot;
+        if (!Array.isArray(snapshot.items) || cancelled) {
+          return;
+        }
+
+        const itemsByPortal = new Map(snapshot.items.map((item) => [item.portalUrl, item]));
+        setConnectorItems(
+          content.connectors.items.map((item) => {
+            const snapshotItem = itemsByPortal.get(item.portalUrl);
+            if (!snapshotItem) {
+              return item;
+            }
+
+            if (snapshotItem.state === "available") {
+              return {
+                ...item,
+                tone: "healthy",
+                status: locale === "es" ? "Disponible" : "Available",
+                note:
+                  locale === "es"
+                    ? `${snapshotItem.returnedCount} resultados en la última prueba`
+                    : `${snapshotItem.returnedCount} results in the latest check`
+              };
+            }
+
+            if (snapshotItem.state === "no_results") {
+              return {
+                ...item,
+                tone: "warning",
+                status: locale === "es" ? "Sin resultados" : "No results",
+                note:
+                  locale === "es"
+                    ? "0 resultados en la última prueba"
+                    : "0 results in the latest check"
+              };
+            }
+
+            return {
+              ...item,
+              tone: "error",
+              status: locale === "es" ? "Bloqueado" : "Blocked",
+              note:
+                locale === "es"
+                  ? "Bloqueó el acceso automático"
+                  : "Automated access was blocked"
+            };
+          })
+        );
+      } catch {
+        return;
+      }
+    };
+
+    void loadSnapshot();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [content.connectors.items, locale]);
+
+  const defaultVisibleConnectorCount = isCompactConnectors ? 4 : 8;
+  const hasHiddenConnectors = connectorItems.length > defaultVisibleConnectorCount;
+  const visibleConnectors =
+    hasHiddenConnectors && !showAllConnectors
+      ? connectorItems.slice(0, defaultVisibleConnectorCount)
+      : connectorItems;
 
   return (
     <div className="theme-light">
@@ -242,18 +347,55 @@ export function HomePage({ locale, content }: HomePageProps) {
         </div>
       </section>
 
-      <section id="trust">
+      <section id="connectors">
         <div className="container">
-          <div className="statement-box statement-box-outline">
-            <div className="section-head">
-              <span className="eyebrow center">{content.trust.eyebrow}</span>
-              <h2>
-                {content.trust.title}
-                <i> {content.trust.titleAccent}</i>
-              </h2>
-            </div>
-            <p className="section-copy problem-copy">{content.trust.body}</p>
+          <div className="section-head">
+            <span className="eyebrow">{content.connectors.eyebrow}</span>
+            <h2>
+              {content.connectors.title}
+              <br />
+              <i>{content.connectors.titleAccent}</i>
+            </h2>
+            <p className="section-copy section-copy-left">{content.connectors.intro}</p>
           </div>
+
+          <div className="connector-grid">
+            {visibleConnectors.map((connector) => (
+              <article className={`connector-card connector-card-${connector.tone}`} key={connector.name}>
+                <a
+                  href={connector.portalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="connector-link"
+                  aria-label={`Open ${connector.name}`}
+                >
+                  ↗
+                </a>
+                <div className="connector-card-top">
+                  <h3>{connector.name}</h3>
+                  <span className={`connector-status connector-status-${connector.tone}`}>
+                    <span className="connector-status-dot" aria-hidden="true" />
+                    {connector.status}
+                  </span>
+                </div>
+                <p className="connector-note">{connector.note}</p>
+              </article>
+            ))}
+          </div>
+
+          {hasHiddenConnectors ? (
+            <button
+              type="button"
+              className={`connector-toggle ${showAllConnectors ? "connector-toggle-open" : ""}`}
+              onClick={() => setShowAllConnectors((current) => !current)}
+              aria-expanded={showAllConnectors}
+            >
+              {showAllConnectors ? content.connectors.collapseLabel : content.connectors.expandLabel}
+              <span className="connector-toggle-arrow" aria-hidden="true">
+                ↓
+              </span>
+            </button>
+          ) : null}
         </div>
       </section>
 
@@ -276,62 +418,7 @@ export function HomePage({ locale, content }: HomePageProps) {
       </section>
 
       <div className="container">
-        <footer>
-          <div className="footer-grid">
-            <div className="footer-brand">
-              <div className="footer-logo-wrap">
-                <img src="/web/fynlogo.png" alt="Fyn logo" className="logo-img" />
-                <div className="footer-logo-text">Fyn.</div>
-              </div>
-              <p>{content.footer.description}</p>
-            </div>
-
-            <div>
-              <h4 className="footer-heading">{content.footer.productTitle}</h4>
-              <ul className="footer-list">
-                <li>
-                  <a href="#problem">{content.nav.problem}</a>
-                </li>
-                <li>
-                  <a href="#use-cases">{content.nav.useCases}</a>
-                </li>
-                <li>
-                  <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
-                    {content.footer.tryChatgpt}
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="footer-heading">{content.footer.developersTitle}</h4>
-              <ul className="footer-list">
-                <li>
-                  <Link href="/developers" locale={locale}>
-                    {content.footer.docs}
-                  </Link>
-                </li>
-                <li>
-                  <a href="/docs/chatgpt-developer-mode-runbook.md">{content.footer.runbook}</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="foot-bottom">
-            <p>
-              © {year} {content.footer.copyright}
-            </p>
-            <div className="credits">
-              {content.footer.creditsLabel}
-              {content.footer.creditLinks.map((link) => (
-                <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        </footer>
+        <SiteFooter locale={locale} content={content} />
       </div>
     </div>
   );

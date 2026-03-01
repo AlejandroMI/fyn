@@ -81,11 +81,6 @@ export function DevelopersPage({ locale, content }: DevelopersPageProps) {
           </section>
 
           <div className="resource-grid">
-            <a href="/docs/chatgpt-developer-mode-runbook.md" className="resource-card">
-              <h3>{content.developers.runbookTitle}</h3>
-              <p>{content.developers.runbookBody}</p>
-            </a>
-
             <a href="/health" className="resource-card">
               <h3>{content.developers.healthTitle}</h3>
               <p>{content.developers.healthBody}</p>

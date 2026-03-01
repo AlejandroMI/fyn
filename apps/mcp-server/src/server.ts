@@ -236,7 +236,7 @@ function createTimedFetch(timeoutMs: number): typeof fetch {
   };
 }
 
-function connectorsFromEnv(): ConnectorRegistry {
+export function connectorsFromEnv(): ConnectorRegistry {
   const timedFetch = createTimedFetch(
     Math.max(1_000, readNumberEnv("CONNECTOR_FETCH_TIMEOUT_MS", DEFAULT_CONNECTOR_FETCH_TIMEOUT_MS))
   );
