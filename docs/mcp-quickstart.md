@@ -92,6 +92,8 @@ npx vercel --prod
 
 Then set environment variables in Vercel project settings:
 
+- `NEXT_PUBLIC_SITE_URL` (recommended for canonical URLs, sitemap, robots, and legal pages; for your domain use `https://fynfyn.top`)
+- `OPENAI_WIDGET_DOMAIN` (required for public app submission; use a dedicated origin such as `https://chatgpt.fynfyn.top`)
 - `PISOS_API_KEY` (optional for API mode)
 - `PISOS_ALLOW_FIXTURE_FALLBACK`
 - `PISOS_ENABLE_SCRAPE_FALLBACK`

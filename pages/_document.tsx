@@ -8,6 +8,8 @@ class FynDocument extends Document {
     return (
       <Html lang={locale}>
         <Head>
+          <link rel="icon" href="/web/fynlogo.png" />
+          <meta name="theme-color" content="#f5f4ef" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link

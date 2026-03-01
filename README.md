@@ -71,6 +71,19 @@ pnpm start
 pnpm --filter @fyn/mcp-server dev
 ```
 
+## Environment variables
+
+You do not need every supported env var to run Fyn.
+
+Required for connector status snapshot refresh + private Backblaze storage:
+
+- `B2_BUCKET_ID`
+- `B2_BUCKET_NAME`
+- `B2_KEY_ID`
+- `B2_APPLICATION_KEY`
+- `CONNECTOR_STATUS_REFRESH_TOKEN`
+- `CRON_SECRET`
+
 ## Validation
 
 ```bash
@@ -83,6 +96,8 @@ pnpm test
 - Production deploys are handled by Vercel's GitHub integration.
 - Branch rule: every push to `main` triggers a production deployment.
 - No GitHub Actions deploy workflow is required for production deploys.
+- Vercel cron triggers `/api/connector-status/refresh` daily at `09:00 UTC`.
+- After the first deploy, manually hit `/api/connector-status/refresh?token=<CONNECTOR_STATUS_REFRESH_TOKEN>` once to seed the first snapshot.
 - If deployment behavior changes, update this section and `docs/website-architecture.md` in the same PR.
 
 ## MCP smoke checks
@@ -92,6 +107,17 @@ pnpm smoke:mcp -- "Find me a flat in Valencia with 3 rooms max 350k"
 pnpm smoke:sources
 pnpm smoke:mcp:http -- --url https://<your-project>.vercel.app/api/mcp "Find me an office for +50 people in Valencia"
 ```
+
+## Connector status snapshot
+
+The landing page connector cards use a daily snapshot, not live per-request checks.
+
+- Refresh route: `/api/connector-status/refresh`
+- Read route: `/api/connector-status/latest`
+- Storage: `connector-status/latest.json` in Backblaze B2
+- Browser clients do not read B2 directly. The app reads the private snapshot server-side and returns it through `/api/connector-status/latest`.
+
+This keeps the bucket private, avoids browser CORS issues, and reduces the chance of over-probing source portals.
 
 ## Docs
 
