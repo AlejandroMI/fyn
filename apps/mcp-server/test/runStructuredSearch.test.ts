@@ -224,6 +224,61 @@ describe("runStructuredSearch", () => {
     expect(result.diagnostics.request_warnings).toHaveLength(0);
   });
 
+  it("auto-relaxes floor filters when candidates exist but no listing exposes floor metadata", async () => {
+    const connectors = makeRegistry({
+      pisos: okConnector("pisos", [makeListing({ portal: "pisos", canonical_id: "pisos-1", portal_listing_id: "1" })])
+    });
+
+    const result = await runStructuredSearch(
+      payload({
+        min_floor: 1,
+        exclude_ground_floor: true,
+        sources: ["pisos"]
+      }),
+      connectors
+    );
+
+    expect(result.listings).toHaveLength(1);
+    expect(result.criteria.min_floor).toBeUndefined();
+    expect(result.criteria.exclude_ground_floor).toBeUndefined();
+    expect(
+      result.diagnostics.connector_warnings.some((warning) =>
+        warning.includes("Auto-relaxed floor filters for pisos in Ronda")
+      )
+    ).toBe(true);
+  });
+
+  it("keeps floor filters when listings do expose floor metadata", async () => {
+    const connectors = makeRegistry({
+      pisos: okConnector("pisos", [
+        makeListing({
+          portal: "pisos",
+          canonical_id: "pisos-ground-floor",
+          portal_listing_id: "gf1",
+          raw: {
+            chars: ["Bajo"]
+          }
+        })
+      ])
+    });
+
+    const result = await runStructuredSearch(
+      payload({
+        min_floor: 1,
+        exclude_ground_floor: true,
+        sources: ["pisos"]
+      }),
+      connectors
+    );
+
+    expect(result.listings).toHaveLength(0);
+    expect(result.criteria.min_floor).toBe(1);
+    expect(result.criteria.exclude_ground_floor).toBe(true);
+    expect(
+      result.diagnostics.connector_warnings.some((warning) => warning.includes("Auto-relaxed floor filters"))
+    ).toBe(false);
+  });
+
   it("does not throw when one connector is blocked but another succeeds with zero candidates", async () => {
     const connectors = makeRegistry({
       idealista: errorConnector(

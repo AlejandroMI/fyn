@@ -706,6 +706,35 @@ function extractFloorLabel(listing: ListingCard): string | undefined {
   return undefined;
 }
 
+function extractFloorValue(listing: ListingCard): number | null {
+  for (const item of readRawChars(listing)) {
+    if (/\b(bajo|ground floor)\b/i.test(item)) {
+      return 0;
+    }
+
+    const match = item.match(/(\d+)[ªa]?\s*planta/i);
+    if (!match?.[1]) {
+      continue;
+    }
+
+    const floor = Number(match[1]);
+    if (Number.isFinite(floor)) {
+      return floor;
+    }
+  }
+
+  return null;
+}
+
+function hasFloorFilters(criteria: NormalizedFilters): boolean {
+  return criteria.min_floor !== undefined || criteria.exclude_ground_floor === true;
+}
+
+function withoutFloorFilters(criteria: NormalizedFilters): NormalizedFilters {
+  const { min_floor: _minFloor, exclude_ground_floor: _excludeGroundFloor, ...rest } = criteria;
+  return rest;
+}
+
 function formatPrice(price: number | null, locale: Locale): string {
   if (price === null) {
     return locale === "es" ? "Precio no disponible" : "Price unavailable";
@@ -1090,6 +1119,7 @@ export async function runStructuredSearch(
   const coverage: CoverageEntry[] = [];
   const collected: CollectedCandidate[] = [];
   let firstConnectorError: ConnectorError | null = null;
+  let relaxedFloorFilters = false;
   let successfulSourceCalls = 0;
 
   if (payload.sources && payload.sources.length > 0) {
@@ -1192,7 +1222,22 @@ export async function runStructuredSearch(
         successfulSourceCalls += 1;
         sourceKinds.add(result.diagnostics.source);
         connectorWarnings.push(...result.diagnostics.connector_warnings);
-        const ranked = rankListings(result.listings, criteria).slice(0, perSourceCap);
+        let ranked = rankListings(result.listings, criteria).slice(0, perSourceCap);
+        const missingFloorMetadata =
+          result.listings.length > 0 && result.listings.every((listing) => extractFloorValue(listing) === null);
+
+        if (ranked.length === 0 && hasFloorFilters(criteria) && missingFloorMetadata) {
+          const relaxedCriteria = withoutFloorFilters(criteria);
+          const relaxedRanked = rankListings(result.listings, relaxedCriteria).slice(0, perSourceCap);
+          if (relaxedRanked.length > 0) {
+            ranked = relaxedRanked;
+            relaxedFloorFilters = true;
+            connectorWarnings.push(
+              `Auto-relaxed floor filters for ${sourceResult.source} in ${location} because ${result.listings.length} candidates lacked floor metadata.`
+            );
+          }
+        }
+
         collected.push(
           ...ranked.map((listing) => ({
             listing,
@@ -1233,27 +1278,28 @@ export async function runStructuredSearch(
   const uniqueCandidates = uniqueBy(collected, (candidate) => listingKey(candidate.listing));
   const deduped = dedupeNearDuplicateCandidates(uniqueCandidates);
   const dedupedCandidates = deduped.candidates;
+  const effectiveBaseCriteria = relaxedFloorFilters ? withoutFloorFilters(baseCriteria) : baseCriteria;
   const singleLocationHints =
     locationContexts.length === 1
       ? uniqueStrings([
-        ...(baseCriteria.location_hints ?? []),
+        ...(effectiveBaseCriteria.location_hints ?? []),
         ...(locationContexts[0]?.hints ?? [])
       ])
       : [];
   const rankingBaseCriteria =
     singleLocationHints.length > 0
       ? {
-        ...baseCriteria,
+        ...effectiveBaseCriteria,
         location_hints: singleLocationHints
       }
-      : baseCriteria;
+      : effectiveBaseCriteria;
   const rankingCriteria =
     locationContexts.length === 1
       ? criteriaForLocation(
         rankingBaseCriteria,
         locationContexts[0]?.search === "__discovery__" ? undefined : locationContexts[0]?.search
       )
-      : criteriaForLocation(baseCriteria);
+      : criteriaForLocation(effectiveBaseCriteria);
 
   const ranked =
     locationContexts.length > 1
