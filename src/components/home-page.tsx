@@ -189,17 +189,13 @@ export function HomePage({ locale, content }: HomePageProps) {
               <p>{content.hero.body}</p>
               <div className="hero-actions">
                 <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="btn btn-primary">
+                  <img src="/web/chatgpt-logo.svg" alt="" aria-hidden="true" className="chatgpt-icon" />
                   {content.hero.primaryCta}
                 </a>
                 <Link href="/developers" locale={locale} className="btn btn-outline">
                   {content.hero.secondaryCta}
                 </Link>
               </div>
-              <ul className="checks">
-                {content.hero.checks.map((check) => (
-                  <li key={check}>{check}</li>
-                ))}
-              </ul>
             </div>
 
             <div className="hero-image-wrap">
@@ -408,6 +404,7 @@ export function HomePage({ locale, content }: HomePageProps) {
           <p>{content.finalCta.body}</p>
           <div className="final-actions">
             <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="btn btn-primary">
+              <img src="/web/chatgpt-logo.svg" alt="" aria-hidden="true" className="chatgpt-icon" />
               {content.finalCta.primary}
             </a>
             <Link href="/developers" locale={locale} className="btn btn-outline">
