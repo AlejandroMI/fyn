@@ -137,7 +137,7 @@ export interface ConnectorSearchResult {
 
 export const SEARCH_PROPERTIES_TOOL_TITLE = "Search Properties (Model-Driven)";
 export const SEARCH_PROPERTIES_TOOL_DESCRIPTION =
-  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must send either `city` (single municipality) or `locations[]` (multiple municipalities/towns, recommended 3-5, hard max 5). If the user mentions neighborhoods, districts, comarcas, or regions, send those in `location_hints[]` (soft preference for reranking), not in `city`. `query_text` is context only and never a substitute for structured constraints. Do not set `sources` unless the user explicitly asks for specific portals. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
+  "Use this when the user wants to find, compare, or shortlist Spanish properties (flat, house, office, land) for buy/rent using location, budget, rooms, floor, and lifestyle preferences (e.g. nature, views, natural light). LLM must send either `city` (single municipality) or `locations[]` (multiple municipalities/towns, recommended 3-5, hard max 5). If the user mentions neighborhoods, districts, comarcas, or regions, send those in `location_hints[]` (soft preference for reranking), not in `city`. `query_text` is context only and never a substitute for structured constraints. Treat `min_floor` and `exclude_ground_floor` as apartment-style filters: only set them when the user explicitly asks for upper-floor/non-ground-floor units, not as a proxy for generic brightness or light. Do not set `sources` unless the user explicitly asks for specific portals. Returns normalized listings with portal links, prices, photos, explainability (`why_matched`), presentation cards, and execution diagnostics including per-location and per-source coverage.";
 
 export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   query_text:
@@ -155,8 +155,10 @@ export const SEARCH_PROPERTIES_FIELD_DESCRIPTIONS = {
   min_rooms: "Minimum bedrooms.",
   min_capacity_people: "Minimum people capacity.",
   max_price_eur: "Maximum budget in EUR.",
-  min_floor: "Minimum floor index (0 = ground).",
-  exclude_ground_floor: "Exclude ground-floor properties.",
+  min_floor:
+    "Minimum floor index (0 = ground). Apartment-style filter; only set when the user explicitly wants upper-floor units.",
+  exclude_ground_floor:
+    "Exclude ground-floor properties. Apartment-style filter; do not infer this from generic brightness/light intent.",
   prefer_exterior: "Boost exterior properties when true.",
   strict_constraints:
     "Default true. When true and no location is provided, the tool returns guidance instead of discovery fallback.",
