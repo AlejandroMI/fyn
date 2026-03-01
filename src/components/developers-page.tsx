@@ -10,7 +10,7 @@ interface DevelopersPageProps {
   content: SiteContent;
 }
 
-const MCP_ENDPOINT = "https://fyn-mcp-server.vercel.app/mcp";
+const MCP_ENDPOINT = "https://fynfyn.top/mcp";
 
 export function DevelopersPage({ locale, content }: DevelopersPageProps) {
   const [copied, setCopied] = useState(false);
