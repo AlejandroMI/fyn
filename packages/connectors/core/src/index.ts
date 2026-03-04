@@ -21,6 +21,12 @@ export interface ScraperOptions {
 export const DEFAULT_BROWSER_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
 
+const FALLBACK_BROWSER_USER_AGENTS = [
+  DEFAULT_BROWSER_USER_AGENT,
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3 Safari/605.1.15"
+] as const;
+
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&",
   lt: "<",
@@ -199,11 +205,26 @@ export function listingNowIso(): string {
   return new Date().toISOString();
 }
 
+export function browserUserAgents(options: Pick<ScraperOptions, "userAgent"> = {}): string[] {
+  if (options.userAgent && options.userAgent.trim().length > 0) {
+    return [options.userAgent.trim()];
+  }
+
+  return [...FALLBACK_BROWSER_USER_AGENTS];
+}
+
 export function browserHeaders(options: ScraperOptions): Record<string, string> {
   return {
     "User-Agent": options.userAgent ?? DEFAULT_BROWSER_USER_AGENT,
-    Accept: "text/html,application/xhtml+xml",
-    "Accept-Language": options.acceptLanguage ?? "es-ES,es;q=0.9,en;q=0.7"
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": options.acceptLanguage ?? "es-ES,es;q=0.9,en;q=0.7",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1"
   };
 }
 

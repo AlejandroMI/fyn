@@ -119,4 +119,42 @@ describe("SpainhousesConnector", () => {
       source_portal: "spainhouses"
     } satisfies Partial<ConnectorError>);
   });
+
+  it("retries when the first request is blocked and then recovers", async () => {
+    const html = `
+      <html>
+        <body>
+          <article data-href="https://www.spainhouses.net/es/casa-venta-valencia-valencia-3001.html" data-position="3001" class="property_block clearfix">
+            <div class="details">
+              <div class="title_1"><a href="https://www.spainhouses.net/es/casa-venta-valencia-valencia-3001.html" data-position="3001">Casa con patio</a><span class="titleTail"></span></div>
+              <div class="title_2">Valencia</div>
+              <div class="features">130 m², 3 dormitorios, 2 baños</div>
+              <div class="descTxt">Casa exterior.</div>
+              <span class="price">330.000</span>
+            </div>
+          </article>
+        </body>
+      </html>
+    `;
+
+    let callCount = 0;
+    const connector = new SpainhousesConnector({
+      fetchImpl: async () => {
+        callCount += 1;
+        if (callCount === 1) {
+          return makeResponse("<html>Forbidden</html>", 403);
+        }
+        return makeResponse(html, 200);
+      },
+      requestDelayMs: 0,
+      maxRequests: 1,
+      maxListings: 10
+    });
+
+    const result = await connector.search(criteria("Valencia"));
+
+    expect(callCount).toBe(2);
+    expect(result.listings).toHaveLength(1);
+    expect(result.listings[0]?.city).toBe("Valencia");
+  });
 });

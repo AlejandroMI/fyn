@@ -8,6 +8,7 @@ import {
 import {
   assertNotBotBlocked,
   browserHeaders,
+  browserUserAgents,
   inferPropertyTypeFromText,
   inferTagsFromDescription,
   listingNowIso,
@@ -27,6 +28,8 @@ import {
 const TUCASA_BASE_URL = "https://www.tucasa.com";
 const DEFAULT_MAX_REQUESTS = 6;
 const INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
+const MAX_FETCH_ATTEMPTS_PER_REQUEST = 2;
+const RETRY_BACKOFF_MS = 600;
 
 interface UnknownRecord {
   [key: string]: unknown;
@@ -351,6 +354,47 @@ async function fetchHtml(
   };
 }
 
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && /fetch timeout/i.test(error.message);
+}
+
+function isRetriableConnectorError(error: unknown): error is ConnectorError {
+  if (!(error instanceof ConnectorError)) {
+    return false;
+  }
+
+  return error.code === "UPSTREAM_BLOCKED" || error.code === "UPSTREAM_RATE_LIMIT" || error.code === "UPSTREAM_UNAVAILABLE";
+}
+
+async function fetchHtmlWithRetries(
+  fetchImpl: typeof fetch,
+  url: string,
+  options: ScraperOptions
+): Promise<{ status: number; html: string }> {
+  const userAgents = browserUserAgents(options);
+  const maxAttempts = Math.max(1, Math.min(MAX_FETCH_ATTEMPTS_PER_REQUEST, userAgents.length));
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const userAgent = userAgents[attempt % userAgents.length] ?? userAgents[0] ?? "";
+    try {
+      return await fetchHtml(fetchImpl, url, {
+        ...options,
+        userAgent
+      });
+    } catch (error) {
+      const isRetriable = isRetriableConnectorError(error);
+      if (!isRetriable || attempt >= maxAttempts - 1) {
+        throw error;
+      }
+
+      const delay = Math.max(options.requestDelayMs ?? 0, RETRY_BACKOFF_MS) * (attempt + 1);
+      await sleep(delay);
+    }
+  }
+
+  throw new Error(`tucasa exhausted retry attempts for ${url}`);
+}
+
 function parseListingsFromPage(html: string, baseUrl: string, seenAt: string): ListingCard[] {
   const scripts = collectJsonLdBlocks(html);
   const itemLists: UnknownRecord[] = [];
@@ -412,17 +456,29 @@ export class TucasaConnector implements ConnectorAdapter {
         indexHtml = cached.html;
       } else {
         const indexUrl = `${this.baseUrl}/${opPath}/`;
-        const indexResponse = await fetchHtml(this.fetchImpl, indexUrl, {
-          requestDelayMs: this.requestDelayMs
-        });
-
-        if (indexResponse.status === 200) {
-          assertNotBotBlocked(indexResponse.html, "tucasa");
-          indexHtml = indexResponse.html;
-          indexCache.set(indexKey, {
-            fetchedAt: Date.now(),
-            html: indexResponse.html
+        try {
+          const indexResponse = await fetchHtmlWithRetries(this.fetchImpl, indexUrl, {
+            requestDelayMs: this.requestDelayMs
           });
+
+          if (indexResponse.status === 200) {
+            assertNotBotBlocked(indexResponse.html, "tucasa");
+            indexHtml = indexResponse.html;
+            indexCache.set(indexKey, {
+              fetchedAt: Date.now(),
+              html: indexResponse.html
+            });
+          }
+        } catch (error) {
+          if (error instanceof ConnectorError) {
+            warnings.push(`tucasa index request failed (${error.code}) and will fall back to heuristic routes.`);
+          } else if (isTimeoutError(error)) {
+            warnings.push("tucasa index request timed out; falling back to heuristic routes.");
+          } else {
+            warnings.push(
+              `tucasa index request failed unexpectedly: ${error instanceof Error ? error.message : String(error)}`
+            );
+          }
         }
       }
 
@@ -444,15 +500,56 @@ export class TucasaConnector implements ConnectorAdapter {
 
     const dedupedTargets = uniqueStrings(targets).slice(0, this.maxRequests);
     const allListings: ListingCard[] = [];
+    let blockedCount = 0;
+    let rateLimitedCount = 0;
+    let unavailableCount = 0;
 
     for (const [index, target] of dedupedTargets.entries()) {
       if (index > 0) {
         await sleep(this.requestDelayMs);
       }
 
-      const { status, html } = await fetchHtml(this.fetchImpl, target, {
-        requestDelayMs: this.requestDelayMs
-      });
+      let status = 0;
+      let html = "";
+      try {
+        const fetched = await fetchHtmlWithRetries(this.fetchImpl, target, {
+          requestDelayMs: this.requestDelayMs
+        });
+        status = fetched.status;
+        html = fetched.html;
+      } catch (error) {
+        if (error instanceof ConnectorError) {
+          if (error.code === "UPSTREAM_BLOCKED") {
+            blockedCount += 1;
+            warnings.push(`tucasa blocked request: ${new URL(target).pathname}`);
+            continue;
+          }
+
+          if (error.code === "UPSTREAM_RATE_LIMIT") {
+            rateLimitedCount += 1;
+            warnings.push(`tucasa rate-limited request: ${new URL(target).pathname}`);
+            continue;
+          }
+
+          unavailableCount += 1;
+          warnings.push(`tucasa unavailable request: ${new URL(target).pathname}`);
+          continue;
+        }
+
+        if (isTimeoutError(error)) {
+          unavailableCount += 1;
+          warnings.push(`tucasa timeout on request: ${new URL(target).pathname}`);
+          continue;
+        }
+
+        unavailableCount += 1;
+        warnings.push(
+          `tucasa request failed unexpectedly on ${new URL(target).pathname}: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+        continue;
+      }
 
       if (status === 404) {
         warnings.push(`tucasa route returned 404: ${new URL(target).pathname}`);
@@ -474,6 +571,24 @@ export class TucasaConnector implements ConnectorAdapter {
     }
 
     const uniqueListings = uniqueBy(allListings, (listing) => `${listing.portal}:${listing.portal_listing_id}`);
+    if (uniqueListings.length === 0 && dedupedTargets.length > 0) {
+      if (rateLimitedCount === dedupedTargets.length) {
+        throw new ConnectorError("UPSTREAM_RATE_LIMIT", "tucasa rate-limited all candidate requests.", true, "tucasa");
+      }
+
+      if (blockedCount === dedupedTargets.length) {
+        throw new ConnectorError("UPSTREAM_BLOCKED", "tucasa blocked automated access for all candidate paths.", true, "tucasa");
+      }
+
+      if (unavailableCount === dedupedTargets.length) {
+        throw new ConnectorError(
+          "UPSTREAM_UNAVAILABLE",
+          "tucasa unavailable for all candidate requests.",
+          true,
+          "tucasa"
+        );
+      }
+    }
 
     return {
       listings: uniqueListings,

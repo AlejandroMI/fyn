@@ -247,7 +247,7 @@ describe("YaencontreConnector", () => {
     let call = 0;
     const fetchMock: typeof fetch = async () => {
       call += 1;
-      if (call === 1) {
+      if (call <= 2) {
         return makeResponse(
           `<html><body><script src="https://ct.captcha-delivery.com/c.js"></script></body></html>`,
           403,
@@ -280,5 +280,69 @@ describe("YaencontreConnector", () => {
     expect(result.diagnostics.connector_warnings).toContain(
       "yaencontre blocked request: /venta/pisos/valencia"
     );
+  });
+
+  it("retries the same path when the first request is blocked", async () => {
+    const reachableHtml = `
+      <html>
+        <head>
+          <script type="application/ld+json">
+            {
+              "@type": "ItemList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "item": {
+                    "@type": "Residence",
+                    "url": "https://www.yaencontre.com/venta/piso/valencia/88997766",
+                    "name": "Piso con terraza en Valencia",
+                    "offers": { "@type": "Offer", "price": "295000" },
+                    "numberOfRooms": "3",
+                    "address": { "addressLocality": "Valencia" }
+                  }
+                }
+              ]
+            }
+          </script>
+        </head>
+        <body></body>
+      </html>
+    `;
+
+    let callCount = 0;
+    const fetchMock: typeof fetch = async () => {
+      callCount += 1;
+      if (callCount === 1) {
+        return makeResponse(
+          `<html><body><script src="https://ct.captcha-delivery.com/c.js"></script></body></html>`,
+          403,
+          { "x-dd-b": "2" }
+        );
+      }
+
+      return makeResponse(reachableHtml, 200);
+    };
+
+    const connector = new YaencontreConnector({
+      fetchImpl: fetchMock,
+      maxRequests: 1,
+      requestDelayMs: 0
+    });
+
+    const result = await connector.search({
+      locale: "es",
+      property_types: ["flat"],
+      nearby_towns: false,
+      strict_constraints: true,
+      renovation_ok: false,
+      tags: [],
+      transaction_type: "buy",
+      city: "Valencia"
+    });
+
+    expect(callCount).toBe(2);
+    expect(result.listings).toHaveLength(1);
+    expect(result.listings[0]?.title).toContain("terraza");
   });
 });
