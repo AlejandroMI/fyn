@@ -7,9 +7,11 @@ import {
 import {
   assertNotBotBlocked,
   browserHeaders,
+  browserUserAgents,
   inferPropertyTypeFromText,
   inferTagsFromDescription,
   listingNowIso,
+  looksLikeBotBlockPage,
   parseFiniteNumber,
   parsePriceNumber,
   parseRoomsFromText,
@@ -26,6 +28,8 @@ import {
 const MILANUNCIOS_BASE_URL = "https://www.milanuncios.com";
 const DEFAULT_MAX_LISTINGS = 20;
 const DEFAULT_MAX_REQUESTS = 6;
+const MAX_FETCH_ATTEMPTS_PER_PATH = 2;
+const RETRY_BACKOFF_MS = 600;
 
 type Resource = "pisos" | "casas" | "locales" | "solares";
 
@@ -278,6 +282,53 @@ function parseListings(html: string, baseUrl: string, criteria: NormalizedFilter
   return uniqueBy(listings, (listing) => `${listing.portal}:${listing.portal_listing_id}`);
 }
 
+function isRetriableStatus(status: number): boolean {
+  return status === 401 || status === 403 || status === 429 || status >= 500;
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && /fetch timeout/i.test(error.message);
+}
+
+async function fetchPathWithRetries(
+  fetchImpl: typeof fetch,
+  url: URL,
+  baseUrl: string,
+  requestDelayMs: number
+): Promise<{ response: Response; html: string }> {
+  const userAgents = browserUserAgents();
+  const maxAttempts = Math.max(1, Math.min(MAX_FETCH_ATTEMPTS_PER_PATH, userAgents.length));
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const userAgent = userAgents[attempt % userAgents.length] ?? userAgents[0] ?? "";
+    try {
+      const response = await fetchImpl(url, {
+        headers: {
+          ...browserHeaders({
+            requestDelayMs,
+            userAgent
+          }),
+          Referer: `${baseUrl}/`
+        }
+      });
+      const html = await response.text();
+
+      const retriable = isRetriableStatus(response.status) || looksLikeBotBlockPage(html);
+      if (!retriable || attempt >= maxAttempts - 1) {
+        return { response, html };
+      }
+    } catch (error) {
+      if (isTimeoutError(error) || attempt >= maxAttempts - 1) {
+        throw error;
+      }
+    }
+
+    await sleep(Math.max(requestDelayMs, RETRY_BACKOFF_MS) * (attempt + 1));
+  }
+
+  throw new Error(`milanuncios exhausted retry attempts for ${url.toString()}`);
+}
+
 export class MilanunciosConnector implements ConnectorAdapter {
   readonly portal = "milanuncios" as const;
 
@@ -311,6 +362,7 @@ export class MilanunciosConnector implements ConnectorAdapter {
     const seenAt = listingNowIso();
     let blockedCount = 0;
     let rateLimitedCount = 0;
+    let unavailableCount = 0;
 
     for (const [index, path] of candidatePaths.entries()) {
       if (index > 0) {
@@ -318,17 +370,21 @@ export class MilanunciosConnector implements ConnectorAdapter {
       }
 
       const url = new URL(path, this.baseUrl);
-      const response = await this.fetchImpl(url, {
-        headers: {
-          ...browserHeaders({
-            requestDelayMs: this.requestDelayMs,
-            userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
-          }),
-          Referer: `${this.baseUrl}/`
-        }
-      });
+      let response: Response;
+      let html = "";
+      try {
+        const fetched = await fetchPathWithRetries(this.fetchImpl, url, this.baseUrl, this.requestDelayMs);
+        response = fetched.response;
+        html = fetched.html;
+      } catch (error) {
+        unavailableCount += 1;
+        warnings.push(
+          `milanuncios request failed on ${path}: ${isTimeoutError(error) ? "timeout" : error instanceof Error ? error.message : String(error)}`
+        );
+        continue;
+      }
 
-      if (response.status === 403) {
+      if (response.status === 401 || response.status === 403) {
         blockedCount += 1;
         warnings.push(`milanuncios path blocked: ${path}`);
         continue;
@@ -350,7 +406,6 @@ export class MilanunciosConnector implements ConnectorAdapter {
         continue;
       }
 
-      const html = await response.text();
       try {
         assertNotBotBlocked(html, "milanuncios");
       } catch {
@@ -409,6 +464,15 @@ export class MilanunciosConnector implements ConnectorAdapter {
         throw new ConnectorError(
           "UPSTREAM_BLOCKED",
           "milanuncios blocked automated access for all candidate paths.",
+          true,
+          "milanuncios"
+        );
+      }
+
+      if (unavailableCount === candidatePaths.length) {
+        throw new ConnectorError(
+          "UPSTREAM_UNAVAILABLE",
+          "milanuncios unavailable for all candidate requests.",
           true,
           "milanuncios"
         );

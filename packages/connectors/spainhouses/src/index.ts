@@ -7,10 +7,12 @@ import {
 import {
   assertNotBotBlocked,
   browserHeaders,
+  browserUserAgents,
   decodeHtmlEntities,
   inferPropertyTypeFromText,
   inferTagsFromDescription,
   listingNowIso,
+  looksLikeBotBlockPage,
   parseFiniteNumber,
   parsePriceNumber,
   parseRoomsFromText,
@@ -27,6 +29,8 @@ import {
 const SPAINHOUSES_BASE_URL = "https://www.spainhouses.net";
 const DEFAULT_MAX_LISTINGS = 20;
 const DEFAULT_MAX_REQUESTS = 8;
+const MAX_FETCH_ATTEMPTS_PER_PATH = 2;
+const RETRY_BACKOFF_MS = 600;
 
 const DISCOVERY_CITY_SLUGS = ["valencia", "madrid", "barcelona", "malaga", "alicante", "sevilla"] as const;
 
@@ -336,6 +340,52 @@ function isErrorTemplate(html: string): boolean {
   return /<title>\s*(?:Error|Not Found)\b/i.test(html);
 }
 
+function isRetriableStatus(status: number): boolean {
+  return status === 401 || status === 403 || status === 429 || status >= 500;
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && /fetch timeout/i.test(error.message);
+}
+
+async function fetchPathWithRetries(
+  fetchImpl: typeof fetch,
+  url: URL,
+  baseUrl: string,
+  requestDelayMs: number
+): Promise<{ response: Response; html: string }> {
+  const userAgents = browserUserAgents();
+  const maxAttempts = Math.max(1, Math.min(MAX_FETCH_ATTEMPTS_PER_PATH, userAgents.length));
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const userAgent = userAgents[attempt % userAgents.length] ?? userAgents[0] ?? "";
+    try {
+      const response = await fetchImpl(url, {
+        headers: {
+          ...browserHeaders({
+            requestDelayMs,
+            userAgent
+          }),
+          Referer: `${baseUrl}/`
+        }
+      });
+      const html = await response.text();
+      const retriable = isRetriableStatus(response.status) || looksLikeBotBlockPage(html);
+      if (!retriable || attempt >= maxAttempts - 1) {
+        return { response, html };
+      }
+    } catch (error) {
+      if (isTimeoutError(error) || attempt >= maxAttempts - 1) {
+        throw error;
+      }
+    }
+
+    await sleep(Math.max(requestDelayMs, RETRY_BACKOFF_MS) * (attempt + 1));
+  }
+
+  throw new Error(`spainhouses exhausted retry attempts for ${url.toString()}`);
+}
+
 export class SpainhousesConnector implements ConnectorAdapter {
   readonly portal = "spainhouses" as const;
 
@@ -377,20 +427,35 @@ export class SpainhousesConnector implements ConnectorAdapter {
 
     let blockedCount = 0;
     let rateLimitedCount = 0;
+    let unavailableCount = 0;
 
     for (const [index, path] of requestPaths.entries()) {
       if (index > 0) {
         await sleep(this.requestDelayMs);
       }
 
-      const response = await this.fetchImpl(new URL(path, this.baseUrl), {
-        headers: {
-          ...browserHeaders({ requestDelayMs: this.requestDelayMs }),
-          Referer: `${this.baseUrl}/`
-        }
-      });
+      let response: Response;
+      let html = "";
+      try {
+        const fetched = await fetchPathWithRetries(
+          this.fetchImpl,
+          new URL(path, this.baseUrl),
+          this.baseUrl,
+          this.requestDelayMs
+        );
+        response = fetched.response;
+        html = fetched.html;
+      } catch (error) {
+        unavailableCount += 1;
+        warnings.push(
+          `spainhouses request failed on ${path}: ${
+            isTimeoutError(error) ? "timeout" : error instanceof Error ? error.message : String(error)
+          }`
+        );
+        continue;
+      }
 
-      if (response.status === 403) {
+      if (response.status === 401 || response.status === 403) {
         blockedCount += 1;
         warnings.push(`spainhouses blocked path: ${path}`);
         continue;
@@ -412,7 +477,6 @@ export class SpainhousesConnector implements ConnectorAdapter {
         continue;
       }
 
-      const html = await response.text();
       if (isErrorTemplate(html)) {
         warnings.push(`spainhouses error template on path: ${path}`);
         continue;
@@ -454,6 +518,15 @@ export class SpainhousesConnector implements ConnectorAdapter {
         throw new ConnectorError(
           "UPSTREAM_BLOCKED",
           "spainhouses blocked automated access for all candidate paths.",
+          true,
+          "spainhouses"
+        );
+      }
+
+      if (unavailableCount === requestPaths.length) {
+        throw new ConnectorError(
+          "UPSTREAM_UNAVAILABLE",
+          "spainhouses unavailable for all candidate requests.",
           true,
           "spainhouses"
         );

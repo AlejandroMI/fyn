@@ -6,6 +6,7 @@ import {
 } from "@fyn/domain";
 import {
   browserHeaders,
+  browserUserAgents,
   decodeHtmlEntities,
   inferPropertyTypeFromText,
   inferTagsFromDescription,
@@ -27,6 +28,8 @@ const YAENCONTRE_BASE_URL = "https://www.yaencontre.com";
 const YAENCONTRE_MEDIA_BASE_URL = "https://media.yaencontre.com/";
 const DEFAULT_MAX_LISTINGS = 20;
 const DEFAULT_MAX_REQUESTS = 4;
+const MAX_FETCH_ATTEMPTS_PER_PATH = 2;
+const RETRY_BACKOFF_MS = 700;
 
 interface UnknownRecord {
   [key: string]: unknown;
@@ -485,6 +488,48 @@ function looksLikeChallengeBody(html: string): boolean {
   return /captcha-delivery\.com|please enable js and disable any ad blocker|datadome|access denied/i.test(html);
 }
 
+function isRetriableStatus(status: number): boolean {
+  return status === 401 || status === 403 || status === 429 || status >= 500;
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return error instanceof Error && /fetch timeout/i.test(error.message);
+}
+
+async function fetchPathWithRetries(
+  fetchImpl: typeof fetch,
+  url: string,
+  requestDelayMs: number
+): Promise<{ response: Response; html: string }> {
+  const userAgents = browserUserAgents();
+  const maxAttempts = Math.max(1, Math.min(MAX_FETCH_ATTEMPTS_PER_PATH, userAgents.length));
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const userAgent = userAgents[attempt % userAgents.length] ?? userAgents[0] ?? "";
+    try {
+      const response = await fetchImpl(url, {
+        headers: browserHeaders({
+          requestDelayMs,
+          userAgent
+        })
+      });
+      const html = await response.text();
+      const retriable = isRetriableStatus(response.status) || looksLikeChallengeBody(html);
+      if (!retriable || attempt >= maxAttempts - 1) {
+        return { response, html };
+      }
+    } catch (error) {
+      if (isTimeoutError(error) || attempt >= maxAttempts - 1) {
+        throw error;
+      }
+    }
+
+    await sleep(Math.max(requestDelayMs, RETRY_BACKOFF_MS) * (attempt + 1));
+  }
+
+  throw new Error(`yaencontre exhausted retry attempts for ${url}`);
+}
+
 function toCityNormalized(value: string): string {
   return value
     .normalize("NFD")
@@ -537,12 +582,19 @@ export class YaencontreConnector implements ConnectorAdapter {
       }
 
       const url = toAbsoluteUrl(path, this.baseUrl);
-      const response = await this.fetchImpl(url, {
-        headers: browserHeaders({
-          requestDelayMs: this.requestDelayMs
-        })
-      });
-      const html = await response.text();
+      let response: Response;
+      let html = "";
+      try {
+        const fetched = await fetchPathWithRetries(this.fetchImpl, url, this.requestDelayMs);
+        response = fetched.response;
+        html = fetched.html;
+      } catch (error) {
+        unavailableCount += 1;
+        warnings.push(
+          `yaencontre request failed on ${path}: ${isTimeoutError(error) ? "timeout" : error instanceof Error ? error.message : String(error)}`
+        );
+        continue;
+      }
 
       if (response.status === 429) {
         rateLimitedCount += 1;

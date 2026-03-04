@@ -74,6 +74,8 @@ const sourcePayloadOverrides: Partial<Record<SourceSelection, Record<string, unk
 };
 
 const acceptableUpstreamErrors = new Set(["UPSTREAM_BLOCKED", "UPSTREAM_RATE_LIMIT", "UPSTREAM_UNAVAILABLE"]);
+const STATUS_PROBE_MAX_ATTEMPTS = 2;
+const STATUS_PROBE_RETRY_DELAY_MS = 1200;
 
 function basePayload(overrides: Record<string, unknown>): Record<string, unknown> {
   return {
@@ -86,6 +88,14 @@ function basePayload(overrides: Record<string, unknown>): Record<string, unknown
     max_results_total: 10,
     ...overrides
   };
+}
+
+async function sleep(ms: number): Promise<void> {
+  if (ms <= 0) {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function authorizeB2Account(): Promise<B2AuthorizeResponse> {
@@ -145,32 +155,52 @@ export async function generateConnectorStatusSnapshot(): Promise<ConnectorStatus
   const items: ConnectorStatusSnapshotItem[] = [];
 
   for (const source of sourceOrder) {
-    try {
-      const result = await runStructuredSearch(
-        {
-          ...basePayload(sourcePayloadOverrides[source] ?? {}),
-          sources: [source]
-        },
-        connectors
-      );
+    let finalItem: ConnectorStatusSnapshotItem | null = null;
+    let upstreamError: ConnectorError | null = null;
 
-      items.push({
-        portalUrl: sourcePortalUrls[source],
-        state: result.diagnostics.returned_count > 0 ? "available" : "no_results",
-        returnedCount: result.diagnostics.returned_count
-      });
-    } catch (error) {
-      if (error instanceof ConnectorError && acceptableUpstreamErrors.has(error.code)) {
-        items.push({
+    for (let attempt = 0; attempt < STATUS_PROBE_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        const result = await runStructuredSearch(
+          {
+            ...basePayload(sourcePayloadOverrides[source] ?? {}),
+            sources: [source]
+          },
+          connectors
+        );
+
+        finalItem = {
           portalUrl: sourcePortalUrls[source],
-          state: "blocked",
-          returnedCount: 0
-        });
-        continue;
+          state: result.diagnostics.returned_count > 0 ? "available" : "no_results",
+          returnedCount: result.diagnostics.returned_count
+        };
+        break;
+      } catch (error) {
+        if (error instanceof ConnectorError && acceptableUpstreamErrors.has(error.code)) {
+          upstreamError = error;
+          if (attempt < STATUS_PROBE_MAX_ATTEMPTS - 1) {
+            await sleep(STATUS_PROBE_RETRY_DELAY_MS);
+            continue;
+          }
+          break;
+        }
+
+        throw error;
+      }
+    }
+
+    if (!finalItem) {
+      if (!upstreamError) {
+        throw new Error(`Connector status probe failed for ${source}.`);
       }
 
-      throw error;
+      finalItem = {
+        portalUrl: sourcePortalUrls[source],
+        state: "blocked",
+        returnedCount: 0
+      };
     }
+
+    items.push(finalItem);
   }
 
   return {

@@ -121,4 +121,43 @@ describe("MilanunciosConnector", () => {
       source_portal: "milanuncios"
     } satisfies Partial<ConnectorError>);
   });
+
+  it("retries when the first request is blocked and succeeds on the second attempt", async () => {
+    const html = `
+      <html>
+        <body>
+          <article class="ma-AdCardV2">
+            <a class="ma-AdCardListingV2-TitleLink" href="/venta-de-casas-en-valencia-valencia/casa-soleada-111222333.htm">
+              <h2 class="ma-AdCardV2-title">Casa soleada</h2>
+            </a>
+            <span class="ma-AdPrice-value">320.000 €</span>
+            <span class="ma-AdLocation-text">Valencia (Valencia)</span>
+            <span class="ma-AdTag-label">3 dorm.</span>
+          </article>
+        </body>
+      </html>
+    `;
+
+    let callCount = 0;
+    const fetchMock: typeof fetch = async () => {
+      callCount += 1;
+      if (callCount === 1) {
+        return makeResponse("<html>Forbidden</html>", 403);
+      }
+
+      return makeResponse(html, 200);
+    };
+
+    const connector = new MilanunciosConnector({
+      fetchImpl: fetchMock,
+      requestDelayMs: 0,
+      maxRequests: 1
+    });
+
+    const result = await connector.search(criteria("Valencia"));
+
+    expect(callCount).toBe(2);
+    expect(result.listings).toHaveLength(1);
+    expect(result.listings[0]?.city).toContain("Valencia");
+  });
 });
