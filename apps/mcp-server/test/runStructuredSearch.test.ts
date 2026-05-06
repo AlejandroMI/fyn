@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ConnectorError, type ConnectorSearchResult, type ListingCard, type NormalizedFilters } from "@fyn/domain";
+import {
+  ConnectorError,
+  SEARCH_PROPERTIES_TOOL_ANNOTATIONS,
+  type ConnectorSearchResult,
+  type ListingCard,
+  type NormalizedFilters
+} from "@fyn/domain";
 import type { ConnectorAdapter } from "@fyn/connectors-core";
 
 import { runStructuredSearch, type ConnectorRegistry, type SourceSelection, type ToolPayload } from "../src/server.js";
@@ -82,6 +88,19 @@ function payload(overrides: Partial<ToolPayload> = {}): ToolPayload {
 }
 
 describe("runStructuredSearch", () => {
+  it("keeps OpenAI tool annotations explicit and aligned with live portal search behavior", () => {
+    expect(SEARCH_PROPERTIES_TOOL_ANNOTATIONS).toEqual({
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: true,
+      idempotentHint: true
+    });
+
+    for (const value of Object.values(SEARCH_PROPERTIES_TOOL_ANNOTATIONS)) {
+      expect(typeof value).toBe("boolean");
+    }
+  });
+
   it("runs selected sources concurrently for the same location", async () => {
     let inFlight = 0;
     let maxInFlight = 0;

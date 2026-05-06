@@ -25,6 +25,15 @@ This starts a stdio MCP server that exposes:
 
 `search_properties` now also links an MCP Apps component resource (`ui://widget/fyn-search-results-v1.html`) so compatible hosts (like ChatGPT apps) can render map + cards from the same tool result.
 
+## OpenAI app annotation justification
+
+`search_properties` uses explicit boolean annotations:
+
+- `readOnlyHint: false` because the tool sends user search criteria to Fyn and live public property portals instead of only computing inside ChatGPT.
+- `destructiveHint: false` because it does not create, update, delete, purchase, reserve, or overwrite user data.
+- `openWorldHint: true` because it reaches public external property portals outside the current ChatGPT/user account boundary.
+- `idempotentHint: true` because repeat calls with the same arguments have no additional side effect on Fyn or upstream portals; results may change as public listings change.
+
 ## Tool contract (recommended)
 
 Use structured constraints so the model can act as an agent and Fyn stays deterministic:
