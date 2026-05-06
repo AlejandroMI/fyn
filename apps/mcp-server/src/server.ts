@@ -11,6 +11,7 @@ import {
   SEARCH_PROPERTIES_MISSING_LOCATION_RETRY_HINT,
   SEARCH_PROPERTIES_MISSING_LOCATION_WARNING,
   SEARCH_PROPERTIES_TOOL_DESCRIPTION,
+  SEARCH_PROPERTIES_TOOL_ANNOTATIONS,
   SEARCH_PROPERTIES_TOOL_TITLE,
   SEARCH_PROPERTIES_WIDGET_HTML,
   SEARCH_PROPERTIES_WIDGET_RESOURCE_MIME_TYPE,
@@ -1387,12 +1388,7 @@ export function createFynMcpServer(connectors = connectorsFromEnv()): McpServer 
       description: SEARCH_PROPERTIES_TOOL_DESCRIPTION,
       inputSchema: toolSchema,
       _meta: buildSearchPropertiesToolMeta(),
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        openWorldHint: false,
-        idempotentHint: true
-      }
+      annotations: SEARCH_PROPERTIES_TOOL_ANNOTATIONS
     },
     async (payload) => {
       try {

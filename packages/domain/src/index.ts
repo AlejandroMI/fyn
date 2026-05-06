@@ -186,6 +186,12 @@ export const SEARCH_PROPERTIES_TOOL_INVOKING_LABEL = "Searching Fyn listings..."
 export const SEARCH_PROPERTIES_TOOL_INVOKED_LABEL = "Listings ready.";
 export const SEARCH_PROPERTIES_WIDGET_MODEL_DESCRIPTION =
   "Interactive Fyn shortlist with map + cards, prices, and source links.";
+export const SEARCH_PROPERTIES_TOOL_ANNOTATIONS = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  openWorldHint: true,
+  idempotentHint: true
+} as const;
 
 function normalizeWidgetDomain(origin: string | undefined): string | undefined {
   if (!origin) {
