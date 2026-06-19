@@ -281,7 +281,7 @@ img {
   margin-bottom: 2rem;
 }
 
-.chatgpt-icon {
+.mcp-icon {
   width: 1.05rem;
   height: 1.05rem;
   object-fit: contain;
@@ -291,7 +291,7 @@ img {
   transform-origin: center;
 }
 
-.btn-primary .chatgpt-icon {
+.btn-primary .mcp-icon {
   filter: brightness(0) invert(1);
 }
 
@@ -1061,6 +1061,58 @@ footer {
 .card p {
   color: var(--ink-light);
   margin-bottom: 2rem;
+}
+
+.setup-list {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  margin: 2rem 0;
+  padding: 0;
+}
+
+.setup-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.setup-number {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.setup-list h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.setup-list p,
+.connector-setup .compatibility-note {
+  margin: 0;
+}
+
+.setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.connector-setup .compatibility-note {
+  font-size: 0.88rem;
 }
 
 .code-window {

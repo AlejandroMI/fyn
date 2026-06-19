@@ -88,7 +88,7 @@ function payload(overrides: Partial<ToolPayload> = {}): ToolPayload {
 }
 
 describe("runStructuredSearch", () => {
-  it("keeps OpenAI tool annotations explicit and aligned with live portal search behavior", () => {
+  it("keeps MCP tool annotations explicit and aligned with live portal search behavior", () => {
     expect(SEARCH_PROPERTIES_TOOL_ANNOTATIONS).toEqual({
       readOnlyHint: false,
       destructiveHint: false,

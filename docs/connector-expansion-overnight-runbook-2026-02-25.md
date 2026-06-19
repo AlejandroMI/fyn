@@ -45,7 +45,7 @@ If context is lost or the thread is interrupted, continue with this exact loop:
 
 ## Snapshot (Current Reality)
 
-- ChatGPT connector path is working in developer mode.
+- Remote MCP connector path is working with a compatible client.
 - MCP tool `search_properties` is operational with `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria + spainhouses + nuroa` default scraping sources, plus conditional `pisocompartido + enalquiler` (rent + flat/house intents).
 - `idealista` is now a probe connector with cid-aware blocked diagnostics and best-effort parsing for reachable windows.
 - `globaliza` is wired as a live scraping source and validated in smoke runs.
