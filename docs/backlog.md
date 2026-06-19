@@ -1,6 +1,6 @@
 # Fyn Backlog
 
-Last updated: 2026-02-25
+Last updated: 2026-06-19
 
 ## Working Rules
 
@@ -10,14 +10,14 @@ Last updated: 2026-02-25
 - Every completed task adds at least one learning entry to `docs/learning-log.md`.
 - Anything blocked for more than 24h gets moved to `Blocked / Needs`.
 - Vercel is the default deployment target.
-- Demo path: landing sends users directly to the ChatGPT app/connector URL.
+- Demo path: landing sends users to the MCP setup page and public endpoint.
 
 ## In Progress (Now)
 
-- [ ] `P0` ChatGPT app connector alpha
+- [x] `P0` Remote MCP connector distribution
   - Owner: Codex
-  - Goal: run Fyn from ChatGPT app connection using real listings.
-  - Definition of done: one successful end-to-end run in ChatGPT with sample prompt.
+  - Goal: let users connect Fyn without relying on an app-store approval.
+  - Definition of done: public Streamable HTTP endpoint, Claude setup instructions, and client-neutral MCP output.
 - [x] `P0` Multi-source connector hardening
   - Owner: Codex
   - Goal: keep `pisos + habitaclia + tucasa + fotocasa + yaencontre + milanuncios + globaliza + hogaria + spainhouses + nuroa` orchestration stable, while preserving best-effort `idealista` diagnostics and rent-focused `pisocompartido + enalquiler` coverage.
@@ -29,10 +29,10 @@ Last updated: 2026-02-25
 
 ## Next Up
 
-- [ ] `P0` Landing -> connector handoff
+- [x] `P0` Landing -> connector handoff
   - Owner: Codex
-  - Goal: one click from landing to the ChatGPT connector URL.
-  - Definition of done: primary CTA opens connector and fallback copy exists when URL is not configured.
+  - Goal: one click from landing to the MCP connector setup.
+  - Definition of done: primary CTA opens concrete remote-MCP setup instructions and exposes the copyable endpoint.
 - [ ] `P1` Adapter framework for multi-portal expansion
   - Owner: Codex
   - Goal: add new portals with minimal code duplication.
@@ -75,8 +75,7 @@ Last updated: 2026-02-25
 
 ## Blocked / Needs From Founder
 
-- [ ] Final connector launch URL once we publish the first ChatGPT app entry.
-- [ ] If connection fails in ChatGPT, provide exact error text + timestamp so server logs can be mapped quickly.
+- None for MCP distribution. Directory submissions can remain optional discovery channels.
 
 ## Done
 
@@ -87,13 +86,13 @@ Last updated: 2026-02-25
 - [x] Vercel HTTP MCP scaffold added (`/api/mcp`, `/api/health`, remote smoke client script).
 - [x] Vercel production MCP endpoint live and reachable (`https://fyn-mcp-server.vercel.app/mcp`) with successful remote smoke.
 - [x] Natural-light intent parsing and ranking upgrade (`natural_light`/`exterior`/`orientation` signals).
-- [x] `search_properties` now returns `presentation_cards` + markdown card preview with image URLs for richer ChatGPT output.
+- [x] `search_properties` returns `presentation_cards` + markdown card preview with image URLs for rich client output.
 - [x] No-city nature queries now use discovery scrape mode (instead of fixture fallback) and avoid fake city extraction.
 - [x] `search_properties` upgraded to model-driven MCP contract (structured constraints, multi-location execution, coverage diagnostics).
 - [x] Strict structured mode now blocks no-location execution and returns `action_required` guidance (`MISSING_LOCATIONS`) so models must provide `city`/`locations[]`.
 - [x] Legacy parser execution path removed; MCP backend now runs a single structured deterministic flow.
 - [x] MCP tool metadata centralized in shared domain constants and rewritten in Booking-style action language.
-- [x] `search_properties` now exposes an MCP Apps widget (`ui://widget/fyn-search-results-v1.html`) for map + card rendering in ChatGPT.
+- [x] `search_properties` exposes an MCP Apps widget (`ui://widget/fyn-search-results-v1.html`) for compatible hosts, with text and structured fallbacks for every client.
 - [x] Added connector adapter framework package (`@fyn/connectors-core`) with shared scraper helpers and stable blocked-portal behavior.
 - [x] Added `@fyn/connectors-tucasa` and `@fyn/connectors-fotocasa` adapters with parser tests and MCP integration.
 - [x] Added Fotocasa search-card fallback parser so detail-blocked flows can still return normalized listings.

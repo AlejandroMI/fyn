@@ -106,7 +106,7 @@ export interface SiteContent {
     developersTitle: string;
     runbook: string;
     docs: string;
-    tryChatgpt: string;
+    connectFyn: string;
     copyright: string;
     creditsLabel: string;
     creditLinks: Array<{ label: string; href: string }>;
@@ -119,6 +119,10 @@ export interface SiteContent {
     endpointBody: string;
     copyUrl: string;
     copied: string;
+    setupTitle: string;
+    setupSteps: Array<{ title: string; body: string }>;
+    claudeCta: string;
+    compatibilityNote: string;
     runbookTitle: string;
     runbookBody: string;
     healthTitle: string;
@@ -167,7 +171,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       title: "Describe tu próxima casa",
        titleAccent: "en palabras sencillas.",
       body: "Buscar vivienda en España no debería ser un segundo trabajo. Fyn conecta tu IA con el mercado inmobiliario: describes lo que te importa y recibes coincidencias explicables con enlaces directos y fotos reales, en minutos.",
-      primaryCta: "Abrir en ChatGPT",
+      primaryCta: "Conectar Fyn a tu IA",
        secondaryCta: "Documentación MCP",
       checks: [
         "Sin laberintos de filtros antes de empezar.",
@@ -428,8 +432,8 @@ export const siteContent: Record<Locale, SiteContent> = {
       eyebrow: "Cierre",
       title: "Fyn ya está en marcha.",
       titleAccent: "¿Listo para encontrar tu nido?",
-      body: "Ya tenemos conector funcional en ChatGPT. Deja atrás filtros infinitos y empieza a encontrar exactamente lo que buscas.",
-      primary: "Probar conector en ChatGPT",
+      body: "Fyn está disponible como servidor MCP remoto. Añade la URL a un cliente compatible, como Claude, y busca vivienda desde tu conversación habitual.",
+      primary: "Configurar el conector",
       secondary: "Quickstart para desarrolladores"
     },
     footer: {
@@ -438,7 +442,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       developersTitle: "Desarrolladores",
       runbook: "Runbook",
       docs: "Documentación MCP",
-      tryChatgpt: "Probar en ChatGPT",
+      connectFyn: "Conectar Fyn",
       copyright: "Fyn · Find Your Nest",
       creditsLabel: "Fotos de Unsplash:",
       creditLinks
@@ -450,9 +454,26 @@ export const siteContent: Record<Locale, SiteContent> = {
         "Conecta tus LLMs y apps de chat a búsqueda inmobiliaria en España mediante el servidor MCP unificado de Fyn.",
       endpointTitle: "Configuración del endpoint MCP",
       endpointBody:
-        "Configura Claude Desktop, ChatGPT en developer mode o tu agente personalizado para consumir herramientas de Fyn.",
+        "Añade la URL pública de Fyn como conector MCP remoto en Claude o en cualquier cliente compatible.",
       copyUrl: "Copiar URL",
       copied: "Copiado",
+      setupTitle: "Conéctalo a Claude en tres pasos",
+      setupSteps: [
+        {
+          title: "Abre los conectores de Claude",
+          body: "En un plan Pro o Max, ve a Personalizar → Conectores y elige Añadir conector personalizado. En Team o Enterprise debe hacerlo un propietario."
+        },
+        {
+          title: "Pega la URL de Fyn",
+          body: "Usa la URL MCP que aparece arriba. Fyn no necesita instalar una app ni pasar por un marketplace."
+        },
+        {
+          title: "Actívalo en una conversación",
+          body: "Abre el menú +, activa Fyn en Conectores y describe la vivienda que buscas con ubicación, presupuesto y preferencias."
+        }
+      ],
+      claudeCta: "Abrir conectores en Claude",
+      compatibilityNote: "También funciona con clientes y agentes que admitan servidores MCP remotos mediante Streamable HTTP.",
       runbookTitle: "Runbook para desarrolladores",
       runbookBody: "Cómo ejecutar en local, validar calidad de herramientas y desplegar a producción.",
       healthTitle: "Comprobador de estado",
@@ -479,7 +500,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       title: "Describe your next home",
       titleAccent: "in plain language.",
       body: "Finding a property in Spain should not be a second job. Fyn connects your AI to the real estate market: describe what matters and get explainable matches with direct links and real photos in minutes.",
-      primaryCta: "Open in ChatGPT",
+      primaryCta: "Connect Fyn to your AI",
        secondaryCta: "MCP Docs",
       checks: [
         "No giant filter maze before you can start.",
@@ -738,8 +759,8 @@ export const siteContent: Record<Locale, SiteContent> = {
       eyebrow: "Final call",
       title: "Fyn is live.",
       titleAccent: "Ready to find your nest?",
-      body: "We already have a working ChatGPT connector flow. Leave endless filters behind and start finding exactly what you want.",
-      primary: "Try connector in ChatGPT",
+      body: "Fyn is available as a remote MCP server. Add its URL to a compatible client such as Claude and search for property from the conversation you already use.",
+      primary: "Set up the connector",
       secondary: "Developer quickstart"
     },
     footer: {
@@ -748,7 +769,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       developersTitle: "Developers",
       runbook: "Runbook",
       docs: "MCP documentation",
-      tryChatgpt: "Try in ChatGPT",
+      connectFyn: "Connect Fyn",
       copyright: "Fyn · Find Your Nest",
       creditsLabel: "Photos from Unsplash:",
       creditLinks
@@ -760,9 +781,26 @@ export const siteContent: Record<Locale, SiteContent> = {
         "Connect your LLMs and chat apps to Spanish property search through the unified Fyn MCP server.",
       endpointTitle: "MCP endpoint configuration",
       endpointBody:
-        "Configure Claude Desktop, ChatGPT developer mode, or your custom agent to consume Fyn tools.",
+        "Add Fyn's public URL as a remote MCP connector in Claude or any compatible client.",
       copyUrl: "Copy URL",
       copied: "Copied",
+      setupTitle: "Connect it to Claude in three steps",
+      setupSteps: [
+        {
+          title: "Open Claude connectors",
+          body: "On Pro or Max, go to Customize → Connectors and choose Add custom connector. On Team or Enterprise, an owner must add it."
+        },
+        {
+          title: "Paste the Fyn URL",
+          body: "Use the MCP URL shown above. Fyn does not require an app install or marketplace approval."
+        },
+        {
+          title: "Enable it in a conversation",
+          body: "Open the + menu, enable Fyn under Connectors, then describe the property you want with a location, budget, and preferences."
+        }
+      ],
+      claudeCta: "Open connectors in Claude",
+      compatibilityNote: "It also works with clients and agents that support remote MCP servers over Streamable HTTP.",
       runbookTitle: "Developer runbook",
       runbookBody: "How to run locally, validate tool quality, and deploy safely.",
       healthTitle: "System health checker",

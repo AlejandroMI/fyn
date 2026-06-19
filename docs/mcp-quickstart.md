@@ -23,15 +23,15 @@ pnpm --filter @fyn/mcp-server dev
 This starts a stdio MCP server that exposes:
 - `search_properties`
 
-`search_properties` now also links an MCP Apps component resource (`ui://widget/fyn-search-results-v1.html`) so compatible hosts (like ChatGPT apps) can render map + cards from the same tool result.
+`search_properties` also links an MCP Apps component resource (`ui://widget/fyn-search-results-v1.html`) so compatible hosts can render a map and property cards from the same tool result. Other clients receive the normalized text and structured result.
 
-## OpenAI app annotation justification
+## MCP tool annotation justification
 
 `search_properties` uses explicit boolean annotations:
 
-- `readOnlyHint: false` because the tool sends user search criteria to Fyn and live public property portals instead of only computing inside ChatGPT.
+- `readOnlyHint: false` because the tool sends user search criteria to Fyn and live public property portals.
 - `destructiveHint: false` because it does not create, update, delete, purchase, reserve, or overwrite user data.
-- `openWorldHint: true` because it reaches public external property portals outside the current ChatGPT/user account boundary.
+- `openWorldHint: true` because it reaches public external property portals outside the current client boundary.
 - `idempotentHint: true` because repeat calls with the same arguments have no additional side effect on Fyn or upstream portals; results may change as public listings change.
 
 ## Tool contract (recommended)
@@ -90,7 +90,7 @@ Then run the same smoke command again and check diagnostics:
 - `"source": "fixture"` means fixture fallback mode
 - `coverage[].portal` shows which source succeeded/failed per location.
 
-## 6. Vercel HTTP deployment (for ChatGPT app connection)
+## 6. Remote HTTP deployment
 
 From `apps/mcp-server`:
 
@@ -102,7 +102,7 @@ npx vercel --prod
 Then set environment variables in Vercel project settings:
 
 - `NEXT_PUBLIC_SITE_URL` (recommended for canonical URLs, sitemap, robots, and legal pages; for your domain use `https://fynfyn.top`)
-- `OPENAI_WIDGET_DOMAIN` (required for public app submission; use a dedicated origin such as `https://chatgpt.fynfyn.top`)
+- `MCP_WIDGET_DOMAIN` (optional origin for hosts that render the MCP Apps component)
 - `PISOS_API_KEY` (optional for API mode)
 - `PISOS_ALLOW_FIXTURE_FALLBACK`
 - `PISOS_ENABLE_SCRAPE_FALLBACK`

@@ -71,6 +71,18 @@ pnpm start
 pnpm --filter @fyn/mcp-server dev
 ```
 
+## Connect from Claude
+
+The production remote MCP endpoint is:
+
+```text
+https://fynfyn.top/mcp
+```
+
+On Claude Pro or Max, open **Customize → Connectors → Add custom connector**, paste the endpoint, and enable Fyn from the **+ → Connectors** menu in a conversation. On Team or Enterprise, an organization owner must add the connector first. See Anthropic's [remote MCP connector guide](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp).
+
+Fyn uses Streamable HTTP and is not tied to Claude; any compatible MCP client can consume the same endpoint.
+
 ## Environment variables
 
 You do not need every supported env var to run Fyn.
@@ -125,8 +137,6 @@ This keeps the bucket private, avoids browser CORS issues, and reduces the chanc
 - `docs/fyn-foundation.md`
 - `docs/backlog.md`
 - `docs/mcp-quickstart.md`
-- `docs/chatgpt-connector-research-2026-02-24.md`
-- `docs/chatgpt-developer-mode-runbook.md`
 - `docs/learning-log.md`
 - `docs/connector-context-continuity.md`
 - `docs/connector-expansion-overnight-runbook-2026-02-25.md`

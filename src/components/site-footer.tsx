@@ -36,9 +36,9 @@ export function SiteFooter({ locale, content, anchorPrefix = "" }: SiteFooterPro
               <a href={`${anchorPrefix}#use-cases`}>{content.nav.useCases}</a>
             </li>
             <li>
-              <a href="https://chatgpt.com" target="_blank" rel="noreferrer">
-                {content.footer.tryChatgpt}
-              </a>
+              <Link href="/developers#connect" locale={locale}>
+                {content.footer.connectFyn}
+              </Link>
             </li>
           </ul>
         </div>

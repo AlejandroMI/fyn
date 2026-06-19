@@ -182,10 +182,6 @@ export const SEARCH_PROPERTIES_CONTEXT_ONLY_WARNING =
 export const SEARCH_PROPERTIES_WIDGET_RESOURCE_URI =
   "ui://widget/fyn-search-results-v1.html";
 export const SEARCH_PROPERTIES_WIDGET_RESOURCE_MIME_TYPE = "text/html;profile=mcp-app";
-export const SEARCH_PROPERTIES_TOOL_INVOKING_LABEL = "Searching Fyn listings...";
-export const SEARCH_PROPERTIES_TOOL_INVOKED_LABEL = "Listings ready.";
-export const SEARCH_PROPERTIES_WIDGET_MODEL_DESCRIPTION =
-  "Interactive Fyn shortlist with map + cards, prices, and source links.";
 export const SEARCH_PROPERTIES_TOOL_ANNOTATIONS = {
   readOnlyHint: false,
   destructiveHint: false,
@@ -210,16 +206,12 @@ export function buildSearchPropertiesToolMeta(): Record<string, unknown> {
     ui: {
       resourceUri: SEARCH_PROPERTIES_WIDGET_RESOURCE_URI,
       visibility: ["model", "app"]
-    },
-    "openai/outputTemplate": SEARCH_PROPERTIES_WIDGET_RESOURCE_URI,
-    "openai/widgetAccessible": true,
-    "openai/toolInvocation/invoking": SEARCH_PROPERTIES_TOOL_INVOKING_LABEL,
-    "openai/toolInvocation/invoked": SEARCH_PROPERTIES_TOOL_INVOKED_LABEL
+    }
   };
 }
 
 export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknown> {
-  const widgetDomain = normalizeWidgetDomain(process.env.OPENAI_WIDGET_DOMAIN);
+  const widgetDomain = normalizeWidgetDomain(process.env.MCP_WIDGET_DOMAIN);
   const csp = {
     connectDomains: [
       "https://tile.openstreetmap.org",
@@ -281,14 +273,6 @@ export function buildSearchPropertiesWidgetResourceMeta(): Record<string, unknow
       prefersBorder: false,
       ...(widgetDomain ? { domain: widgetDomain } : {}),
       csp
-    },
-    "openai/widgetDescription": SEARCH_PROPERTIES_WIDGET_MODEL_DESCRIPTION,
-    "openai/widgetPrefersBorder": false,
-    ...(widgetDomain ? { "openai/widgetDomain": widgetDomain } : {}),
-    "openai/widgetCSP": {
-      connect_domains: csp.connectDomains,
-      resource_domains: csp.resourceDomains,
-      redirect_domains: csp.redirectDomains
     }
   };
 }
@@ -849,12 +833,6 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         var sourcePill = document.getElementById("sourcePill");
         var openTopBtn = document.getElementById("openTopBtn");
 
-        function notifyHeight() {
-          if (window.openai && typeof window.openai.notifyIntrinsicHeight === "function") {
-            window.openai.notifyIntrinsicHeight(document.body.scrollHeight);
-          }
-        }
-
         function escapeHtml(value) {
           return String(value || "")
             .replace(/&/g, "&amp;")
@@ -885,10 +863,6 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
 
         function openExternal(url) {
           if (!url) {
-            return;
-          }
-          if (window.openai && typeof window.openai.openExternal === "function") {
-            window.openai.openExternal({ href: url, redirectUrl: false });
             return;
           }
           window.open(url, "_blank", "noopener,noreferrer");
@@ -1328,7 +1302,6 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           if (mapActive) {
             renderMap();
           }
-          notifyHeight();
         }
 
         function renderAll() {
@@ -1339,7 +1312,6 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           if (state.view === "map") {
             renderMap();
           }
-          notifyHeight();
         }
 
         function applyToolOutput(output) {
@@ -1353,9 +1325,6 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         }
 
         function readInitialOutput() {
-          if (window.openai && window.openai.toolOutput) {
-            return window.openai.toolOutput;
-          }
           return null;
         }
 
@@ -1423,26 +1392,6 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
         });
 
         window.addEventListener(
-          "openai:set_globals",
-          function (event) {
-            var detail = event && event.detail ? event.detail : {};
-            var globals = detail.globals || {};
-            if (Object.prototype.hasOwnProperty.call(globals, "toolOutput")) {
-              if (!globals.toolOutput) {
-                state.loading = true;
-                state.cards = [];
-                state.criteria = null;
-                state.diagnostics = null;
-                renderAll();
-                return;
-              }
-              applyToolOutput(globals.toolOutput);
-            }
-          },
-          { passive: true }
-        );
-
-        window.addEventListener(
           "message",
           function (event) {
             if (event.source !== window.parent) {
@@ -1474,7 +1423,6 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
             if (map) {
               map.invalidateSize();
             }
-            notifyHeight();
           },
           { passive: true }
         );

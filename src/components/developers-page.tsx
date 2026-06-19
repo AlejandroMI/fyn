@@ -50,7 +50,7 @@ export function DevelopersPage({ locale, content }: DevelopersPageProps) {
             <p>{content.developers.intro}</p>
           </header>
 
-          <section className="card">
+          <section className="card" id="connect">
             <h2>{content.developers.endpointTitle}</h2>
             <p>{content.developers.endpointBody}</p>
 
@@ -66,18 +66,41 @@ export function DevelopersPage({ locale, content }: DevelopersPageProps) {
                 </button>
               </div>
               <div className="code-body">
-                <span className="token-keyword">const</span> endpoint <span className="token-keyword">=</span>{" "}
-                <span className="token-string">"{MCP_ENDPOINT}"</span>;<br />
+                <span className="token-string">{MCP_ENDPOINT}</span>
                 <br />
-                <span className="token-function">connectMCP</span>({"{"}
-                <br />
-                &nbsp;&nbsp;serverUrl: endpoint,
-                <br />
-                &nbsp;&nbsp;transport: <span className="token-string">"sse"</span>
-                <br />
-                {"}"});
+                <span className="token-keyword">transport:</span>{" "}
+                <span className="token-function">Streamable HTTP</span>
               </div>
             </div>
+          </section>
+
+          <section className="card connector-setup">
+            <h2>{content.developers.setupTitle}</h2>
+            <ol className="setup-list">
+              {content.developers.setupSteps.map((step, index) => (
+                <li key={step.title}>
+                  <span className="setup-number">{index + 1}</span>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="setup-actions">
+              <a href="https://claude.ai/settings/connectors" target="_blank" rel="noreferrer" className="btn btn-primary">
+                {content.developers.claudeCta}
+              </a>
+              <a
+                href="https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp"
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-outline"
+              >
+                {locale === "es" ? "Guía oficial de Claude" : "Official Claude guide"}
+              </a>
+            </div>
+            <p className="compatibility-note">{content.developers.compatibilityNote}</p>
           </section>
 
           <div className="resource-grid">

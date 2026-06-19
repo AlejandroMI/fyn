@@ -188,10 +188,10 @@ export function HomePage({ locale, content }: HomePageProps) {
               </h1>
               <p>{content.hero.body}</p>
               <div className="hero-actions">
-                <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="btn btn-primary">
-                  <img src="/web/chatgpt-logo.svg" alt="" aria-hidden="true" className="chatgpt-icon" />
+                <Link href="/developers#connect" locale={locale} className="btn btn-primary">
+                  <span className="mcp-icon" aria-hidden="true">↗</span>
                   {content.hero.primaryCta}
-                </a>
+                </Link>
                 <Link href="/developers" locale={locale} className="btn btn-outline">
                   {content.hero.secondaryCta}
                 </Link>
@@ -403,10 +403,10 @@ export function HomePage({ locale, content }: HomePageProps) {
           </h2>
           <p>{content.finalCta.body}</p>
           <div className="final-actions">
-            <a href="https://chatgpt.com" target="_blank" rel="noreferrer" className="btn btn-primary">
-              <img src="/web/chatgpt-logo.svg" alt="" aria-hidden="true" className="chatgpt-icon" />
+            <Link href="/developers#connect" locale={locale} className="btn btn-primary">
+              <span className="mcp-icon" aria-hidden="true">↗</span>
               {content.finalCta.primary}
-            </a>
+            </Link>
             <Link href="/developers" locale={locale} className="btn btn-outline">
               {content.finalCta.secondary}
             </Link>
