@@ -76,7 +76,21 @@ export function decodeHtmlEntities(input: string): string {
 }
 
 export function stripTags(input: string): string {
-  return decodeHtmlEntities(input.replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+  let text = "";
+  let insideTag = false;
+
+  for (const character of input) {
+    if (character === "<") {
+      insideTag = true;
+      text += " ";
+    } else if (character === ">" && insideTag) {
+      insideTag = false;
+    } else if (!insideTag) {
+      text += character;
+    }
+  }
+
+  return decodeHtmlEntities(text).replace(/\s+/g, " ").trim();
 }
 
 export function slugify(value: string): string {
@@ -120,13 +134,40 @@ export function parseFiniteNumber(raw: unknown): number | null {
 }
 
 export function parseRoomsFromText(input: string): number | null {
-  const match = input.match(/(\d+)\s*(?:habs?\.?|habitaciones?|dorm(?:itorios?)?|rooms?)/i);
-  if (!match?.[1]) {
-    return null;
+  const roomLabels = [
+    "habitaciones",
+    "habitacion",
+    "dormitorios",
+    "dormitorio",
+    "habs.",
+    "habs",
+    "hab.",
+    "hab",
+    "rooms",
+    "room",
+    "dorm"
+  ];
+
+  for (const match of input.matchAll(/\d{1,3}/g)) {
+    const rawNumber = match[0];
+    let labelStart = (match.index ?? 0) + rawNumber.length;
+    while (labelStart < input.length && /\s/.test(input[labelStart] ?? "")) {
+      labelStart += 1;
+    }
+
+    const remainder = input.slice(labelStart).toLowerCase();
+    const label = roomLabels.find((candidate) => remainder.startsWith(candidate));
+    if (!label || /[a-z]/i.test(remainder[label.length] ?? "")) {
+      continue;
+    }
+
+    const value = Number(rawNumber);
+    if (Number.isFinite(value)) {
+      return value;
+    }
   }
 
-  const value = Number(match[1]);
-  return Number.isFinite(value) ? value : null;
+  return null;
 }
 
 export function inferPropertyTypeFromText(input: string): "flat" | "house" | "office" | "land" | null {
