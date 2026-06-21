@@ -36,6 +36,7 @@ export function DevelopersPage({ locale, content }: DevelopersPageProps) {
           activeHref="/developers"
           links={[
             { href: "/", label: content.nav.product },
+            { href: "/how-it-works", label: content.nav.how },
             { href: "/developers", label: content.nav.developers }
           ]}
         />

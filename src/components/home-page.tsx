@@ -174,7 +174,7 @@ export function HomePage({ locale, content }: HomePageProps) {
           links={[
             { href: "#problem", label: content.nav.problem },
             { href: "#use-cases", label: content.nav.useCases },
-            { href: "#how", label: content.nav.how },
+            { href: "/how-it-works", label: content.nav.how },
             { href: "#preview", label: content.nav.preview },
             { href: "/developers", label: content.nav.developers }
           ]}
@@ -303,6 +303,9 @@ export function HomePage({ locale, content }: HomePageProps) {
               </article>
             ))}
           </div>
+          <Link href="/how-it-works" locale={locale} className="how-more-link">
+            {locale === "es" ? "Ver el proceso completo" : "See the complete process"} <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </section>
 
