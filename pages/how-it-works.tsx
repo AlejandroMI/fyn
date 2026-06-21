@@ -14,11 +14,11 @@ export const getStaticProps: GetStaticProps<Props> = async ({ locale }) => ({
 });
 
 export default function HowItWorksRoute({ locale }: InferGetStaticPropsType<typeof getStaticProps>) {
-  const title = locale === "es" ? "Cómo funciona Fyn" : "How Fyn works";
+  const title = locale === "es" ? "Cómo funciona Fyn por dentro" : "How Fyn works under the hood";
   const description =
     locale === "es"
-      ? "Descubre cómo Fyn convierte una conversación en resultados inmobiliarios comparables, explicables y enlazados a su fuente."
-      : "See how Fyn turns a conversation into comparable, explainable property results linked to their source.";
+      ? "Arquitectura, conectores, normalización, ranking y límites del experimento de búsqueda inmobiliaria con IA de Fyn."
+      : "Architecture, connectors, normalization, ranking, and limitations of Fyn's experimental AI property search project.";
   const canonicalUrl = absoluteSiteUrl("/how-it-works", locale);
 
   return (
