@@ -36,6 +36,11 @@ export function SiteFooter({ locale, content, anchorPrefix = "" }: SiteFooterPro
               <a href={`${anchorPrefix}#use-cases`}>{content.nav.useCases}</a>
             </li>
             <li>
+              <Link href="/how-it-works" locale={locale}>
+                {content.nav.how}
+              </Link>
+            </li>
+            <li>
               <Link href="/developers#connect" locale={locale}>
                 {content.footer.connectFyn}
               </Link>

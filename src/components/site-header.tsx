@@ -25,6 +25,26 @@ export function SiteHeader({
   variant = "light",
   activeHref
 }: SiteHeaderProps) {
+  const renderLink = (link: HeaderLink, mobile = false) =>
+    link.external ? (
+      <a key={`${mobile ? "mobile-" : ""}${link.href}`} href={link.href} target="_blank" rel="noreferrer">
+        {link.label}
+      </a>
+    ) : link.href.startsWith("#") ? (
+      <a key={`${mobile ? "mobile-" : ""}${link.href}`} href={link.href}>
+        {link.label}
+      </a>
+    ) : (
+      <Link
+        key={`${mobile ? "mobile-" : ""}${link.href}`}
+        href={link.href}
+        locale={locale}
+        className={activeHref === link.href ? "active" : ""}
+      >
+        {link.label}
+      </Link>
+    );
+
   return (
     <header className="site-shell">
       <nav className={`site-nav ${variant === "dark" ? "site-nav-dark" : ""}`}>
@@ -34,26 +54,7 @@ export function SiteHeader({
         </Link>
 
         <div className="nav-links">
-          {links.map((link) =>
-            link.external ? (
-              <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
-                {link.label}
-              </a>
-            ) : link.href.startsWith("#") ? (
-              <a key={link.href} href={link.href}>
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                locale={locale}
-                className={activeHref === link.href ? "active" : ""}
-              >
-                {link.label}
-              </Link>
-            )
-          )}
+          {links.map((link) => renderLink(link))}
           <LanguageSwitcher locale={locale} variant={variant} />
           {variant === "dark" ? (
             <span className="status-pill">
@@ -62,6 +63,25 @@ export function SiteHeader({
             </span>
           ) : null}
         </div>
+
+        <details className="mobile-nav">
+          <summary aria-label={locale === "es" ? "Abrir menú" : "Open menu"}>
+            <span>{locale === "es" ? "Menú" : "Menu"}</span>
+            <span className="mobile-nav-icon" aria-hidden="true" />
+          </summary>
+          <div className="mobile-nav-panel">
+            {links.map((link) => renderLink(link, true))}
+            <div className="mobile-nav-meta">
+              <LanguageSwitcher locale={locale} variant={variant} />
+              {variant === "dark" ? (
+                <span className="status-pill">
+                  <span className="status-dot" />
+                  {content.nav.mcpLive}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </details>
       </nav>
     </header>
   );
