@@ -13,9 +13,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const snapshot = await fetchConnectorStatusSnapshot();
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=3600");
     res.status(200).json(snapshot);
-  } catch (error) {
+  } catch (_error) {
     res.status(404).json({
-      error: error instanceof Error ? error.message : String(error)
+      error: "Connector status snapshot is unavailable."
     });
   }
 }

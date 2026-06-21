@@ -109,7 +109,7 @@ pnpm test
 - Branch rule: every push to `main` triggers a production deployment.
 - No GitHub Actions deploy workflow is required for production deploys.
 - Vercel cron triggers `/api/connector-status/refresh` daily at `09:00 UTC`.
-- After the first deploy, manually hit `/api/connector-status/refresh?token=<CONNECTOR_STATUS_REFRESH_TOKEN>` once to seed the first snapshot.
+- After the first deploy, seed the first snapshot with `POST /api/connector-status/refresh` and an `Authorization: Bearer <CONNECTOR_STATUS_REFRESH_TOKEN>` header. Never put refresh secrets in URLs.
 - If deployment behavior changes, update this section and `docs/website-architecture.md` in the same PR.
 
 ## MCP smoke checks

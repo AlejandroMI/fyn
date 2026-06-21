@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { timingSafeEqual } from "node:crypto";
 
 import { generateConnectorStatusSnapshot, uploadConnectorStatusSnapshot } from "@/lib/connector-status";
 
 function isAuthorized(request: NextApiRequest): boolean {
   const bearerToken = request.headers.authorization?.replace(/^Bearer\s+/i, "").trim();
-  const queryToken = typeof request.query.token === "string" ? request.query.token.trim() : "";
   const acceptedTokens = [process.env.CONNECTOR_STATUS_REFRESH_TOKEN, process.env.CRON_SECRET].filter(
     (value): value is string => Boolean(value && value.trim().length > 0)
   );
@@ -13,7 +13,13 @@ function isAuthorized(request: NextApiRequest): boolean {
     return false;
   }
 
-  return acceptedTokens.some((token) => token === bearerToken || token === queryToken);
+  if (!bearerToken) return false;
+
+  return acceptedTokens.some((token) => {
+    const expected = Buffer.from(token);
+    const received = Buffer.from(bearerToken);
+    return expected.length === received.length && timingSafeEqual(expected, received);
+  });
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -38,10 +44,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       generatedAt: snapshot.generatedAt,
       itemCount: snapshot.items.length
     });
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({
       ok: false,
-      error: error instanceof Error ? error.message : String(error)
+      error: "Connector status refresh failed."
     });
   }
 }

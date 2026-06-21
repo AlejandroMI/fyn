@@ -865,7 +865,15 @@ export const SEARCH_PROPERTIES_WIDGET_HTML = `<!doctype html>
           if (!url) {
             return;
           }
-          window.open(url, "_blank", "noopener,noreferrer");
+          try {
+            var parsed = new URL(url);
+            if (parsed.protocol !== "https:") {
+              return;
+            }
+            window.open(parsed.toString(), "_blank", "noopener,noreferrer");
+          } catch (_error) {
+            return;
+          }
         }
 
         function isSpanish() {
