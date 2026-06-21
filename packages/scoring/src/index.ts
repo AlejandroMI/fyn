@@ -139,7 +139,7 @@ function extractFloor(listing: ListingCard): number | null {
       return 0;
     }
 
-    const match = item.match(/(\d+)[ªa]?\s*planta/i);
+    const match = item.match(/(\d{1,3})[ªa]?[ \t]{0,8}planta/i);
     if (!match?.[1]) {
       continue;
     }
