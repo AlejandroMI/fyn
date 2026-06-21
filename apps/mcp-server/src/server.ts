@@ -57,10 +57,15 @@ const sourceSchema = z.enum([
   "nuroa"
 ]);
 const MAX_LOCATIONS = 5;
+const MAX_QUERY_LENGTH = 2_000;
+const MAX_TEXT_FIELD_LENGTH = 200;
+const MAX_HINTS = 10;
+const MAX_TAGS = 20;
 
 const toolSchema = {
   query_text: z
     .string()
+    .max(MAX_QUERY_LENGTH)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.query_text),
   locale: localeSchema.optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.locale),
@@ -69,36 +74,42 @@ const toolSchema = {
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.transaction_type),
   property_types: z
     .array(propertyTypeSchema)
+    .max(4)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.property_types),
   city: z
     .string()
+    .min(1)
+    .max(MAX_TEXT_FIELD_LENGTH)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.city),
   locations: z
-    .array(z.string().min(1))
+    .array(z.string().min(1).max(MAX_TEXT_FIELD_LENGTH))
     .max(MAX_LOCATIONS)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.locations),
   location_hints: z
-    .array(z.string().min(1))
+    .array(z.string().min(1).max(MAX_TEXT_FIELD_LENGTH))
+    .max(MAX_HINTS)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.location_hints),
   nearby_towns: z.boolean().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.nearby_towns),
-  min_rooms: z.number().int().nonnegative().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_rooms),
+  min_rooms: z.number().int().nonnegative().max(100).optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_rooms),
   min_capacity_people: z
     .number()
     .int()
     .nonnegative()
+    .max(10_000)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_capacity_people),
   max_price_eur: z
     .number()
     .int()
     .nonnegative()
+    .max(1_000_000_000)
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.max_price_eur),
-  min_floor: z.number().int().nonnegative().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_floor),
+  min_floor: z.number().int().nonnegative().max(300).optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.min_floor),
   exclude_ground_floor: z
     .boolean()
     .optional()
@@ -109,8 +120,12 @@ const toolSchema = {
     .optional()
     .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.strict_constraints),
   renovation_ok: z.boolean().optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.renovation_ok),
-  tags: z.array(z.string()).optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.tags),
-  sources: z.array(sourceSchema).optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.sources),
+  tags: z
+    .array(z.string().min(1).max(MAX_TEXT_FIELD_LENGTH))
+    .max(MAX_TAGS)
+    .optional()
+    .describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.tags),
+  sources: z.array(sourceSchema).max(13).optional().describe(SEARCH_PROPERTIES_FIELD_DESCRIPTIONS.sources),
   per_location_limit: z
     .number()
     .int()
@@ -766,6 +781,44 @@ interface PresentationCard {
   longitude?: number;
 }
 
+type PublicListingCard = Omit<ListingCard, "raw">;
+
+function safeHttpsUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:") return null;
+    parsed.username = "";
+    parsed.password = "";
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+function safePublicText(value: string, maxLength: number): string {
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, maxLength);
+}
+
+function toPublicListing(listing: ListingCard): PublicListingCard | null {
+  const url = safeHttpsUrl(listing.url);
+  if (!url) return null;
+
+  const { raw: _raw, ...publicFields } = listing;
+  return {
+    ...publicFields,
+    url,
+    title: safePublicText(listing.title, 300),
+    city: safePublicText(listing.city, MAX_TEXT_FIELD_LENGTH),
+    image_urls: listing.image_urls.flatMap((imageUrl) => {
+      const safeUrl = safeHttpsUrl(imageUrl);
+      return safeUrl ? [safeUrl] : [];
+    }).slice(0, 12),
+    why_matched: listing.why_matched.map((reason) => safePublicText(reason, 300)).slice(0, 10),
+    ...(listing.description ? { description: safePublicText(listing.description, 2_000) } : {}),
+    ...(listing.tags ? { tags: listing.tags.map((tag) => safePublicText(tag, 100)).slice(0, MAX_TAGS) } : {})
+  };
+}
+
 function readDomainFromUrl(url: string): string {
   try {
     const parsed = new URL(url);
@@ -773,6 +826,18 @@ function readDomainFromUrl(url: string): string {
   } catch {
     return "";
   }
+}
+
+function publicConnectorErrorMessage(code: ConnectorErrorCode): string {
+  const messages: Record<ConnectorErrorCode, string> = {
+    MISSING_API_KEY: "A required connector credential is unavailable.",
+    AUTH_REJECTED: "A source rejected connector authentication.",
+    UPSTREAM_RATE_LIMIT: "A source is temporarily rate limited.",
+    UPSTREAM_SCHEMA_CHANGED: "A source returned an unsupported response.",
+    UPSTREAM_BLOCKED: "A source blocked automated access.",
+    UPSTREAM_UNAVAILABLE: "A source is temporarily unavailable."
+  };
+  return messages[code];
 }
 
 function readCoordinatesFromRaw(
@@ -1393,14 +1458,22 @@ export function createFynMcpServer(connectors = connectorsFromEnv()): McpServer 
     async (payload) => {
       try {
         const execution = await runStructuredSearch(payload, connectors);
-        const cards = execution.listings
+        const publicListings = execution.listings.flatMap((listing) => {
+          const publicListing = toPublicListing(listing);
+          return publicListing ? [publicListing] : [];
+        });
+        const cards = publicListings
           .slice(0, 20)
           .map((listing) => toPresentationCard(listing, execution.criteria.locale));
+        const diagnostics = {
+          ...execution.diagnostics,
+          coverage: execution.diagnostics.coverage.map(({ error_message: _errorMessage, ...entry }) => entry)
+        };
         const response = {
           criteria: execution.criteria,
-          listings: execution.listings,
+          listings: publicListings,
           presentation_cards: cards,
-          diagnostics: execution.diagnostics
+          diagnostics
         };
 
         return {
@@ -1416,10 +1489,10 @@ export function createFynMcpServer(connectors = connectorsFromEnv()): McpServer 
         };
       } catch (error) {
         if (error instanceof ConnectorError) {
-          return asErrorResult(error.code, error.message);
+          return asErrorResult(error.code, publicConnectorErrorMessage(error.code));
         }
 
-        return asErrorResult("UPSTREAM_SCHEMA_CHANGED", `Unhandled search error: ${String(error)}`);
+        return asErrorResult("UPSTREAM_SCHEMA_CHANGED", publicConnectorErrorMessage("UPSTREAM_SCHEMA_CHANGED"));
       }
     }
   );

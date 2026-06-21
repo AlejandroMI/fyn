@@ -48,13 +48,13 @@ export async function handleMcpHttpRequest(request: Request): Promise<Response> 
     await server.connect(transport);
     const response = await transport.handleRequest(request);
     return withCors(response);
-  } catch (error) {
+  } catch (_error) {
     return jsonResponse(
       {
         jsonrpc: "2.0",
         error: {
           code: -32603,
-          message: `MCP handler error: ${String(error)}`
+          message: "The MCP request could not be completed."
         },
         id: null
       },
