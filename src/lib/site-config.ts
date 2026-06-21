@@ -2,6 +2,7 @@ export type AppLocale = "es" | "en";
 
 export const DEFAULT_SITE_URL = "https://fynfyn.top";
 export const SUPPORT_EMAIL = "support@fynfyn.top";
+export const GITHUB_REPOSITORY_URL = "https://github.com/AlejandroMI/fyn";
 
 function normalizeOrigin(value: string | undefined): string | undefined {
   if (!value) {

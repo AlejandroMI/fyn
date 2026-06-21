@@ -106,6 +106,7 @@ export interface SiteContent {
     developersTitle: string;
     runbook: string;
     docs: string;
+    github: string;
     connectFyn: string;
     copyright: string;
     creditsLabel: string;
@@ -129,6 +130,8 @@ export interface SiteContent {
     healthBody: string;
     schemaTitle: string;
     schemaBody: string;
+    sourceTitle: string;
+    sourceBody: string;
     footer: string;
   };
 }
@@ -442,6 +445,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       developersTitle: "Desarrolladores",
       runbook: "Runbook",
       docs: "Documentación MCP",
+      github: "Código en GitHub",
       connectFyn: "Conectar Fyn",
       copyright: "Fyn · Find Your Nest",
       creditsLabel: "Fotos de Unsplash:",
@@ -480,6 +484,8 @@ export const siteContent: Record<Locale, SiteContent> = {
       healthBody: "Verifica salud del endpoint y estado de ejecución del conector.",
       schemaTitle: "Endpoint del schema",
       schemaBody: "Abre el endpoint MCP usado por developer mode y clientes compatibles.",
+      sourceTitle: "Código fuente",
+      sourceBody: "Explora los conectores, el contrato MCP, el ranking y las decisiones del experimento en GitHub.",
       footer: "Fyn Developers"
     }
   },
@@ -769,6 +775,7 @@ export const siteContent: Record<Locale, SiteContent> = {
       developersTitle: "Developers",
       runbook: "Runbook",
       docs: "MCP documentation",
+      github: "Source on GitHub",
       connectFyn: "Connect Fyn",
       copyright: "Fyn · Find Your Nest",
       creditsLabel: "Photos from Unsplash:",
@@ -807,6 +814,8 @@ export const siteContent: Record<Locale, SiteContent> = {
       healthBody: "Verify endpoint health and runtime status for connector calls.",
       schemaTitle: "Schema endpoint",
       schemaBody: "Open the MCP endpoint used by developer mode and compatible clients.",
+      sourceTitle: "Source code",
+      sourceBody: "Explore the connectors, MCP contract, ranking, and experiment decisions on GitHub.",
       footer: "Fyn Developers"
     }
   }

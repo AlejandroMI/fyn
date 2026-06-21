@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { Locale, SiteContent } from "@/content/site-content";
+import { GITHUB_REPOSITORY_URL } from "@/lib/site-config";
 
 interface SiteFooterProps {
   locale: Locale;
@@ -55,6 +56,11 @@ export function SiteFooter({ locale, content, anchorPrefix = "" }: SiteFooterPro
               <Link href="/developers" locale={locale}>
                 {content.footer.docs}
               </Link>
+            </li>
+            <li>
+              <a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer">
+                {content.footer.github} ↗
+              </a>
             </li>
           </ul>
         </div>

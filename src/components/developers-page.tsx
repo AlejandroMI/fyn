@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { Locale, SiteContent } from "@/content/site-content";
+import { GITHUB_REPOSITORY_URL } from "@/lib/site-config";
 
 import { SiteHeader } from "./site-header";
 
@@ -114,6 +115,11 @@ export function DevelopersPage({ locale, content }: DevelopersPageProps) {
               <h3>{content.developers.schemaTitle}</h3>
               <p>{content.developers.schemaBody}</p>
             </a>
+
+            <a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer" className="resource-card">
+              <h3>{content.developers.sourceTitle}</h3>
+              <p>{content.developers.sourceBody}</p>
+            </a>
           </div>
         </main>
 
@@ -122,6 +128,9 @@ export function DevelopersPage({ locale, content }: DevelopersPageProps) {
             © {year} {content.developers.footer}
           </div>
           <div className="nav-links">
+            <a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer">
+              GitHub
+            </a>
             <Link href="/" locale={locale}>
               {content.nav.backToProduct}
             </Link>
