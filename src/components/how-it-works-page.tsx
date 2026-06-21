@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { Locale, SiteContent } from "@/content/site-content";
+import { GITHUB_REPOSITORY_URL } from "@/lib/site-config";
 
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
@@ -70,8 +71,8 @@ const pageCopy = {
     ctaTitle: "El prototipo está abierto a inspección.",
     ctaBody:
       "Consulta el contrato MCP y prueba el endpoint para entender qué funciona hoy y dónde están los límites.",
-    primary: "Ver implementación MCP",
-    secondary: "Probar el endpoint"
+    primary: "Ver código en GitHub",
+    secondary: "Ver documentación MCP"
   },
   en: {
     eyebrow: "Inside the experiment",
@@ -131,8 +132,8 @@ const pageCopy = {
       "Fyn has no commercial agreements with the portals and is not intended to replace their products. Terms of use, access restrictions, and anti-bot measures limit which sources can be queried and how reliably; a source may stop working at any time. The project uses that friction to show why official, consent-based, AI-ready interfaces are needed. It is not a complete database or a service suitable for decisions without checking the original listing.",
     ctaTitle: "The prototype is open to inspection.",
     ctaBody: "Review the MCP contract and test the endpoint to see what works today and where the boundaries are.",
-    primary: "View MCP implementation",
-    secondary: "Test the endpoint"
+    primary: "View source on GitHub",
+    secondary: "Read MCP documentation"
   }
 } as const;
 
@@ -203,12 +204,12 @@ export function HowItWorksPage({ locale, content }: HowItWorksPageProps) {
             <h2>{copy.ctaTitle}</h2>
             <p>{copy.ctaBody}</p>
             <div className="final-actions">
-              <Link href="/developers" locale={locale} className="btn btn-primary">
+              <a href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer" className="btn btn-primary">
                 {copy.primary}
-              </Link>
-              <a href="/mcp" className="btn btn-outline">
-                {copy.secondary}
               </a>
+              <Link href="/developers" locale={locale} className="btn btn-outline">
+                {copy.secondary}
+              </Link>
             </div>
           </section>
         </main>
