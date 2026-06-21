@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
 import { createFynMcpServer } from "../apps/mcp-server/src/server";
@@ -15,13 +15,13 @@ const CORS_HEADERS = {
   "access-control-allow-headers": "content-type,mcp-session-id,mcp-protocol-version,last-event-id"
 } as const;
 
-function setCorsHeaders(response: VercelResponse): void {
+function setCorsHeaders(response: NextApiResponse): void {
   for (const [name, value] of Object.entries(CORS_HEADERS)) {
     response.setHeader(name, value);
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+export default async function handler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
   setCorsHeaders(res);
 
   if (req.method === "OPTIONS") {
