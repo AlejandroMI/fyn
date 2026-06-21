@@ -19,8 +19,8 @@ function normalizeText(value: string): string {
     .trim();
 }
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function containsWholeTerm(haystack: string, term: string): boolean {
+  return ` ${haystack} `.includes(` ${term} `);
 }
 
 function matchesCityScope(listing: ListingCard, city: string): boolean {
@@ -35,7 +35,7 @@ function matchesCityScope(listing: ListingCard, city: string): boolean {
       return true;
     }
 
-    return new RegExp(`\\b${escapeRegex(normalizedCity)}\\b`, "i").test(normalizedListingCity);
+    return containsWholeTerm(normalizedListingCity, normalizedCity);
   }
 
   const citySlug = slugify(city);
@@ -130,7 +130,7 @@ function matchesLocationHint(listing: ListingCard, hint: string): boolean {
     return false;
   }
 
-  return new RegExp(`\\b${escapeRegex(normalizedHint)}\\b`, "i").test(searchable);
+  return containsWholeTerm(searchable, normalizedHint);
 }
 
 function extractFloor(listing: ListingCard): number | null {
