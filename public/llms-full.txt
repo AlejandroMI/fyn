@@ -1,0 +1,72 @@
+# Fyn — complete agent documentation
+
+## Product overview
+
+Fyn (Find Your Nest) is an independent, open-source property-search service for Spain. It provides a single normalized search contract over multiple public property portals. Fyn is designed for AI assistants, copilots, and agents that need transparent housing results rather than a transaction system.
+
+## When to use Fyn
+
+Use Fyn when a user asks to find a home, room, office, or other supported property in Spain and supplies a location plus constraints such as transaction type, budget, rooms, floor, exterior preference, renovation tolerance, or lifestyle tags. It is particularly useful for multi-city and multi-portal searches.
+
+Do not use Fyn to reserve, purchase, value, or legally verify a property. Fyn does not replace the source portal, owner, estate agent, surveyor, lawyer, or public registry. Always preserve source attribution and direct users to the original listing to verify price, availability, condition, and terms.
+
+## Authentication and access
+
+The production MCP endpoint is public and currently requires no authentication, account, API key, OAuth token, or payment. Do not send an `Authorization` header. Requests are rate-limited and oversized requests are rejected. See [auth.md](https://fynfyn.top/auth.md) for the canonical access policy.
+
+## MCP quickstart
+
+Connect a Streamable HTTP MCP client to:
+
+```text
+https://fynfyn.top/mcp
+```
+
+The equivalent discovery URL is `https://fynfyn.top/.well-known/mcp`. Initialize the MCP session, list tools, and call `search_properties`.
+
+Example tool arguments:
+
+```json
+{
+  "locale": "en",
+  "transaction_type": "buy",
+  "property_types": ["house"],
+  "locations": ["Náquera", "Buñol", "Requena"],
+  "max_price_eur": 350000,
+  "tags": ["nature", "views"],
+  "strict_constraints": true,
+  "max_results_total": 20
+}
+```
+
+## Tool behavior
+
+`search_properties` is non-destructive and idempotent with respect to Fyn: repeating a call does not create or change records, although public listings can change between requests. It has open-world behavior because it queries third-party portals. Search terms are sent to Fyn and relevant public sources.
+
+For deterministic agent behavior, provide `locations` (or `city`) and keep `strict_constraints` enabled. If a strict request omits a location, the result includes `action_required.code = "MISSING_LOCATIONS"`; ask the user for a Spanish city, municipality, or area and retry.
+
+Useful input fields include `locale`, `query_text`, `locations`, `city`, `location_hints`, `nearby_towns`, `transaction_type`, `property_types`, `min_rooms`, `min_capacity_people`, `max_price_eur`, `min_floor`, `exclude_ground_floor`, `prefer_exterior`, `renovation_ok`, `tags`, `sources`, `per_location_limit`, and `max_results_total`.
+
+## Results and limitations
+
+Results contain normalized criteria, listing cards, source URLs, photos where available, match explanations, scores, and diagnostics. Diagnostics distinguish request guidance from connector or upstream problems and report coverage per portal and location.
+
+Portal availability varies. Some portals rate-limit or block automated requests, listings may be duplicated, and fields may be incomplete or stale. A zero-result response can mean no matching inventory or temporary source unavailability. Agents should state the coverage shown in diagnostics and avoid claiming exhaustive market coverage.
+
+## Errors and retries
+
+MCP protocol errors use JSON-RPC error objects. Rate limiting returns HTTP `429`, error code `-32029`, and `Retry-After`. Oversized bodies return `413`. Unexpected server failures return `500` with code `-32603`. Respect `RateLimit-Limit`, `RateLimit-Remaining`, and `Retry-After`; use bounded exponential backoff with jitter for transient `429` and `5xx` responses. Do not retry invalid arguments without changing them.
+
+## Machine-readable resources
+
+- [OpenAPI description](https://fynfyn.top/openapi.json)
+- [Agent discovery](https://fynfyn.top/.well-known/agent.json)
+- [A2A agent card](https://fynfyn.top/.well-known/agent-card.json)
+- [MCP server card](https://fynfyn.top/.well-known/mcp/server-card.json)
+- [API catalog](https://fynfyn.top/.well-known/api-catalog)
+- [Health endpoint](https://fynfyn.top/health)
+- [Scoped developer index](https://fynfyn.top/developers/llms.txt)
+
+## Source and contact
+
+Source code and contribution instructions are at [github.com/AlejandroMI/fyn](https://github.com/AlejandroMI/fyn). Operational and privacy questions can be sent to `support@fynfyn.top`. Fyn is an independent experiment and is not affiliated with the property portals it searches.

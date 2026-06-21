@@ -1,0 +1,9 @@
+# Fyn developer context
+
+- [MCP quickstart](https://fynfyn.top/llms-full.txt#mcp-quickstart)
+- [OpenAPI description](https://fynfyn.top/openapi.json)
+- [Authentication](https://fynfyn.top/auth.md)
+- [MCP server card](https://fynfyn.top/.well-known/mcp/server-card.json)
+- [Source repository](https://github.com/AlejandroMI/fyn)
+
+The production service exposes a public, rate-limited Streamable HTTP MCP endpoint at `https://fynfyn.top/mcp`. No authentication is currently required. The only tool is `search_properties`.

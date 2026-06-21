@@ -1,0 +1,101 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Fyn MCP API",
+    "version": "0.1.0",
+    "description": "Public, rate-limited Model Context Protocol service for normalized property search across public Spanish real-estate portals. No authentication is currently required. This OpenAPI document describes the HTTP transport; MCP clients should discover the full tool schema with tools/list."
+  },
+  "servers": [{ "url": "https://fynfyn.top" }],
+  "tags": [
+    { "name": "MCP", "description": "Streamable HTTP Model Context Protocol transport" },
+    { "name": "Operations", "description": "Service status and discovery" }
+  ],
+  "paths": {
+    "/mcp": {
+      "post": {
+        "operationId": "sendMcpRequest",
+        "summary": "Send an MCP JSON-RPC request",
+        "description": "Initialize an MCP session, list tools, or call search_properties. Use MCP protocol version 2025-06-18 or another version supported by your client. The search tool is read-only with respect to Fyn but queries third-party public portals.",
+        "tags": ["MCP"],
+        "parameters": [
+          { "name": "MCP-Protocol-Version", "in": "header", "required": false, "description": "MCP protocol version negotiated by the client.", "schema": { "type": "string", "example": "2025-06-18" } },
+          { "name": "Mcp-Session-Id", "in": "header", "required": false, "description": "Session identifier returned by the server when session state is used.", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JsonRpcRequest" },
+              "examples": {
+                "initialize": { "value": { "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": { "name": "example-agent", "version": "1.0.0" } } } },
+                "search": { "value": { "jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": { "name": "search_properties", "arguments": { "locale": "en", "transaction_type": "buy", "property_types": ["house"], "locations": ["Valencia"], "max_price_eur": 350000, "strict_constraints": true } } } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "MCP JSON-RPC result or protocol-level error.", "headers": { "RateLimit-Limit": { "$ref": "#/components/headers/RateLimitLimit" }, "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimitRemaining" } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JsonRpcResponse" } }, "text/event-stream": { "schema": { "type": "string", "description": "Streamable HTTP event stream when negotiated by the MCP client." } } } },
+          "413": { "$ref": "#/components/responses/JsonRpcError" },
+          "429": { "description": "Anonymous rate limit exceeded.", "headers": { "Retry-After": { "description": "Seconds to wait before retrying.", "schema": { "type": "integer", "minimum": 1 } }, "RateLimit-Limit": { "$ref": "#/components/headers/RateLimitLimit" }, "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimitRemaining" } }, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JsonRpcResponse" } } } },
+          "500": { "$ref": "#/components/responses/JsonRpcError" }
+        }
+      },
+      "get": {
+        "operationId": "openMcpStream",
+        "summary": "Open the MCP Streamable HTTP transport",
+        "description": "Transport-level GET used by compatible MCP clients for server-to-client streaming. A client without a valid session may receive a structured protocol error.",
+        "tags": ["MCP"],
+        "responses": { "200": { "description": "MCP event stream.", "content": { "text/event-stream": { "schema": { "type": "string" } } } }, "400": { "$ref": "#/components/responses/JsonRpcError" }, "405": { "$ref": "#/components/responses/JsonRpcError" } }
+      },
+      "delete": {
+        "operationId": "closeMcpSession",
+        "summary": "Close an MCP session",
+        "tags": ["MCP"],
+        "parameters": [{ "name": "Mcp-Session-Id", "in": "header", "required": true, "description": "MCP session to close.", "schema": { "type": "string" } }],
+        "responses": { "204": { "description": "Session closed." }, "400": { "$ref": "#/components/responses/JsonRpcError" } }
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "getServiceHealth",
+        "summary": "Read service health",
+        "tags": ["Operations"],
+        "responses": { "200": { "description": "Service is available.", "content": { "application/json": { "schema": { "type": "object", "required": ["status", "service", "version", "timestamp"], "properties": { "status": { "type": "string", "const": "ok" }, "service": { "type": "string" }, "version": { "type": "string" }, "timestamp": { "type": "string", "format": "date-time" } } } } } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {},
+    "headers": {
+      "RateLimitLimit": { "description": "Maximum requests in the current anonymous rate-limit window.", "schema": { "type": "integer" } },
+      "RateLimitRemaining": { "description": "Requests remaining in the current anonymous rate-limit window.", "schema": { "type": "integer" } }
+    },
+    "responses": {
+      "JsonRpcError": { "description": "Structured MCP JSON-RPC error.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JsonRpcResponse" } } } }
+    },
+    "schemas": {
+      "JsonRpcRequest": {
+        "type": "object",
+        "required": ["jsonrpc", "method"],
+        "properties": {
+          "jsonrpc": { "type": "string", "const": "2.0" },
+          "id": { "oneOf": [{ "type": "string" }, { "type": "integer" }] },
+          "method": { "type": "string", "description": "MCP method such as initialize, tools/list, or tools/call." },
+          "params": { "type": "object", "additionalProperties": true }
+        },
+        "additionalProperties": false
+      },
+      "JsonRpcResponse": {
+        "type": "object",
+        "required": ["jsonrpc"],
+        "properties": {
+          "jsonrpc": { "type": "string", "const": "2.0" },
+          "id": { "oneOf": [{ "type": "string" }, { "type": "integer" }, { "type": "null" }] },
+          "result": { "type": "object", "additionalProperties": true },
+          "error": { "type": "object", "required": ["code", "message"], "properties": { "code": { "type": "integer" }, "message": { "type": "string" }, "data": {} } }
+        }
+      }
+    }
+  }
+}
+}

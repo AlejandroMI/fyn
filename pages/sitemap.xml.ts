@@ -2,7 +2,7 @@ import type { GetServerSideProps } from "next";
 
 import { absoluteSiteUrl, type AppLocale } from "@/lib/site-config";
 
-const ROUTES = ["/", "/how-it-works", "/developers", "/privacy", "/terms", "/support"] as const;
+const ROUTES = ["/", "/how-it-works", "/developers", "/about", "/compare", "/privacy", "/terms", "/support"] as const;
 const LOCALES: AppLocale[] = ["es", "en"];
 
 function xmlEscape(value: string): string {

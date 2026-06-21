@@ -1,0 +1,12 @@
+interface:
+  display_name: "Search Fyn Properties"
+  short_description: "Search Spanish property through Fyn MCP"
+  default_prompt: "Use $search-fyn-properties to find properties in Spain that match my criteria."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "fyn"
+      description: "Fyn multi-portal property search for Spain"
+      transport: "streamable_http"
+      url: "https://fynfyn.top/mcp"

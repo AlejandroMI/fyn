@@ -1,0 +1,33 @@
+# Fyn — agent and developer index
+
+> Fyn (Find Your Nest) is an independent, open-source property-search service for Spain. It gives AI agents one normalized MCP tool for searching multiple public property portals.
+
+## Use Fyn when
+
+- A user wants to buy or rent property in Spain using natural-language criteria.
+- An agent needs normalized results, source attribution, direct listing URLs, match explanations, and per-source diagnostics.
+- A search should cover several Spanish portals without separate portal-specific integrations.
+
+## Do not use Fyn for
+
+- Purchasing, reserving, valuing, or legally verifying a property.
+- Assuming a listing is current: agents must show the source URL and tell users to verify details with the source portal.
+- Sending personal or sensitive information. Search criteria are sent to Fyn and relevant public listing sources.
+
+## Integration
+
+- [Developer guide](https://fynfyn.top/developers)
+- [Full agent documentation](https://fynfyn.top/llms-full.txt)
+- [OpenAPI description](https://fynfyn.top/openapi.json)
+- [MCP server card](https://fynfyn.top/.well-known/mcp/server-card.json)
+- [Authentication guide](https://fynfyn.top/auth.md)
+- [Markdown homepage](https://fynfyn.top/index.md)
+- [Repository and agent instructions](https://github.com/AlejandroMI/fyn)
+
+## Primary endpoints
+
+- MCP Streamable HTTP: `https://fynfyn.top/mcp`
+- MCP discovery alias: `https://fynfyn.top/.well-known/mcp`
+- Health: `https://fynfyn.top/health`
+
+The public MCP endpoint currently requires no account, API key, or OAuth token. It is rate-limited. Fyn exposes one tool: `search_properties`.

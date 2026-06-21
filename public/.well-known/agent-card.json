@@ -1,0 +1,22 @@
+{
+  "name": "Fyn Property Search",
+  "description": "Search multiple public Spanish property portals through one normalized agent interface.",
+  "url": "https://fynfyn.top/mcp",
+  "version": "0.1.0",
+  "protocolVersion": "0.3.0",
+  "provider": { "organization": "Fyn", "url": "https://fynfyn.top" },
+  "documentationUrl": "https://fynfyn.top/llms-full.txt",
+  "capabilities": { "streaming": true, "pushNotifications": false, "stateTransitionHistory": false },
+  "authentication": { "schemes": ["none"] },
+  "defaultInputModes": ["application/json", "text/plain"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "search_properties",
+      "name": "Search properties in Spain",
+      "description": "Find property across multiple Spanish portals using locations, budget, transaction type, property type, rooms, floor preferences, and lifestyle tags.",
+      "tags": ["real-estate", "property-search", "spain", "mcp"],
+      "examples": ["Find houses near Valencia under €350,000 with nature and views."]
+    }
+  ]
+}
