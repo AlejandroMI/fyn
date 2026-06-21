@@ -1,0 +1,16 @@
+{
+  "name": "Fyn",
+  "description": "Normalized multi-portal property search for Spain, designed for AI agents.",
+  "url": "https://fynfyn.top",
+  "version": "0.1.0",
+  "documentation_url": "https://fynfyn.top/llms-full.txt",
+  "contact_email": "support@fynfyn.top",
+  "authentication": { "type": "none", "description": "Public anonymous access; rate limits apply." },
+  "capabilities": [
+    { "name": "search_properties", "description": "Search public Spanish property portals with normalized constraints, source links, match explanations, and coverage diagnostics." }
+  ],
+  "interfaces": {
+    "mcp": { "transport": "streamable-http", "url": "https://fynfyn.top/mcp", "server_card": "https://fynfyn.top/.well-known/mcp/server-card.json" },
+    "openapi": { "url": "https://fynfyn.top/openapi.json" }
+  }
+}

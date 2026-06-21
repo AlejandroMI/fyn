@@ -1,0 +1,29 @@
+{
+  "name": "fyn-mcp-server",
+  "title": "Fyn Property Search",
+  "description": "Public, rate-limited Streamable HTTP MCP server for normalized property search across Spanish real-estate portals.",
+  "version": "0.1.0",
+  "serverUrl": "https://fynfyn.top/mcp",
+  "transport": "streamable-http",
+  "authentication": { "type": "none" },
+  "documentationUrl": "https://fynfyn.top/llms-full.txt",
+  "tools": [
+    {
+      "name": "search_properties",
+      "title": "Search properties",
+      "description": "Search multiple public Spanish property portals with normalized constraints and return source-attributed listings, explanations, and coverage diagnostics.",
+      "readOnly": false,
+      "destructive": false,
+      "idempotent": true,
+      "openWorld": true,
+      "inputSchemaUrl": "https://fynfyn.top/openapi.json"
+    }
+  ],
+  "resources": [
+    {
+      "uri": "ui://widget/fyn-search-results-v1.html",
+      "name": "Fyn Search Results Widget",
+      "description": "Interactive map and property cards for MCP Apps-compatible clients."
+    }
+  ]
+}

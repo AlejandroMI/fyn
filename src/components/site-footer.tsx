@@ -31,6 +31,16 @@ export function SiteFooter({ locale, content, anchorPrefix = "" }: SiteFooterPro
           <h4 className="footer-heading">{content.footer.productTitle}</h4>
           <ul className="footer-list">
             <li>
+              <Link href="/about" locale={locale}>
+                {locale === "es" ? "Sobre Fyn" : "About"}
+              </Link>
+            </li>
+            <li>
+              <Link href="/compare" locale={locale}>
+                {locale === "es" ? "Comparar" : "Compare"}
+              </Link>
+            </li>
+            <li>
               <a href={`${anchorPrefix}#problem`}>{content.nav.problem}</a>
             </li>
             <li>

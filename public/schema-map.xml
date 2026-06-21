@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemaMap xmlns="https://schema.org/SchemaMap">
+  <dataFeed>
+    <url>https://fynfyn.top/schema-feed.jsonl</url>
+    <encodingFormat>application/x-ndjson</encodingFormat>
+  </dataFeed>
+</schemaMap>

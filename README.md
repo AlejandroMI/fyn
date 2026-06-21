@@ -83,6 +83,19 @@ On Claude Pro or Max, open **Customize → Connectors → Add custom connector**
 
 Fyn uses Streamable HTTP and is not tied to Claude; any compatible MCP client can consume the same endpoint.
 
+## Agent discovery
+
+Production publishes machine-readable discovery resources at predictable URLs:
+
+- `/llms.txt` and `/llms-full.txt`
+- `/index.md`, `/auth.md`, and Markdown twins for key content pages
+- `/openapi.json`
+- `/.well-known/agent.json` and `/.well-known/agent-card.json`
+- `/.well-known/mcp` and `/.well-known/mcp/server-card.json`
+- `/.well-known/api-catalog`
+
+The root repository includes `AGENTS.md`. The publishable agent skill is in `skills/search-fyn-properties/`.
+
 ## Environment variables
 
 You do not need every supported env var to run Fyn.
