@@ -141,3 +141,7 @@ This keeps the bucket private, avoids browser CORS issues, and reduces the chanc
 - `docs/connector-context-continuity.md`
 - `docs/connector-expansion-overnight-runbook-2026-02-25.md`
 - `docs/autonomous-continuation-playbook.md`
+
+## License
+
+Fyn is licensed under the [Apache License 2.0](LICENSE).
