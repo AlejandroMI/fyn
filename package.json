@@ -7,7 +7,7 @@
   "packageManager": "pnpm@10.29.3",
   "pnpm": {
     "overrides": {
-      "postcss": "8.5.10",
+      "postcss": "8.5.15",
       "yaml": "2.8.3"
     }
   },
@@ -31,13 +31,13 @@
     "@types/node": "^22.13.10",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.5.10",
-    "tailwindcss": "^3.4.19",
+    "autoprefixer": "^10.5.2",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
-    "turbo": "^2.9.18",
-    "typescript": "^5.9.3",
-    "vite": "6.4.3",
+    "turbo": "^2.10.0",
+    "typescript": "^6.0.3",
+    "vite": "8.1.0",
     "vitest": "^4.1.9",
     "zod": "^4.3.6"
   },
